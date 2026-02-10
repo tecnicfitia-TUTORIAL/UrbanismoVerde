@@ -125,9 +125,9 @@ const SearchControl: React.FC<SearchControlProps> = ({ onLocationSelected }) => 
         {/* Results dropdown */}
         {showResults && results.length > 0 && !isSearching && (
           <div className="absolute top-full mt-2 w-full bg-white rounded-lg shadow-lg max-h-80 overflow-y-auto">
-            {results.map((result, index) => (
+            {results.map((result) => (
               <button
-                key={index}
+                key={result.raw.place_id}
                 onClick={() => handleResultClick(result)}
                 className="w-full text-left px-4 py-3 hover:bg-blue-50 transition-colors border-b border-gray-100 last:border-b-0 text-sm"
               >

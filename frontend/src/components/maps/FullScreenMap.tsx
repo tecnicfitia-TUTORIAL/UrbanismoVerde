@@ -8,6 +8,14 @@ import { DrawingToolsPanel } from '../panels/DrawingToolsPanel';
 import { DrawingMarkers } from './DrawingMarker';
 import SearchControl from './SearchControl';
 
+// Custom icon for search marker
+const searchMarkerIcon = new Icon({
+  iconUrl: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCAzMiA0OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTE2IDQ4QzE2IDQ4IDMyIDI4IDE2IDhDMTYgOCAwIDI4IDE2IDQ4WiIgZmlsbD0iI0VGNDQ0NCIvPgo8Y2lyY2xlIGN4PSIxNiIgY3k9IjE2IiByPSI4IiBmaWxsPSJ3aGl0ZSIvPgo8L3N2Zz4K',
+  iconSize: [32, 48],
+  iconAnchor: [16, 48],
+  popupAnchor: [0, -48]
+});
+
 interface FullScreenMapProps {
   isDrawing: boolean;
   setIsDrawing: (value: boolean) => void;
@@ -125,14 +133,6 @@ const FullScreenMap: React.FC<FullScreenMapProps> = ({
       onDeleteArea(id);
     }
   };
-
-  // Custom icon for search marker
-  const searchMarkerIcon = new Icon({
-    iconUrl: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCAzMiA0OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTE2IDQ4QzE2IDQ4IDMyIDI4IDE2IDhDMTYgOCAwIDI4IDE2IDQ4WiIgZmlsbD0iI0VGNDQ0NCIvPgo8Y2lyY2xlIGN4PSIxNiIgY3k9IjE2IiByPSI4IiBmaWxsPSJ3aGl0ZSIvPgo8L3N2Zz4K',
-    iconSize: [32, 48],
-    iconAnchor: [16, 48],
-    popupAnchor: [0, -48]
-  });
 
   // Handle location selection from search
   const handleLocationSelected = (lat: number, lng: number, label: string) => {
