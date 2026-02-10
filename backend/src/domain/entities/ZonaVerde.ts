@@ -39,7 +39,7 @@ export interface ZonaVerde {
   nombre: string;
   tipo: TipoZona;
   estado?: EstadoZona;
-  areaMm2: number;
+  areaM2: number;
   nivelViabilidad?: NivelViabilidad;
   detectadaPorIA: boolean;
   municipioId?: string;
@@ -65,7 +65,7 @@ export function esZonaViable(zona: ZonaVerde): boolean {
  * @returns true si la zona cumple con el área mínima
  */
 export function cumpleAreaMinima(zona: ZonaVerde, areaMinima: number = 50): boolean {
-  return zona.areaMm2 >= areaMinima;
+  return zona.areaM2 >= areaMinima;
 }
 
 /**
@@ -82,7 +82,7 @@ export function calcularPrioridad(zona: ZonaVerde): number {
   else if (zona.nivelViabilidad === 'baja') prioridad += 10;
 
   // Puntos por área (normalizado)
-  const factorArea = Math.min(zona.areaMm2 / 1000, 1);
+  const factorArea = Math.min(zona.areaM2 / 1000, 1);
   prioridad += factorArea * 30;
 
   // Puntos por tipo de zona (algunos tipos son más urgentes)
@@ -121,11 +121,11 @@ export function validarZonaVerde(zona: Partial<ZonaVerde>): {
     errores.push('El tipo de zona es obligatorio');
   }
 
-  if (!zona.areaMm2 || zona.areaMm2 <= 0) {
+  if (!zona.areaM2 || zona.areaM2 <= 0) {
     errores.push('El área debe ser mayor a 0 m²');
   }
 
-  if (zona.areaMm2 && zona.areaMm2 > 1000000) {
+  if (zona.areaM2 && zona.areaM2 > 1000000) {
     errores.push('El área parece excesivamente grande (>1,000,000 m²)');
   }
 

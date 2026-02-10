@@ -12,7 +12,7 @@ interface Area {
   nombre: string;
   tipo: TipoZona;
   coordenadas: [number, number][];
-  areaMm2: number;
+  areaM2: number;
   notas?: string;
   fechaCreacion: Date;
 }
@@ -131,7 +131,7 @@ const FullScreenMap: React.FC = () => {
       nombre: formData.nombre,
       tipo: formData.tipo,
       coordenadas: tempCoordsRef.current,
-      areaMm2: calcularArea(tempCoordsRef.current),
+      areaM2: calcularArea(tempCoordsRef.current),
       notas: formData.notas || undefined,
       fechaCreacion: new Date()
     };
@@ -227,7 +227,7 @@ const FullScreenMap: React.FC = () => {
                   <strong>Tipo:</strong> {area.tipo.replace('_', ' ')}
                 </p>
                 <p className="text-sm text-gray-600 mb-1">
-                  <strong>Área:</strong> {area.areaMm2.toLocaleString()} m²
+                  <strong>Área:</strong> {area.areaM2.toLocaleString()} m²
                 </p>
                 {area.notas && (
                   <p className="text-sm text-gray-600 mb-2">
@@ -265,7 +265,7 @@ const FullScreenMap: React.FC = () => {
               </p>
               {areas.length > 0 && (
                 <p className="text-xs">
-                  Área total: {areas.reduce((sum, a) => sum + a.areaMm2, 0).toLocaleString()} m²
+                  Área total: {areas.reduce((sum, a) => sum + a.areaM2, 0).toLocaleString()} m²
                 </p>
               )}
             </div>
