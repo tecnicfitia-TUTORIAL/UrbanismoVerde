@@ -3,6 +3,7 @@ import { useMap } from 'react-leaflet';
 import { OpenStreetMapProvider } from 'leaflet-geosearch';
 import { Search, X } from 'lucide-react';
 import type { SearchResult } from 'leaflet-geosearch/dist/providers/provider.js';
+import type { RawResult } from 'leaflet-geosearch/dist/providers/openStreetMapProvider.js';
 
 interface SearchControlProps {
   onLocationSelected?: (lat: number, lng: number, label: string) => void;
@@ -11,7 +12,7 @@ interface SearchControlProps {
 const SearchControl: React.FC<SearchControlProps> = ({ onLocationSelected }) => {
   const map = useMap();
   const [query, setQuery] = useState('');
-  const [results, setResults] = useState<SearchResult<any>[]>([]);
+  const [results, setResults] = useState<SearchResult<RawResult>[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -64,7 +65,7 @@ const SearchControl: React.FC<SearchControlProps> = ({ onLocationSelected }) => 
     };
   }, [query]);
 
-  const handleResultClick = (result: SearchResult<any>) => {
+  const handleResultClick = (result: SearchResult<RawResult>) => {
     const { x: lng, y: lat } = result;
     
     // Center map on the location
