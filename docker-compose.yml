@@ -1,0 +1,113 @@
+services:
+  # PostgreSQL con PostGIS
+  postgres:
+    image: postgis/postgis:15-3.3
+    container_name: ecourbe-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: ecourbe_db
+      POSTGRES_USER: ecourbe_user
+      POSTGRES_PASSWORD: ecourbe_pass
+      POSTGRES_INITDB_ARGS: "-E UTF8"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+    networks:
+      - ecourbe-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ecourbe_user -d ecourbe_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis para caché
+  redis:
+    image: redis:7-alpine
+    container_name: ecourbe-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - ecourbe-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend - Node.js + Express
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: ecourbe-backend
+    ports:
+      - "4000:4000"
+    environment:
+      DATABASE_URL: postgresql://ecourbe_user:ecourbe_pass@postgres:5432/ecourbe_db
+      REDIS_URL: redis://redis:6379
+      NODE_ENV: development
+      PORT: 4000
+      JWT_SECRET: change_this_secret_in_production
+      AI_SERVICE_URL: http://ai-service:8000
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    networks:
+      - ecourbe-network
+    command: npm run dev
+
+  # Frontend - React + Vite
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: ecourbe-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      VITE_API_URL: http://localhost:4000
+      VITE_AI_SERVICE_URL: http://localhost:8000
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    networks:
+      - ecourbe-network
+    depends_on:
+      - backend
+    command: npm run dev
+
+  # AI Service - Python + FastAPI
+  ai-service:
+    build:
+      context: ./ai-service
+      dockerfile: Dockerfile
+    container_name: ecourbe-ai-service
+    ports:
+      - "8000:8000"
+    environment:
+      PYTHONUNBUFFERED: 1
+      DATABASE_URL: postgresql://ecourbe_user:ecourbe_pass@postgres:5432/ecourbe_db
+    volumes:
+      - ./ai-service:/app
+    networks:
+      - ecourbe-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+# Volúmenes persistentes
+volumes:
+  postgres_data:
+    driver: local
+
+# Red compartida
+networks:
+  ecourbe-network:
+    driver: bridge
