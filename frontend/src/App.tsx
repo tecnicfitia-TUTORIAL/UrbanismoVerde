@@ -1,8 +1,8 @@
 import React from 'react'
-import FullScreenMap from './components/maps/FullScreenMap'
+import Layout from './components/layout/Layout'
 
 function App() {
-  return <FullScreenMap />
+  return <Layout />
 }
 
 export default App
