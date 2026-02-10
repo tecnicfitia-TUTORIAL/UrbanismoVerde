@@ -29,6 +29,7 @@ const Layout: React.FC = () => {
   const [isDrawing, setIsDrawing] = useState(false);
   const [areas, setAreas] = useState<Area[]>([]);
   const [showModal, setShowModal] = useState(false);
+  const [selectedArea, setSelectedArea] = useState<Area | null>(null);
   const tempCoordsRef = useRef<[number, number][]>([]);
 
   const handleStartDrawing = () => {
@@ -92,6 +93,8 @@ const Layout: React.FC = () => {
         areas={areas}
         onDeleteArea={handleDeleteArea}
         onCenterArea={handleCenterArea}
+        selectedArea={selectedArea}
+        onSelectArea={setSelectedArea}
       />
       <div className="flex-1">
         <FullScreenMap
