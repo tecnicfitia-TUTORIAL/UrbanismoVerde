@@ -1,11 +1,20 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { MapContainer, TileLayer, Polygon, Popup, useMapEvents, LayersControl } from 'react-leaflet';
-import { LatLng } from 'leaflet';
+import { MapContainer, TileLayer, Polygon, Popup, useMapEvents, LayersControl, Marker } from 'react-leaflet';
+import { LatLng, Icon } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Area, coloresPorTipo } from '../../types';
 import { AnalysisPanel } from '../panels/AnalysisPanel';
 import { DrawingToolsPanel } from '../panels/DrawingToolsPanel';
 import { DrawingMarkers } from './DrawingMarker';
+import SearchControl from './SearchControl';
+
+// Custom icon for search marker
+const searchMarkerIcon = new Icon({
+  iconUrl: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCAzMiA0OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTE2IDQ4QzE2IDQ4IDMyIDI4IDE2IDhDMTYgOCAwIDI4IDE2IDQ4WiIgZmlsbD0iI0VGNDQ0NCIvPgo8Y2lyY2xlIGN4PSIxNiIgY3k9IjE2IiByPSI4IiBmaWxsPSJ3aGl0ZSIvPgo8L3N2Zz4K',
+  iconSize: [32, 48],
+  iconAnchor: [16, 48],
+  popupAnchor: [0, -48]
+});
 
 interface FullScreenMapProps {
   isDrawing: boolean;
@@ -45,6 +54,7 @@ const FullScreenMap: React.FC<FullScreenMapProps> = ({
   const tempCoordsRef = useRef<[number, number][]>([]);
   const [selectedPoint, setSelectedPoint] = useState<{ lat: number; lon: number } | null>(null);
   const [showAnalysis, setShowAnalysis] = useState(false);
+  const [searchMarker, setSearchMarker] = useState<{ lat: number; lng: number; label: string } | null>(null);
 
   // Deshacer último punto
   const handleUndoPoint = useCallback(() => {
@@ -124,6 +134,17 @@ const FullScreenMap: React.FC<FullScreenMapProps> = ({
     }
   };
 
+  // Handle location selection from search
+  const handleLocationSelected = (lat: number, lng: number, label: string) => {
+    setSearchMarker({ lat, lng, label });
+  };
+
+  // Clear search marker when starting to draw or clicking on map
+  const handleMapClickWrapper = (latlng: LatLng) => {
+    setSearchMarker(null);
+    handleMapClick(latlng);
+  };
+
   return (
     <div className="relative w-full h-full">
       {/* Mapa principal */}
@@ -160,12 +181,36 @@ const FullScreenMap: React.FC<FullScreenMapProps> = ({
         {/* Manejador de eventos de dibujo */}
         <DrawingHandler
           isDrawing={isDrawing}
-          onPointClick={handleMapClick}
+          onPointClick={handleMapClickWrapper}
           onAnalysisClick={(latlng) => {
             setSelectedPoint({ lat: latlng.lat, lon: latlng.lng });
             setShowAnalysis(true);
+            setSearchMarker(null);
           }}
         />
+
+        {/* Search Control */}
+        <SearchControl onLocationSelected={handleLocationSelected} />
+
+        {/* Search Marker */}
+        {searchMarker && (
+          <Marker
+            position={[searchMarker.lat, searchMarker.lng]}
+            icon={searchMarkerIcon}
+          >
+            <Popup>
+              <div className="p-2">
+                <p className="font-semibold text-sm">{searchMarker.label}</p>
+                <button
+                  onClick={() => setSearchMarker(null)}
+                  className="mt-2 text-xs text-red-600 hover:text-red-800"
+                >
+                  Eliminar marcador
+                </button>
+              </div>
+            </Popup>
+          </Marker>
+        )}
 
         {/* Drawing Markers & Lines */}
         {isDrawing && currentPolygon.length > 0 && (
