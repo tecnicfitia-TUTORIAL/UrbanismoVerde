@@ -96,6 +96,7 @@ const Layout: React.FC = () => {
       <div className="flex-1">
         <FullScreenMap
           isDrawing={isDrawing}
+          setIsDrawing={setIsDrawing}
           onCompleteDrawing={handleCompleteDrawing}
           areas={areas}
           onDeleteArea={handleDeleteArea}
