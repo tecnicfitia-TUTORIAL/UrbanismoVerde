@@ -13,8 +13,8 @@ const DashboardContent: React.FC<DashboardContentProps> = ({ areas, onNavigate }
   const stats = {
     zonasCreadas: areas.length,
     areaTotal: areas.reduce((sum, a) => sum + a.areaM2, 0),
-    presupuestosGenerados: 0, // TODO: Implementar cuando haya sistema de presupuestos
-    analisisRealizados: 0 // TODO: Implementar cuando haya sistema de análisis
+    presupuestosGenerados: areas.length, // Un presupuesto simulado por cada zona
+    analisisRealizados: 0 // TODO: Implementar cuando haya sistema de análisis con persistencia
   };
 
   // Obtener últimas 5 zonas

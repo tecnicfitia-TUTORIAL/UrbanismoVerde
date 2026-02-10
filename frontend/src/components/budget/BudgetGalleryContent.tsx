@@ -9,6 +9,10 @@ interface BudgetGalleryContentProps {
   onNavigate: (view: string, data?: any) => void;
 }
 
+// Constantes para el cálculo de presupuestos simulados
+const COST_PER_SQM = 85; // Coste base por metro cuadrado
+const COST_VARIANCE = 200; // Variación aleatoria del coste
+
 const BudgetGalleryContent: React.FC<BudgetGalleryContentProps> = ({
   areas,
   onNavigate
@@ -20,7 +24,7 @@ const BudgetGalleryContent: React.FC<BudgetGalleryContentProps> = ({
     areaNombre: area.nombre,
     areaTipo: area.tipo,
     areaM2: area.areaM2,
-    costeTotal: Math.round(area.areaM2 * 85 + Math.random() * 200), // Simulado
+    costeTotal: Math.round(area.areaM2 * COST_PER_SQM + Math.random() * COST_VARIANCE),
     fechaCreacion: area.fechaCreacion,
     estado: 'finalizado' as const
   }));
