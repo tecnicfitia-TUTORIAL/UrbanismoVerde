@@ -67,3 +67,48 @@ export interface Presupuesto {
   productosAdicionales: MarketplaceProduct[];
   totalFinal: number;
 }
+
+// Interfaces para navegación
+export interface BreadcrumbItem {
+  label: string;
+  path?: string;
+  icon?: React.ReactNode;
+}
+
+export interface SubMenuItem {
+  id: string;
+  label: string;
+  icon: React.ReactNode;
+  view: string;
+  count?: number;
+  active?: boolean;
+}
+
+export interface MenuItem {
+  id: string;
+  icon: React.ReactNode;
+  label: string;
+  view: string;
+  count?: number;
+  disabled?: boolean;
+  subItems?: SubMenuItem[];
+}
+
+// Interfaces para Dashboard
+export interface DashboardStats {
+  zonasCreadas: number;
+  areaTotal: number;
+  presupuestosGenerados: number;
+  analisisRealizados: number;
+}
+
+// Interfaces para análisis IA
+export interface AnalysisResult {
+  id: string;
+  fecha: Date;
+  coordenadas?: [number, number];
+  areaId?: string;
+  greenScore: number;
+  especiesRecomendadas: string[];
+  recomendaciones: string[];
+}
