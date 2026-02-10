@@ -54,7 +54,12 @@ def calculate_perimeter_m(polygon):
 def generate_mock_satellite_image(area_m2):
     """Generate mock satellite image for demo purposes"""
     # Create a mock image with some vegetation patterns
-    size = min(max(int(sqrt(area_m2) / 5), 100), 500)
+    # Constants for image sizing
+    SCALE_FACTOR = 5  # Pixels per meter (controls image resolution)
+    MIN_IMAGE_SIZE = 100  # Minimum image dimension in pixels
+    MAX_IMAGE_SIZE = 500  # Maximum image dimension to limit memory usage
+    
+    size = min(max(int(sqrt(area_m2) / SCALE_FACTOR), MIN_IMAGE_SIZE), MAX_IMAGE_SIZE)
     
     # Create base image with soil color
     img = np.ones((size, size, 3), dtype=np.uint8) * np.array([139, 90, 43], dtype=np.uint8)

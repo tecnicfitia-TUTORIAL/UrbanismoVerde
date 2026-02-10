@@ -35,8 +35,17 @@ function getCachedAnalysis(polygon: GeoJSONPolygon): AnalysisResponse | null {
     const cached = cache.find(entry => {
       if (now - entry.timestamp > CACHE_EXPIRY) return false;
       
-      // Simple comparison - in production, use better polygon matching
-      return JSON.stringify(entry.polygon.coordinates) === JSON.stringify(polygon.coordinates);
+      // Compare polygons using coordinate hash for better performance
+      // Note: This is a simple approach - in production consider using
+      // a spatial hashing library or tolerance-based comparison
+      const entryHash = JSON.stringify(entry.polygon.coordinates.map(ring => 
+        ring.map(coord => coord.map(c => c.toFixed(6)))
+      ));
+      const polygonHash = JSON.stringify(polygon.coordinates.map(ring =>
+        ring.map(coord => coord.map(c => c.toFixed(6)))
+      ));
+      
+      return entryHash === polygonHash;
     });
 
     if (cached) {
@@ -80,9 +89,14 @@ function cacheAnalysis(polygon: GeoJSONPolygon, result: AnalysisResponse): void 
 
 /**
  * Generate mock analysis for fallback
+ * 
+ * Note: This uses a simplified area calculation that doesn't account
+ * for latitude variations. It's sufficient for fallback/offline mode
+ * but the backend Haversine calculation is more accurate.
  */
 function getMockAnalysis(polygon: GeoJSONPolygon): AnalysisResponse {
-  // Calculate approximate area from coordinates
+  // Calculate approximate area from coordinates (simplified for fallback)
+  // For accurate calculations, the backend uses Haversine formula
   const coords = polygon.coordinates[0];
   const area = Math.abs(
     coords.reduce((sum, point, i) => {
@@ -91,7 +105,8 @@ function getMockAnalysis(polygon: GeoJSONPolygon): AnalysisResponse {
     }, 0) / 2
   );
 
-  // Convert degrees to approximate meters (rough estimate)
+  // Convert degrees to approximate meters (rough estimate for fallback)
+  // Note: This doesn't account for latitude - backend calculation is more accurate
   const area_m2 = Math.abs(area * 111000 * 111000);
 
   const mockSpecies: EspecieRecomendada[] = [

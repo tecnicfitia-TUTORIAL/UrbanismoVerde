@@ -77,7 +77,10 @@ const Layout: React.FC = () => {
       return;
     }
 
-    // Calculate area from analysis result if available, otherwise use default calculation
+    // Use area from analysis if available (more accurate Haversine calculation)
+    // Otherwise fallback to local calculation
+    // Note: Backend uses Haversine formula which is more accurate than the local
+    // calcularArea function, especially for larger areas or higher latitudes
     const areaM2 = analysisResult?.area_m2 || calcularArea(tempCoordsRef.current);
 
     const newArea: Area = {
