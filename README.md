@@ -60,6 +60,9 @@ El proyecto sigue el patrón **Clean Architecture** para garantizar:
 - **Mapas:** Leaflet (código abierto) + Google Maps API (opcional)
 - **Estado:** React Context API / Redux Toolkit
 - **Routing:** React Router v6
+- **Base de Datos:** Supabase (PostgreSQL + Auth + Storage)
+- **Cache Local:** IndexedDB (idb) para modo offline
+- **Service Worker:** Soporte offline completo con sincronización automática
 
 ### Backend
 - **Runtime:** Node.js 18+ con Express
@@ -75,14 +78,18 @@ El proyecto sigue el patrón **Clean Architecture** para garantizar:
 - **Análisis Geoespacial:** PostGIS
 
 ### Base de Datos
-- **Principal:** PostgreSQL 15+ con extensión PostGIS
-- **Cache:** Redis
-- **Storage:** AWS S3 / MinIO (imágenes y reportes)
+- **Principal:** Supabase (PostgreSQL 15+ con PostGIS)
+- **Row Level Security:** Políticas de seguridad a nivel de fila
+- **Cache Local:** IndexedDB para soporte offline
+- **Sincronización:** Background sync automático
+- **Storage:** Supabase Storage para imágenes y archivos
 
 ### DevOps
 - **Containerización:** Docker + Docker Compose
 - **CI/CD:** GitHub Actions
-- **Infraestructura:** Terraform (opcional)
+- **Hosting Frontend:** Vercel (con CDN global)
+- **Hosting Backend:** Supabase (managed PostgreSQL)
+- **Infraestructura:** Serverless-first architecture
 
 ---
 
@@ -155,16 +162,55 @@ ecourbe-ai/
 
 ## 🗄️ Esquema de Base de Datos
 
-Ver archivo completo en: `database/schema.sql`
+Ver archivos completos en: `supabase/migrations/`
 
 ### Tablas Principales:
-- **usuarios**: Gestión de usuarios y roles
-- **municipios**: Inventario de municipios
-- **zonas_verdes**: Zonas detectadas (azoteas, solares, etc.)
-- **analisis_ia**: Resultados de análisis con IA
-- **especies_vegetales**: Catálogo de plantas recomendables
-- **proyectos_verde**: Proyectos de reforestación
-- **seguimiento_proyectos**: Bitácora de actividades
+- **municipios**: Inventario de municipios españoles
+- **especies**: Catálogo de especies vegetales para reforestación urbana
+- **zonas_verdes**: Zonas identificadas para proyectos (azoteas, solares, etc.)
+- **analisis**: Análisis de viabilidad de zonas verdes
+- **proyectos**: Proyectos de implementación de zonas verdes
+- **imagenes**: Imágenes satelitales y fotografías de zonas
+
+### Seguridad
+- **Row Level Security (RLS)** habilitado en todas las tablas
+- Políticas de acceso configuradas por tipo de usuario
+- Autenticación mediante JWT tokens
+- Encriptación en tránsito y en reposo
+
+---
+
+## 📴 Modo Offline y Sincronización
+
+EcoUrbe AI incluye soporte completo para modo offline con sincronización automática:
+
+### Características
+- ✅ **Cache Local**: IndexedDB para almacenamiento persistente
+- ✅ **Service Worker**: Funcionamiento offline completo
+- ✅ **Sincronización Automática**: Background sync cada 30 segundos
+- ✅ **Cola de Operaciones**: Las acciones offline se sincronizan automáticamente
+- ✅ **Detección de Conexión**: Respuesta automática a cambios de conectividad
+
+### Cómo Funciona
+
+```typescript
+// 1. La aplicación intenta conectar con Supabase
+// 2. Si no hay conexión, usa cache local (IndexedDB)
+// 3. Las operaciones se guardan en cola de sincronización
+// 4. Cuando vuelve la conexión, se sincronizan automáticamente
+// 5. El usuario puede trabajar sin interrupciones
+
+// Ejemplo de uso:
+const zonas = await zonasVerdesApi.getAll();
+// Devuelve datos de Supabase si hay conexión
+// O datos del cache si está offline
+```
+
+### Service Worker
+- Estrategia **Network First** para API calls
+- Estrategia **Cache First** para assets estáticos
+- Actualización automática en background
+- Soporte para notificaciones de sincronización
 
 ---
 
@@ -173,10 +219,10 @@ Ver archivo completo en: `database/schema.sql`
 ### Prerrequisitos
 
 - Node.js ≥ 18.0.0
-- Python ≥ 3.10
-- PostgreSQL ≥ 15 con PostGIS
+- Python ≥ 3.10 (para AI service)
+- Cuenta en [Supabase](https://supabase.com) (ya configurada)
+- Cuenta en [Vercel](https://vercel.com) (opcional, para deploy)
 - Docker y Docker Compose (opcional)
-- Cuenta de Google Cloud (para Earth Engine API)
 
 ### Instalación Local
 
@@ -185,37 +231,36 @@ Ver archivo completo en: `database/schema.sql`
 git clone https://github.com/tecnicfitia-TUTORIAL/UrbanismoVerde.git
 cd UrbanismoVerde
 
-# 2. Configurar variables de entorno
-cp .env.example .env
-# Editar .env con tus credenciales
+# 2. Configurar Supabase
+# Ver guía detallada en: docs/SETUP_SUPABASE.md
+# - Ejecutar migraciones desde SQL Editor en Supabase Dashboard
+# - Cargar datos de prueba (seed.sql)
 
-# 3. Instalar dependencias del frontend
+# 3. Configurar variables de entorno del frontend
 cd frontend
+cp .env.example .env
+# Las credenciales de Supabase ya están incluidas en .env.example
+
+# 4. Instalar dependencias del frontend
 npm install
 
-# 4. Instalar dependencias del backend
+# 5. Iniciar frontend
+npm run dev
+# Frontend disponible en: http://localhost:3000
+
+# 6. (Opcional) Instalar dependencias del backend
 cd ../backend
 npm install
+npm run dev
+# Backend disponible en: http://localhost:4000
 
-# 5. Configurar base de datos
-npx prisma migrate dev --name init
-npx prisma db seed
-
-# 6. Instalar dependencias del servicio IA (Python)
+# 7. (Opcional) Instalar dependencias del servicio IA
 cd ../ai-service
 python -m venv venv
 source venv/bin/activate  # En Windows: venv\Scripts\activate
 pip install -r requirements.txt
-
-# 7. Iniciar servicios
-# Terminal 1 - Backend
-cd backend && npm run dev
-
-# Terminal 2 - Frontend
-cd frontend && npm run dev
-
-# Terminal 3 - AI Service
-cd ai-service && uvicorn app.main:app --reload
+uvicorn app.main:app --reload
+# AI Service disponible en: http://localhost:8000
 ```
 
 ### Instalación con Docker
@@ -233,23 +278,70 @@ docker-compose up --build
 
 ---
 
+## 🚀 Despliegue en Producción
+
+### Frontend en Vercel
+
+Ver guía completa en: **[docs/DEPLOYMENT_VERCEL.md](./docs/DEPLOYMENT_VERCEL.md)**
+
+```bash
+# Opción 1: Desde Vercel Dashboard
+# 1. Importar repositorio en vercel.com
+# 2. Configurar Root Directory: frontend
+# 3. Agregar variables de entorno
+# 4. Deploy
+
+# Opción 2: Desde CLI
+cd frontend
+vercel
+```
+
+**Variables de entorno requeridas en Vercel**:
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_ANON_KEY`
+- `VITE_API_URL` (opcional)
+- `VITE_AI_SERVICE_URL` (opcional)
+
+### Base de Datos (Supabase)
+
+Ver guía completa en: **[docs/SETUP_SUPABASE.md](./docs/SETUP_SUPABASE.md)**
+
+1. Accede a [Supabase Dashboard](https://app.supabase.com)
+2. El proyecto ya está creado con URL: `https://wxxztdpkwbyvggpwqdgx.supabase.co`
+3. Ejecutar migraciones desde SQL Editor:
+   - `supabase/migrations/001_initial_schema.sql`
+   - `supabase/migrations/002_enable_rls.sql`
+4. Cargar datos de prueba: `supabase/seed.sql`
+
+---
+
 ## 🔑 Configuración de APIs
 
-### Google Earth Engine
+### Supabase (Requerido)
+
+Credenciales ya configuradas en `.env.example`:
+
+```env
+VITE_SUPABASE_URL=https://wxxztdpkwbyvggpwqdgx.supabase.co
+VITE_SUPABASE_ANON_KEY=eyJhbGc...
+```
+
+### Google Earth Engine (Opcional)
 
 1. Crear cuenta en [Google Earth Engine](https://earthengine.google.com/)
 2. Obtener credenciales de servicio
-3. Descargar el archivo JSON de credenciales
-4. Configurar en `.env`:
+3. Configurar en backend `.env`:
 
 ```env
 GOOGLE_EARTH_ENGINE_KEY_PATH=./config/earth-engine-key.json
 ```
 
-### Google Maps API (opcional)
+### Google Maps API (Opcional)
+
+La aplicación usa Leaflet por defecto (código abierto), pero puedes agregar Google Maps:
 
 ```env
-REACT_APP_GOOGLE_MAPS_API_KEY=tu_api_key_aqui
+VITE_GOOGLE_MAPS_API_KEY=tu_api_key_aqui
 ```
 
 ---
@@ -349,13 +441,51 @@ Para más información, consulta la [documentación de Vercel para Vite](https:/
 
 Para más información detallada, consulta:
 
+### Guías de Usuario
 - 📖 **[USAGE.md](USAGE.md)** - Guía de uso del mapa y funcionalidades
 - 🚀 **[QUICKSTART.md](QUICKSTART.md)** - Instalación rápida en 3 pasos
-- 🤝 **[CONTRIBUTING.md](CONTRIBUTING.md)** - Cómo contribuir al proyecto
+
+### Guías Técnicas
 - 📋 **[IMPLEMENTATION.md](IMPLEMENTATION.md)** - Resumen de implementación técnica
+- 🤝 **[CONTRIBUTING.md](CONTRIBUTING.md)** - Cómo contribuir al proyecto
 - 🌱 **[verde.md](verde.md)** - Roadmap, tareas programadas y propuestas
+
+### Guías de Configuración y Despliegue
+- 🔧 **[docs/SETUP_SUPABASE.md](docs/SETUP_SUPABASE.md)** - Configuración de Supabase (DB + RLS + Migraciones)
+- 🚀 **[docs/DEPLOYMENT_VERCEL.md](docs/DEPLOYMENT_VERCEL.md)** - Despliegue en Vercel (Frontend)
+- 🚀 **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)** - Guía general de despliegue
+
+### Seguridad
+- 🔐 **[docs/SECURITY.md](docs/SECURITY.md)** - Guía de seguridad (RLS, Auth, Best Practices)
+
+### Historial
 - 📝 **[docs/CHANGELOG.md](docs/CHANGELOG.md)** - Historial de cambios
-- 🚀 **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)** - Guía completa de despliegue
+
+---
+
+## 🔐 Seguridad
+
+Ver guía completa en: **[docs/SECURITY.md](./docs/SECURITY.md)**
+
+### Características de Seguridad
+
+- ✅ **Row Level Security (RLS)** en todas las tablas
+- ✅ **JWT Authentication** mediante Supabase Auth
+- ✅ **HTTPS/TLS 1.3** en todas las conexiones
+- ✅ **Encriptación** en tránsito y en reposo
+- ✅ **Content Security Policy (CSP)** configurado
+- ✅ **XSS & CSRF Protection** habilitado
+- ✅ **Input Validation** en todos los endpoints
+- ✅ **Rate Limiting** para prevenir abusos
+
+### Políticas de Acceso
+
+| Recurso | Lectura | Creación | Actualización | Eliminación |
+|---------|---------|----------|---------------|-------------|
+| Zonas Verdes | Todos | Autenticados | Propietario | Propietario |
+| Análisis | Todos | Autenticados | Autenticados | Autenticados |
+| Especies | Todos | Autenticados | Autenticados | - |
+| Municipios | Todos | Autenticados | - | - |
 
 ---
 
