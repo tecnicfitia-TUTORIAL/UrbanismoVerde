@@ -3,7 +3,13 @@ import json
 
 
 def calculate_area_simple(coordinates):
-    """Cálculo simple de área en m²"""
+    """Cálculo simple de área en m²
+    
+    NOTA: Este es un cálculo aproximado que no tiene en cuenta las variaciones
+    de latitud. Para cálculos precisos en producción, usar proyecciones geográficas
+    apropiadas o fórmulas que consideren el factor coseno de la latitud.
+    Es suficiente para demostración y áreas pequeñas cerca del ecuador.
+    """
     if len(coordinates) < 3:
         return 0.0
     
@@ -15,7 +21,8 @@ def calculate_area_simple(coordinates):
         x2, y2 = coordinates[(i + 1) % n]
         area += x1 * y2 - x2 * y1
     
-    # Convertir a m² (aproximación para lat/lon)
+    # Convertir a m² (aproximación simple)
+    # Para mayor precisión, usar: cos(center_latitude) * METERS_PER_DEGREE
     METERS_PER_DEGREE = 111000
     return abs(area) * METERS_PER_DEGREE * METERS_PER_DEGREE / 2
 
@@ -167,14 +174,6 @@ class handler(BaseHTTPRequestHandler):
                     }
                 ],
                 'recomendaciones': [
-                    '⚠️ CRÍTICO: Verificar capacidad estructural del edificio',
-                    '⚠️ Revisar impermeabilización antes de instalación',
-                    'Instalar sistema de drenaje perimetral',
-                    'Colocar lámina anti-raíces',
-                    'Sistema de riego por goteo automatizado',
-                    'Solicitar permiso comunidad y licencia municipal'
-                ],
-                'recomendaciones_tecnicas': [
                     '⚠️ CRÍTICO: Verificar capacidad estructural del edificio',
                     '⚠️ Revisar impermeabilización antes de instalación',
                     'Instalar sistema de drenaje perimetral',
