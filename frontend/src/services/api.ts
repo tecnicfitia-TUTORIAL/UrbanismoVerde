@@ -5,9 +5,8 @@
  * Integrates Supabase for backend operations and IndexedDB for offline storage.
  */
 
-import { supabase, TABLES, ZonaVerde, Analisis, Especie, Municipio } from '../config/supabase';
+import { supabase, TABLES, ZonaVerde, Especie } from '../config/supabase';
 import { CacheService } from './cache';
-import { SyncService } from './sync';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 

@@ -9,7 +9,7 @@ import { openDB, DBSchema, IDBPDatabase } from 'idb';
 
 // Database schema definition
 interface EcoUrbeDB extends DBSchema {
-  zonas_verdes: {
+  'zonas_verdes': {
     key: string;
     value: {
       id: string;
@@ -19,7 +19,7 @@ interface EcoUrbeDB extends DBSchema {
     };
     indexes: { 'by-synced': boolean; 'by-timestamp': number };
   };
-  analisis: {
+  'analisis': {
     key: string;
     value: {
       id: string;
@@ -29,7 +29,7 @@ interface EcoUrbeDB extends DBSchema {
     };
     indexes: { 'by-synced': boolean; 'by-timestamp': number };
   };
-  especies: {
+  'especies': {
     key: string;
     value: {
       id: string;
@@ -38,7 +38,7 @@ interface EcoUrbeDB extends DBSchema {
     };
     indexes: { 'by-timestamp': number };
   };
-  sync_queue: {
+  'sync_queue': {
     key: number;
     value: {
       id?: number;
