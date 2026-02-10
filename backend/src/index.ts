@@ -20,7 +20,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Ruta de salud
-app.get('/health', (req: Request, res: Response) => {
+app.get('/health', (_req: Request, res: Response) => {
   res.json({
     status: 'healthy',
     timestamp: new Date().toISOString(),
@@ -29,7 +29,7 @@ app.get('/health', (req: Request, res: Response) => {
 });
 
 // Ruta raíz
-app.get('/', (req: Request, res: Response) => {
+app.get('/', (_req: Request, res: Response) => {
   res.json({
     message: 'EcoUrbe AI Backend API',
     version: '1.0.0',
@@ -41,7 +41,7 @@ app.get('/', (req: Request, res: Response) => {
 });
 
 // Placeholder para rutas API
-app.get('/api/zonas', (req: Request, res: Response) => {
+app.get('/api/zonas', (_req: Request, res: Response) => {
   res.json({
     message: 'Endpoint de zonas verdes - Por implementar',
     data: []
