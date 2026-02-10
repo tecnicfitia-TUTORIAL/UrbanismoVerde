@@ -4,6 +4,9 @@
  * Registers the service worker for offline support and background sync.
  */
 
+// Configuration constants
+const SW_UPDATE_CHECK_INTERVAL = 60000; // 1 minute
+
 export function register(): void {
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
@@ -17,7 +20,7 @@ export function register(): void {
           // Check for updates periodically
           setInterval(() => {
             registration.update();
-          }, 60000); // Check every minute
+          }, SW_UPDATE_CHECK_INTERVAL);
 
           // Listen for updates
           registration.addEventListener('updatefound', () => {

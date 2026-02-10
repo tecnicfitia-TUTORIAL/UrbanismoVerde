@@ -16,12 +16,23 @@ export interface SyncStatus {
   error: string | null;
 }
 
+// Configuration constants
+const DEFAULT_SYNC_INTERVAL = 30000; // 30 seconds
+const MAX_SYNC_RETRIES = 5;
+
 class SyncServiceClass {
-  private syncInterval: number = 30000; // 30 seconds
+  private syncInterval: number;
   private intervalId: NodeJS.Timeout | null = null;
   private isSyncing: boolean = false;
   private lastSyncTime: number | null = null;
   private listeners: Array<(status: SyncStatus) => void> = [];
+
+  constructor() {
+    // Use environment variable or default
+    this.syncInterval = import.meta.env.VITE_SYNC_INTERVAL_MS 
+      ? parseInt(import.meta.env.VITE_SYNC_INTERVAL_MS, 10)
+      : DEFAULT_SYNC_INTERVAL;
+  }
 
   /**
    * Start automatic sync
@@ -154,8 +165,8 @@ class SyncServiceClass {
         }
 
         // Remove if too many retries
-        if (item.retries >= 5 && item.id) {
-          console.error(`Max retries reached for operation, removing from queue`);
+        if (item.retries >= MAX_SYNC_RETRIES && item.id) {
+          console.error(`Max retries (${MAX_SYNC_RETRIES}) reached for operation, removing from queue`);
           await CacheService.removeFromSyncQueue(item.id);
         }
       }
