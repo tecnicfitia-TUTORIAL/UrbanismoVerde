@@ -2,6 +2,11 @@ import React, { useState, useRef } from 'react';
 import Sidebar from './Sidebar';
 import FullScreenMap from '../maps/FullScreenMap';
 import ZoneFormModal from '../modals/ZoneFormModal';
+import DashboardContent from '../dashboard/DashboardContent';
+import ZonesGalleryContent from '../zones/ZonesGalleryContent';
+import ZoneDetailContent from '../zones/ZoneDetailContent';
+import AnalysisWorkflowContent from '../analysis/AnalysisWorkflowContent';
+import BudgetGalleryContent from '../budget/BudgetGalleryContent';
 import { Area, FormData } from '../../types';
 
 // Calcular área usando fórmula de Haversine (aproximación para polígonos pequeños)
@@ -30,6 +35,7 @@ const Layout: React.FC = () => {
   const [areas, setAreas] = useState<Area[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [selectedArea, setSelectedArea] = useState<Area | null>(null);
+  const [currentView, setCurrentView] = useState('dashboard');
   const tempCoordsRef = useRef<[number, number][]>([]);
 
   const handleStartDrawing = () => {
@@ -85,8 +91,77 @@ const Layout: React.FC = () => {
     tempCoordsRef.current = [];
   };
 
+  const handleNavigate = (view: string, data?: any) => {
+    setCurrentView(view);
+    if (data) {
+      setSelectedArea(data);
+    }
+    if (view === 'zonas-create') {
+      setIsDrawing(true);
+    }
+  };
+
+  const handleViewChange = (view: string) => {
+    setCurrentView(view);
+    if (view === 'zonas-create') {
+      handleStartDrawing();
+    }
+  };
+
+  // Render content based on current view
+  const renderContent = () => {
+    switch (currentView) {
+      case 'dashboard':
+        return <DashboardContent areas={areas} onNavigate={handleNavigate} />;
+      
+      case 'zonas-gallery':
+      case 'zonas':
+      case 'zonas-search':
+        return (
+          <ZonesGalleryContent
+            areas={areas}
+            onSelectZone={setSelectedArea}
+            onNavigate={handleNavigate}
+            onDeleteArea={handleDeleteArea}
+          />
+        );
+      
+      case 'zonas-detail':
+        return selectedArea ? (
+          <ZoneDetailContent
+            area={selectedArea}
+            onBack={() => setCurrentView('zonas-gallery')}
+            onNavigate={handleNavigate}
+            onDelete={handleDeleteArea}
+          />
+        ) : null;
+      
+      case 'analisis-new':
+      case 'analisis-point':
+      case 'analisis-zone':
+      case 'analisis':
+      case 'analisis-history':
+        return <AnalysisWorkflowContent areas={areas} onNavigate={handleNavigate} />;
+      
+      case 'presupuestos-gallery':
+      case 'presupuestos':
+        return <BudgetGalleryContent areas={areas} onNavigate={handleNavigate} />;
+      
+      case 'presupuestos-create':
+      case 'presupuestos-detail':
+      case 'zonas-create':
+        // Show map for these views
+        return null;
+      
+      default:
+        return <DashboardContent areas={areas} onNavigate={handleNavigate} />;
+    }
+  };
+
+  const showMap = currentView === 'zonas-create' || currentView === 'presupuestos-create' || currentView === 'presupuestos-detail' || isDrawing;
+
   return (
-    <div className="flex h-screen">
+    <div className="flex h-screen overflow-hidden">
       <Sidebar
         isDrawing={isDrawing}
         onStartDrawing={handleStartDrawing}
@@ -95,16 +170,27 @@ const Layout: React.FC = () => {
         onCenterArea={handleCenterArea}
         selectedArea={selectedArea}
         onSelectArea={setSelectedArea}
+        activeView={currentView}
+        onViewChange={handleViewChange}
       />
-      <div className="flex-1">
-        <FullScreenMap
-          isDrawing={isDrawing}
-          setIsDrawing={setIsDrawing}
-          onCompleteDrawing={handleCompleteDrawing}
-          areas={areas}
-          onDeleteArea={handleDeleteArea}
-        />
-      </div>
+      
+      {showMap ? (
+        <div className="flex-1">
+          <FullScreenMap
+            isDrawing={isDrawing}
+            setIsDrawing={setIsDrawing}
+            onCompleteDrawing={handleCompleteDrawing}
+            areas={areas}
+            onDeleteArea={handleDeleteArea}
+          />
+        </div>
+      ) : (
+        <main className="flex-1 overflow-y-auto bg-gray-50">
+          <div className="transition-opacity duration-200 animate-fade-in">
+            {renderContent()}
+          </div>
+        </main>
+      )}
 
       <ZoneFormModal
         isOpen={showModal}
