@@ -41,10 +41,11 @@ export const analyzeGreenScore = async (
 ): Promise<{ green_score: number; recommendations: string[] }> => {
   const AI_SERVICE_URL = import.meta.env.VITE_AI_SERVICE_URL || 'http://localhost:8000';
   
-  // Construir GeoJSON
+  // Construir GeoJSON - convertir de [lat, lon] a [lon, lat] para GeoJSON
+  // GeoJSON Polygon requiere un array de anillos (rings), donde cada anillo es un array de coordenadas
   const geojson = {
     type: 'Polygon',
-    coordinates: [coordinates.map(coord => [coord[1], coord[0]])] // [lon, lat]
+    coordinates: [coordinates.map(coord => [coord[1], coord[0]])]
   };
   
   const response = await fetch(`${AI_SERVICE_URL}/api/analyze-green-score`, {

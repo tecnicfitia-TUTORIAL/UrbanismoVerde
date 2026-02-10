@@ -1,6 +1,7 @@
 import { MaterialCalculation } from '../types';
 
 // Calcular perímetro de un polígono usando fórmula de Haversine
+// Coordenadas en formato [lat, lon] como se usa en toda la aplicación
 export const calcularPerimetro = (coords: [number, number][]): number => {
   const R = 6371000; // Radio de la Tierra en metros
   let perimetro = 0;
