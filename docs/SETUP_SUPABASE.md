@@ -152,12 +152,16 @@ SELECT
 cp frontend/.env.example frontend/.env
 ```
 
-2. El archivo ya contiene las credenciales correctas:
+2. Edita el archivo `.env` con las credenciales de Supabase:
 
 ```env
 VITE_SUPABASE_URL=https://wxxztdpkwbyvggpwqdgx.supabase.co
-VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind4eHp0ZHBrd2J5dmdncHdxZGd4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzg4ODEwMDAsImV4cCI6MjA1NDQ1NzAwMH0.sb_publishable_ixXatFFRmRZNgvBJVflnjg_V7IQTbnU
+VITE_API_URL=http://localhost:4000
+VITE_AI_SERVICE_URL=http://localhost:8000
 ```
+
+> **Nota de Seguridad**: Estas credenciales son las claves públicas de Supabase (anon key) que están diseñadas para ser usadas en el cliente. La seguridad está garantizada por las políticas RLS (Row Level Security) en la base de datos. Nunca uses la `service_role_key` en el frontend.
 
 ### Obtener las Claves (si es necesario)
 
