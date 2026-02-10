@@ -28,33 +28,39 @@ const Sidebar: React.FC<SidebarProps> = ({
   onCenterArea
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [activeView, setActiveView] = useState<string>('zonas');
 
   const menuItems: MenuItem[] = [
     {
       id: 'dashboard',
       icon: <Home size={20} />,
       label: 'Dashboard',
-      active: false,
+      active: activeView === 'dashboard',
       disabled: true
     },
     {
       id: 'zonas',
       icon: <MapPin size={20} />,
       label: 'Zonas Verdes',
-      active: true
+      active: activeView === 'zonas',
+      onClick: () => setActiveView('zonas')
     },
     {
       id: 'dibujar',
       icon: <PlusCircle size={20} />,
       label: 'Dibujar Nueva Zona',
-      onClick: onStartDrawing,
-      active: isDrawing
+      onClick: () => {
+        setActiveView('dibujar');
+        onStartDrawing();
+      },
+      active: isDrawing || activeView === 'dibujar'
     },
     {
       id: 'analisis',
       icon: <Brain size={20} />,
       label: 'Análisis IA',
-      disabled: true
+      onClick: () => setActiveView('analisis'),
+      active: activeView === 'analisis'
     },
     {
       id: 'estadisticas',
@@ -132,7 +138,7 @@ const Sidebar: React.FC<SidebarProps> = ({
       </nav>
 
       {/* Sección de Zonas Guardadas */}
-      {!isCollapsed && (
+      {!isCollapsed && activeView === 'zonas' && (
         <div className="flex-1 flex flex-col overflow-hidden">
           <div className="p-4 border-b border-gray-200">
             <div className="flex items-center justify-between">
@@ -165,6 +171,31 @@ const Sidebar: React.FC<SidebarProps> = ({
                 />
               ))
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Ayuda Contextual para Análisis IA */}
+      {!isCollapsed && activeView === 'analisis' && (
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <div className="p-4">
+            <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <div className="flex items-start gap-3">
+                <Brain className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-semibold text-blue-900 mb-2">Modo Análisis IA</p>
+                  <p className="text-sm text-blue-800">
+                    Haz clic en cualquier punto del mapa para analizar su potencial de reforestación.
+                  </p>
+                  <ul className="text-xs text-blue-700 mt-2 space-y-1 list-disc list-inside">
+                    <li>Click en el mapa para seleccionar un punto</li>
+                    <li>Se abrirá un panel con las coordenadas</li>
+                    <li>Click en "Analizar Potencial Verde"</li>
+                    <li>Recibe resultados con especies recomendadas</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}

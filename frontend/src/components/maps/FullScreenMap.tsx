@@ -3,6 +3,7 @@ import { MapContainer, TileLayer, Polygon, Popup, useMapEvents, LayersControl } 
 import { LatLng } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Area, coloresPorTipo } from '../../types';
+import { AnalysisPanel } from '../panels/AnalysisPanel';
 
 interface FullScreenMapProps {
   isDrawing: boolean;
@@ -15,11 +16,15 @@ interface FullScreenMapProps {
 const DrawingHandler: React.FC<{
   isDrawing: boolean;
   onPointClick: (latlng: LatLng) => void;
-}> = ({ isDrawing, onPointClick }) => {
+  onAnalysisClick: (latlng: LatLng) => void;
+}> = ({ isDrawing, onPointClick, onAnalysisClick }) => {
   useMapEvents({
     click: (e) => {
       if (isDrawing) {
         onPointClick(e.latlng);
+      } else {
+        // Si no está dibujando, permitir análisis
+        onAnalysisClick(e.latlng);
       }
     }
   });
@@ -34,6 +39,8 @@ const FullScreenMap: React.FC<FullScreenMapProps> = ({
 }) => {
   const [currentPolygon, setCurrentPolygon] = useState<[number, number][]>([]);
   const tempCoordsRef = useRef<[number, number][]>([]);
+  const [selectedPoint, setSelectedPoint] = useState<{ lat: number; lon: number } | null>(null);
+  const [showAnalysis, setShowAnalysis] = useState(false);
 
   // Manejar click en el mapa para agregar punto
   const handleMapClick = (latlng: LatLng) => {
@@ -108,7 +115,14 @@ const FullScreenMap: React.FC<FullScreenMapProps> = ({
         </LayersControl>
 
         {/* Manejador de eventos de dibujo */}
-        <DrawingHandler isDrawing={isDrawing} onPointClick={handleMapClick} />
+        <DrawingHandler
+          isDrawing={isDrawing}
+          onPointClick={handleMapClick}
+          onAnalysisClick={(latlng) => {
+            setSelectedPoint({ lat: latlng.lat, lon: latlng.lng });
+            setShowAnalysis(true);
+          }}
+        />
 
         {/* Polígono en construcción */}
         {currentPolygon.length >= 2 && (
@@ -172,6 +186,17 @@ const FullScreenMap: React.FC<FullScreenMapProps> = ({
             Haz click cerca del primer punto o usa el botón de la barra lateral para completar
           </p>
         </div>
+      )}
+
+      {/* Analysis Panel */}
+      {showAnalysis && (
+        <AnalysisPanel
+          coordinates={selectedPoint}
+          onClose={() => {
+            setShowAnalysis(false);
+            setSelectedPoint(null);
+          }}
+        />
       )}
     </div>
   );

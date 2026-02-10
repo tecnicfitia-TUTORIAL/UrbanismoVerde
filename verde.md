@@ -78,11 +78,28 @@
   - O temporalmente: `noUnusedLocals: false`, `noUnusedParameters: false`
 - **Estimación**: 30 min
 
+#### 5. Implementar Análisis IA Interactivo
+- **Descripción**: Sistema completo de análisis de potencial verde con IA
+- **Componentes**:
+  - `frontend/src/components/panels/AnalysisPanel.tsx` - Panel de resultados
+  - `frontend/src/services/api.ts` - Cliente API
+  - Integración con Leaflet para captura de clicks
+- **Funcionalidades**:
+  - ✅ Click en mapa para seleccionar punto
+  - ✅ Panel lateral con coordenadas
+  - ✅ Botón "Analizar Potencial Verde"
+  - ✅ Loading state con spinner
+  - ✅ Resultados con viabilidad, especies, costes
+  - ✅ Manejo de errores
+- **Backend**: Endpoint `/api/analyze` debe estar implementado
+- **Estimación**: 6 horas
+- **Estado**: ✅ Completado
+
 ---
 
-### P1 - Próximas 2 Semanas
+### P1 - Siguiente Sprint (Alta Prioridad)
 
-#### 5. Análisis de IA Funcional
+#### 6. Análisis de IA Funcional (Backend)
 - **Descripción**: Conectar endpoint de análisis con modelo real
 - **Componentes**:
   - Clasificación de tipo de suelo (visión artificial)
@@ -91,7 +108,54 @@
   - Estimación de costos
 - **Estimación**: 12 horas
 
-#### 6. Gestión de Proyectos
+#### 7. Mejoras de UI/UX en Barra Lateral
+- **Descripción**: Organizar menú con submenús y categorías
+- **Propuestas de Categorías**:
+  
+  **📊 ANÁLISIS**
+  - Análisis IA Individual
+  - Análisis por Zona
+  - Comparador de Zonas
+  - Historial de Análisis
+  
+  **🗺️ GESTIÓN DE ZONAS**
+  - Dibujar Nueva Zona
+  - Zonas Guardadas
+  - Importar GeoJSON/KML
+  - Exportar Datos
+  
+  **🌿 ESPECIES**
+  - Catálogo de Plantas
+  - Filtrar por Clima
+  - Filtrar por Suelo
+  - Especies Nativas vs. Introducidas
+  
+  **📈 ESTADÍSTICAS**
+  - Dashboard General
+  - Impacto Ambiental
+  - Costes Totales
+  - Gráficos y Reportes
+  
+  **👥 PROYECTOS**
+  - Crear Proyecto
+  - Mis Proyectos
+  - Proyectos Compartidos
+  - Seguimiento de Avances
+  
+  **⚙️ CONFIGURACIÓN**
+  - Preferencias de Usuario
+  - Unidades de Medida
+  - Idioma
+  - Tema Claro/Oscuro
+  
+- **Implementación**:
+  - Componente `AccordionMenu.tsx` para submenús colapsables
+  - Iconos consistentes con `lucide-react`
+  - Animaciones suaves con Tailwind
+  - Estado persistente en localStorage
+- **Estimación**: 8 horas
+
+#### 8. Gestión de Proyectos
 - **Descripción**: CRUD completo para proyectos de reforestación
 - **Funcionalidades**:
   - Crear proyecto desde zona analizada
@@ -100,7 +164,7 @@
   - Seguimiento de progreso
 - **Estimación**: 8 horas
 
-#### 7. Dashboard de Administración
+#### 9. Dashboard de Administración
 - **Descripción**: Panel para gestores municipales
 - **Vistas**:
   - Estadísticas globales
