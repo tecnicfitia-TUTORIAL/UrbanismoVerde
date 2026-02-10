@@ -20,10 +20,41 @@ module.exports = {
           500: '#a855f7',
           600: '#9333ea',
           700: '#7e22ce'
+        },
+        blue: {
+          50: '#eff6ff',
+          100: '#dbeafe',
+          500: '#3b82f6',
+          600: '#2563eb'
+        },
+        orange: {
+          50: '#fff7ed',
+          100: '#ffedd5',
+          500: '#f97316',
+          600: '#ea580c'
         }
       },
       width: {
         '280': '280px'
+      },
+      animation: {
+        'fade-in': 'fadeIn 0.3s ease-in',
+        'slide-down': 'slideDown 0.2s ease-out',
+        'slide-up': 'slideUp 0.2s ease-out',
+      },
+      keyframes: {
+        fadeIn: {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' }
+        },
+        slideDown: {
+          '0%': { height: '0', opacity: '0' },
+          '100%': { height: 'auto', opacity: '1' }
+        },
+        slideUp: {
+          '0%': { height: 'auto', opacity: '1' },
+          '100%': { height: '0', opacity: '0' }
+        }
       }
     }
   },
