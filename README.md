@@ -1,277 +1,352 @@
-# 🌱 EcoUrbe AI - Regeneración Urbana Inteligente
+# 🌱 EcoUrbe AI - Plataforma Inteligente de Regeneración Urbana
 
-![License](https://img.shields.io/badge/license-MIT-green)
-![Version](https://img.shields.io/badge/version-1.0.0-blue)
-![Status](https://img.shields.io/badge/status-development-yellow)
+![Version](https://img.shields.io/badge/version-1.0.0-green.svg)
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
+![Node](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)
 
-Plataforma de inteligencia artificial para identificar zonas urbanas grises o abandonadas y proponer planes de reforestación sostenible y de bajo coste.
+## 🎯 Visión del Proyecto
 
-## 📋 Tabla de Contenidos
+**EcoUrbe AI** es una plataforma inteligente de regeneración urbana que utiliza Inteligencia Artificial y datos geoespaciales para identificar zonas grises o abandonadas en ciudades (azoteas, solares vacíos) y proponer planes de reforestación urbana de bajo coste.
 
-- [Características](#características)
-- [Arquitectura](#arquitectura)
-- [Stack Tecnológico](#stack-tecnológico)
-- [Requisitos Previos](#requisitos-previos)
-- [Instalación](#instalación)
-- [Uso](#uso)
-- [Estructura del Proyecto](#estructura-del-proyecto)
-- [API Documentation](#api-documentation)
-- [Contribuir](#contribuir)
+La plataforma está diseñada para ser escalable a nivel gubernamental, permitiendo a municipios y organizaciones transformar espacios urbanos degradados en pulmones verdes mediante:
 
-## ✨ Características
+- 🛰️ Análisis de imágenes satelitales con Google Earth Engine
+- 🤖 Detección automática de zonas candidatas mediante IA
+- 🗺️ Visualización geoespacial interactiva
+- 📊 Análisis de viabilidad basado en exposición solar y tipo de suelo
+- 💰 Estimación de costes y retorno de inversión ambiental
 
-- 🗺️ **Mapa Interactivo**: Interfaz basada en Leaflet para dibujar y visualizar zonas
-- 🤖 **Análisis con IA**: Detección automática de zonas candidatas usando TensorFlow
-- 🌍 **Datos Geoespaciales**: Integración con PostGIS para análisis espacial
-- 📊 **Métricas de Impacto**: Cálculo de CO2 capturado, biodiversidad y beneficios sociales
-- 🌿 **Catálogo de Especies**: Base de datos de especies nativas para cada tipo de suelo
-- 📱 **Responsive Design**: Interfaz adaptable a todos los dispositivos
+---
 
-## 🏗️ Arquitectura
+## 🏗️ Arquitectura del Sistema
 
-El proyecto sigue **Clean Architecture** con 4 capas:
+El proyecto sigue el patrón **Clean Architecture** para garantizar:
+- ✅ Separación de responsabilidades
+- ✅ Testabilidad
+- ✅ Mantenibilidad
+- ✅ Escalabilidad
+
+### Capas de la Arquitectura
 
 ```
-┌─────────────────────────────────────────┐
-│     Presentation Layer (React)          │
-├─────────────────────────────────────────┤
-│     Application Layer (Use Cases)       │
-├─────────────────────────────────────────┤
-│     Domain Layer (Entities & Rules)     │
-├─────────────────────────────────────────┤
-│     Infrastructure (DB, APIs, AI)       │
-└─────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────┐
+│                   PRESENTATION LAYER                    │
+│          (React + Tailwind + Leaflet/Google Maps)       │
+└────────────────────┬────────────────────────────────────┘
+                     │
+┌────────────────────▼────────────────────────────────────┐
+│                   APPLICATION LAYER                     │
+│              (Use Cases + Business Logic)               │
+└────────────────────┬────────────────────────────────────┘
+                     │
+┌────────────────────▼────────────────────────────────────┐
+│                    DOMAIN LAYER                         │
+│            (Entities + Business Rules)                  │
+└────────────────────┬────────────────────────────────────┘
+                     │
+┌────────────────────▼────────────────────────────────────┐
+│                 INFRASTRUCTURE LAYER                    │
+│  (Database + External APIs + AI Models + Repositories)  │
+└─────────────────────────────────────────────────────────┘
 ```
+
+---
 
 ## 🛠️ Stack Tecnológico
 
 ### Frontend
-- **React 18+** con TypeScript
-- **Tailwind CSS** para estilos
-- **Leaflet** para mapas interactivos
-- **Vite** como build tool
+- **Framework:** React 18+ con TypeScript
+- **Estilos:** Tailwind CSS
+- **Mapas:** Leaflet (código abierto) + Google Maps API (opcional)
+- **Estado:** React Context API / Redux Toolkit
+- **Routing:** React Router v6
 
 ### Backend
-- **Node.js 18+** con Express
-- **TypeScript** para type safety
-- **Prisma ORM** para acceso a datos
-- **PostgreSQL 15+** con PostGIS
+- **Runtime:** Node.js 18+ con Express
+- **Lenguaje:** TypeScript
+- **ORM:** Prisma (PostgreSQL)
+- **Validación:** Zod
+- **Autenticación:** JWT + OAuth2
 
-### AI Service
-- **Python 3.10+** con FastAPI
-- **TensorFlow** para modelos de ML
-- **OpenCV** para procesamiento de imágenes
-- **Google Earth Engine API** (integración futura)
+### IA y Datos Geoespaciales
+- **Procesamiento IA:** Python FastAPI (microservicio separado)
+- **Visión Artificial:** TensorFlow / PyTorch
+- **Datos Satelitales:** Google Earth Engine API
+- **Análisis Geoespacial:** PostGIS
+
+### Base de Datos
+- **Principal:** PostgreSQL 15+ con extensión PostGIS
+- **Cache:** Redis
+- **Storage:** AWS S3 / MinIO (imágenes y reportes)
 
 ### DevOps
-- **Docker** + **Docker Compose**
-- **GitHub Actions** para CI/CD
-- **Redis** para caché
+- **Containerización:** Docker + Docker Compose
+- **CI/CD:** GitHub Actions
+- **Infraestructura:** Terraform (opcional)
 
-## 📦 Requisitos Previos
-
-- Docker 20.10+
-- Docker Compose 2.0+
-- Node.js 18+ (para desarrollo local)
-- Python 3.10+ (para desarrollo local)
-
-## 🚀 Instalación
-
-### 1. Clonar el Repositorio
-
-```bash
-git clone https://github.com/tecnicfitia-TUTORIAL/UrbanismoVerde.git
-cd UrbanismoVerde
-```
-
-### 2. Configurar Variables de Entorno
-
-```bash
-cp .env.example .env
-# Editar .env según tu entorno
-```
-
-### 3. Iniciar con Docker Compose
-
-```bash
-docker-compose up --build
-```
-
-Esto iniciará todos los servicios:
-- **Frontend**: http://localhost:3000
-- **Backend**: http://localhost:4000
-- **AI Service**: http://localhost:8000
-- **PostgreSQL**: localhost:5432
-- **Redis**: localhost:6379
-
-### 4. Verificar Instalación
-
-```bash
-# Backend health check
-curl http://localhost:4000/health
-
-# AI Service health check
-curl http://localhost:8000/health
-```
-
-## 💻 Uso
-
-### Desarrollo Local
-
-#### Frontend
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-#### Backend
-```bash
-cd backend
-npm install
-npm run dev
-```
-
-#### AI Service
-```bash
-cd ai-service
-pip install -r requirements.txt
-uvicorn app.main:app --reload
-```
-
-### Usar el Mapa
-
-1. Abre http://localhost:3000
-2. Haz clic en "Dibujar Nueva Zona"
-3. Dibuja un polígono en el mapa
-4. Completa el formulario con datos de la zona
-5. Guarda para agregar el área a la base de datos
+---
 
 ## 📁 Estructura del Proyecto
 
 ```
-UrbanismoVerde/
-├── frontend/                # React + TypeScript + Leaflet
+ecourbe-ai/
+├── frontend/                    # Aplicación React
 │   ├── src/
-│   │   ├── components/     # Componentes React
-│   │   │   └── maps/       # Componentes de mapas
-│   │   ├── App.tsx
-│   │   ├── main.tsx
-│   │   └── index.css
-│   ├── Dockerfile
-│   ├── package.json
-│   └── vite.config.ts
+│   │   ├── components/          # Componentes reutilizables
+│   │   │   ├── common/          # Componentes genéricos
+│   │   │   ├── maps/            # Componentes de mapas
+│   │   │   └── layout/          # Layout y navegación
+│   │   ├── pages/               # Páginas de la aplicación
+│   │   ├── hooks/               # Custom hooks
+│   │   ├── services/            # Llamadas API
+│   │   ├── store/               # Estado global
+│   │   ├── types/               # TypeScript types
+│   │   └── utils/               # Utilidades
+│   ├── public/
+│   └── package.json
 │
-├── backend/                 # Node.js + Express + TypeScript
+├── backend/                     # API Node.js + Express
 │   ├── src/
-│   │   ├── domain/         # Entidades y reglas de dominio
-│   │   │   └── entities/
-│   │   ├── application/    # Casos de uso
-│   │   ├── infrastructure/ # Repositorios, DB
-│   │   └── index.ts
-│   ├── Dockerfile
-│   ├── package.json
-│   └── tsconfig.json
+│   │   ├── domain/              # Entidades y reglas de negocio
+│   │   │   ├── entities/        # Modelos del dominio
+│   │   │   └── interfaces/      # Contratos
+│   │   ├── application/         # Casos de uso
+│   │   │   └── use-cases/
+│   │   ├── infrastructure/      # Implementaciones concretas
+│   │   │   ├── database/        # Prisma + PostgreSQL
+│   │   │   ├── repositories/    # Implementación de repos
+│   │   │   ├── external-apis/   # Google Earth Engine, etc.
+│   │   │   └── ai-service/      # Cliente del servicio IA
+│   │   ├── presentation/        # Controladores y rutas
+│   │   │   ├── controllers/
+│   │   │   ├── routes/
+│   │   │   └── middlewares/
+│   │   └── config/              # Configuración
+│   └── package.json
 │
-├── ai-service/             # Python + FastAPI + TensorFlow
+├── ai-service/                  # Microservicio Python (IA)
 │   ├── app/
-│   │   ├── main.py        # API FastAPI
-│   │   └── models/        # Modelos de ML
-│   ├── Dockerfile
+│   │   ├── models/              # Modelos de ML
+│   │   ├── services/            # Lógica de procesamiento
+│   │   ├── api/                 # Endpoints FastAPI
+│   │   └── utils/               # Utilidades
 │   └── requirements.txt
 │
-├── database/               # PostgreSQL + PostGIS
-│   └── schema.sql         # Schema completo con triggers
+├── database/                    # Esquemas y migraciones
+│   ├── migrations/
+│   └── seeds/
 │
-├── .github/
-│   └── workflows/
-│       └── ci.yml         # CI/CD pipeline
+├── docs/                        # Documentación
+│   ├── architecture/
+│   ├── api/
+│   └── deployment/
 │
-├── docker-compose.yml     # Orquestación de servicios
-├── .env.example          # Variables de entorno
-└── README.md             # Este archivo
+├── docker/                      # Dockerfiles
+│   ├── frontend.Dockerfile
+│   ├── backend.Dockerfile
+│   └── ai-service.Dockerfile
+│
+├── docker-compose.yml
+├── .github/                     # CI/CD workflows
+└── README.md
 ```
 
-## 📚 API Documentation
+---
 
-### Backend API
+## 🗄️ Esquema de Base de Datos
 
-- **GET** `/health` - Health check
-- **GET** `/api/zonas` - Listar zonas verdes
-- **POST** `/api/zonas` - Crear nueva zona
-- **GET** `/api/zonas/:id` - Obtener zona específica
-- **DELETE** `/api/zonas/:id` - Eliminar zona
-
-### AI Service API
-
-- **GET** `/health` - Health check
-- **POST** `/api/analyze-zone` - Analizar zona con IA
-
-Documentación interactiva disponible en: http://localhost:8000/docs
-
-## 🗄️ Base de Datos
-
-El proyecto incluye un schema completo de PostgreSQL con PostGIS:
-
-- **10+ Tablas** con relaciones bien definidas
-- **Triggers automáticos** para cálculo de centroides y áreas
-- **Índices espaciales GiST** para consultas geoespaciales optimizadas
-- **Tipos enumerados** para garantizar consistencia de datos
-- **Datos semilla** con especies vegetales mediterráneas
+Ver archivo completo en: `database/schema.sql`
 
 ### Tablas Principales:
+- **usuarios**: Gestión de usuarios y roles
+- **municipios**: Inventario de municipios
+- **zonas_verdes**: Zonas detectadas (azoteas, solares, etc.)
+- **analisis_ia**: Resultados de análisis con IA
+- **especies_vegetales**: Catálogo de plantas recomendables
+- **proyectos_verde**: Proyectos de reforestación
+- **seguimiento_proyectos**: Bitácora de actividades
 
-1. `usuarios` - Gestión de usuarios y roles
-2. `municipios` - Límites administrativos
-3. `zonas_verdes` - Zonas para reforestación
-4. `analisis_ia` - Resultados de análisis de IA
-5. `especies_vegetales` - Catálogo de plantas
-6. `proyectos_verde` - Proyectos de reforestación
-7. `proyecto_especies` - Relación proyectos-especies
-8. `seguimiento_proyectos` - Tracking de actividades
-9. `metricas_impacto` - Impacto ambiental y social
-10. `auditoria` - Registro de auditoría
+---
+
+## 🚀 Instalación y Configuración
+
+### Prerrequisitos
+
+- Node.js ≥ 18.0.0
+- Python ≥ 3.10
+- PostgreSQL ≥ 15 con PostGIS
+- Docker y Docker Compose (opcional)
+- Cuenta de Google Cloud (para Earth Engine API)
+
+### Instalación Local
+
+```bash
+# 1. Clonar el repositorio
+git clone https://github.com/tecnicfitia-TUTORIAL/UrbanismoVerde.git
+cd UrbanismoVerde
+
+# 2. Configurar variables de entorno
+cp .env.example .env
+# Editar .env con tus credenciales
+
+# 3. Instalar dependencias del frontend
+cd frontend
+npm install
+
+# 4. Instalar dependencias del backend
+cd ../backend
+npm install
+
+# 5. Configurar base de datos
+npx prisma migrate dev --name init
+npx prisma db seed
+
+# 6. Instalar dependencias del servicio IA (Python)
+cd ../ai-service
+python -m venv venv
+source venv/bin/activate  # En Windows: venv\Scripts\activate
+pip install -r requirements.txt
+
+# 7. Iniciar servicios
+# Terminal 1 - Backend
+cd backend && npm run dev
+
+# Terminal 2 - Frontend
+cd frontend && npm run dev
+
+# Terminal 3 - AI Service
+cd ai-service && uvicorn app.main:app --reload
+```
+
+### Instalación con Docker
+
+```bash
+# Construir y levantar todos los servicios
+docker-compose up --build
+
+# La aplicación estará disponible en:
+# - Frontend: http://localhost:3000
+# - Backend API: http://localhost:4000
+# - AI Service: http://localhost:8000
+# - PostgreSQL: localhost:5432
+```
+
+---
+
+## 🔑 Configuración de APIs
+
+### Google Earth Engine
+
+1. Crear cuenta en [Google Earth Engine](https://earthengine.google.com/)
+2. Obtener credenciales de servicio
+3. Descargar el archivo JSON de credenciales
+4. Configurar en `.env`:
+
+```env
+GOOGLE_EARTH_ENGINE_KEY_PATH=./config/earth-engine-key.json
+```
+
+### Google Maps API (opcional)
+
+```env
+REACT_APP_GOOGLE_MAPS_API_KEY=tu_api_key_aqui
+```
+
+---
+
+## 📊 Casos de Uso Principales
+
+1. **Detección Automática de Zonas**
+   - El sistema analiza imágenes satelitales de una ciudad
+   - Identifica azoteas, solares y espacios abandonados
+   - Calcula área, exposición solar y viabilidad
+
+2. **Análisis de Viabilidad con IA**
+   - Procesa tipo de suelo mediante visión artificial
+   - Calcula horas de sol disponibles
+   - Recomienda especies vegetales óptimas
+   - Estima costes de implementación
+
+3. **Planificación de Proyectos**
+   - Permite a municipios crear proyectos de reforestación
+   - Gestiona presupuestos y recursos
+   - Realiza seguimiento de la ejecución
+
+4. **Visualización Geoespacial**
+   - Mapa interactivo con capas de información
+   - Filtros por tipo de zona, viabilidad, estado
+   - Exportación de datos a GeoJSON/KML
+
+---
 
 ## 🧪 Testing
 
 ```bash
-# Backend tests
-cd backend
-npm test
+# Tests unitarios - Backend
+cd backend && npm test
 
-# Frontend tests
-cd frontend
-npm test
+# Tests unitarios - Frontend
+cd frontend && npm test
 
-# AI Service tests
-cd ai-service
-pytest
+# Tests de integración
+npm run test:integration
+
+# Tests E2E
+npm run test:e2e
 ```
 
-## 🤝 Contribuir
+---
+
+## 📚 Documentación
+
+- [Guía de Arquitectura](./docs/architecture/README.md)
+- [API Documentation](./docs/api/README.md) (Swagger/OpenAPI)
+- [Guía de Despliegue](./docs/deployment/README.md)
+- [Contribución](./CONTRIBUTING.md)
+
+---
+
+## 🤝 Contribuciones
 
 Las contribuciones son bienvenidas. Por favor:
 
 1. Fork el proyecto
-2. Crea una rama para tu feature (`git checkout -b feature/AmazingFeature`)
+2. Crea una rama feature (`git checkout -b feature/AmazingFeature`)
 3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
 4. Push a la rama (`git push origin feature/AmazingFeature`)
 5. Abre un Pull Request
 
+---
+
 ## 📄 Licencia
 
-Este proyecto está bajo la Licencia MIT. Ver `LICENSE` para más detalles.
-
-## 👥 Autores
-
-- **EcoUrbe Team** - [tecnicfitia-TUTORIAL](https://github.com/tecnicfitia-TUTORIAL)
-
-## 🙏 Agradecimientos
-
-- OpenStreetMap por los datos de mapas
-- ESRI por imágenes satelitales
-- Comunidad de código abierto
+Este proyecto está bajo la licencia MIT. Ver `LICENSE` para más información.
 
 ---
 
-Hecho con 💚 para un futuro más verde
+## 👥 Equipo
+
+**Arquitecto de Software Senior**  
+Especialista en Tecnologías Geoespaciales e IA
+
+---
+
+## 🌍 Roadmap
+
+- [ ] **v1.0** - MVP con detección básica y visualización
+- [ ] **v1.1** - Integración completa de Google Earth Engine
+- [ ] **v1.2** - Modelos de IA personalizados para detección de suelo
+- [ ] **v2.0** - Dashboard para gestión municipal
+- [ ] **v2.1** - App móvil para ciudadanos
+- [ ] **v3.0** - Marketplace de especies vegetales y proveedores
+
+---
+
+## 📧 Contacto
+
+Para consultas gubernamentales o implementaciones a gran escala:  
+**Email:** ecourbe-ai@example.com
+
+---
+
+**EcoUrbe AI** - Transformando ciudades grises en pulmones verdes 🌱
