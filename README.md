@@ -297,6 +297,54 @@ npm run test:e2e
 
 ---
 
+## 🚀 Despliegue en Vercel
+
+El frontend de la aplicación está configurado para desplegarse fácilmente en Vercel.
+
+### Despliegue Automático
+
+1. **Conecta tu repositorio con Vercel:**
+   - Ve a [vercel.com](https://vercel.com)
+   - Importa tu repositorio de GitHub
+   - Vercel detectará automáticamente la configuración
+
+2. **Configuración del Proyecto:**
+   - **Root Directory:** `frontend`
+   - **Framework Preset:** Vite (detectado automáticamente)
+   - **Build Command:** `npm run build`
+   - **Output Directory:** `dist`
+   - **Install Command:** `npm install`
+
+### Variables de Entorno
+
+Configura las siguientes variables en el dashboard de Vercel:
+
+```
+VITE_API_URL=https://tu-backend-url.com
+VITE_AI_SERVICE_URL=https://tu-ai-service-url.com
+```
+
+### Verificación Post-Deploy
+
+Después del despliegue, verifica que:
+
+- ✅ La URL raíz muestra la aplicación correctamente
+- ✅ No hay errores 404
+- ✅ Los assets estáticos se cargan correctamente
+- ✅ El mapa de Leaflet se renderiza
+- ✅ La navegación entre rutas funciona sin errores
+
+### Archivos de Configuración
+
+El proyecto incluye los siguientes archivos de configuración para Vercel:
+
+- **`frontend/vercel.json`**: Configuración de rewrites y headers
+- **`.vercelignore`**: Archivos excluidos del despliegue
+
+Para más información, consulta la [documentación de Vercel para Vite](https://vercel.com/docs/frameworks/vite).
+
+---
+
 ## 📚 Documentación
 
 - [Guía de Arquitectura](./docs/architecture/README.md)
