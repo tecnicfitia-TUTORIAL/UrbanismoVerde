@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { MapContainer, TileLayer, Polygon, Popup, useMapEvents, LayersControl } from 'react-leaflet';
 import { LatLng } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -45,37 +45,32 @@ const FullScreenMap: React.FC<FullScreenMapProps> = ({
   const tempCoordsRef = useRef<[number, number][]>([]);
   const [selectedPoint, setSelectedPoint] = useState<{ lat: number; lon: number } | null>(null);
   const [showAnalysis, setShowAnalysis] = useState(false);
-  const [showModal, setShowModal] = useState(false);
 
   // Deshacer último punto
-  const handleUndoPoint = () => {
-    if (currentPolygon.length > 0) {
-      setCurrentPolygon(prev => prev.slice(0, -1));
-    }
-  };
+  const handleUndoPoint = useCallback(() => {
+    setCurrentPolygon(prev => prev.length > 0 ? prev.slice(0, -1) : prev);
+  }, []);
 
   // Reiniciar todo
-  const handleResetDrawing = () => {
+  const handleResetDrawing = useCallback(() => {
     setCurrentPolygon([]);
     setIsDrawing(true);
-  };
+  }, [setIsDrawing]);
 
   // Cancelar dibujo
-  const handleCancelDrawing = () => {
+  const handleCancelDrawing = useCallback(() => {
     setCurrentPolygon([]);
     setIsDrawing(false);
-  };
+  }, [setIsDrawing]);
 
-  // Completar polígono (modificar función existente)
-  const handleCompleteDrawing = () => {
+  // Completar polígono
+  const handleCompleteDrawing = useCallback(() => {
     if (currentPolygon.length >= 3) {
       onCompleteDrawing(currentPolygon);
       setCurrentPolygon([]);
       setIsDrawing(false);
-    } else {
-      alert('Necesitas al menos 3 puntos para crear un área válida');
     }
-  };
+  }, [currentPolygon, onCompleteDrawing, setIsDrawing]);
 
   // Manejar click en el mapa para agregar punto
   const handleMapClick = (latlng: LatLng) => {
@@ -114,7 +109,7 @@ const FullScreenMap: React.FC<FullScreenMapProps> = ({
 
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [isDrawing, currentPolygon]);
+  }, [isDrawing, currentPolygon, handleUndoPoint, handleCancelDrawing, handleCompleteDrawing]);
 
   // Reiniciar el polígono actual cuando se cancela el dibujo
   React.useEffect(() => {
