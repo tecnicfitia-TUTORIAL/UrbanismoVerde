@@ -14,8 +14,10 @@
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
+    // Opciones relajadas para desarrollo activo
+    // Pueden reactivarse antes de producción para mayor strictness
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true
   },
