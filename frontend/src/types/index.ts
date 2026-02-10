@@ -28,3 +28,42 @@ export const coloresPorTipo: Record<TipoZona, string> = {
   zona_industrial: '#6b7280',
   otro: '#14b8a6'
 };
+
+// Interfaz para materiales calculados
+export interface MaterialCalculation {
+  sustrato: {
+    volumenM3: number;
+    bolsas: number;
+    coste: number;
+  };
+  riego: {
+    metrosLineales: number;
+    coste: number;
+  };
+  plantas: {
+    cantidad: number;
+    coste: number;
+  };
+  total: number;
+}
+
+// Interfaz para productos del marketplace
+export interface MarketplaceProduct {
+  id: string;
+  nombre: string;
+  descripcion: string;
+  precio: number;
+  categoria: 'riego' | 'semillas' | 'sustrato' | 'herramientas';
+  badge?: string;
+  enPresupuesto?: boolean;
+}
+
+// Interfaz para presupuesto completo
+export interface Presupuesto {
+  id: string;
+  areaId: string;
+  fechaCreacion: Date;
+  materiales: MaterialCalculation;
+  productosAdicionales: MarketplaceProduct[];
+  totalFinal: number;
+}

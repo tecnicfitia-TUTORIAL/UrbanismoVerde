@@ -34,3 +34,28 @@ export const api = {
     return response.json();
   }
 };
+
+// Función para enviar polígono al servicio de IA
+export const analyzeGreenScore = async (
+  coordinates: [number, number][]
+): Promise<{ green_score: number; recommendations: string[] }> => {
+  const AI_SERVICE_URL = import.meta.env.VITE_AI_SERVICE_URL || 'http://localhost:8000';
+  
+  // Construir GeoJSON
+  const geojson = {
+    type: 'Polygon',
+    coordinates: [coordinates.map(coord => [coord[1], coord[0]])] // [lon, lat]
+  };
+  
+  const response = await fetch(`${AI_SERVICE_URL}/api/analyze-green-score`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ polygon: geojson })
+  });
+  
+  if (!response.ok) {
+    throw new Error(`Error ${response.status}: ${await response.text()}`);
+  }
+  
+  return response.json();
+};

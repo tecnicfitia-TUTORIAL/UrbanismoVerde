@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Home, MapPin, PlusCircle, Brain, BarChart3, Settings, Menu, X } from 'lucide-react';
+import { Home, MapPin, PlusCircle, Brain, BarChart3, Settings, Menu, X, Euro } from 'lucide-react';
 import { Area } from '../../types';
 import ZoneCard from '../cards/ZoneCard';
+import MaterialsPanel from '../panels/MaterialsPanel';
 
 interface SidebarProps {
   isDrawing: boolean;
@@ -9,6 +10,8 @@ interface SidebarProps {
   areas: Area[];
   onDeleteArea: (id: string) => void;
   onCenterArea: (coords: [number, number][]) => void;
+  selectedArea: Area | null;
+  onSelectArea: (area: Area | null) => void;
 }
 
 interface MenuItem {
@@ -25,7 +28,9 @@ const Sidebar: React.FC<SidebarProps> = ({
   onStartDrawing,
   areas,
   onDeleteArea,
-  onCenterArea
+  onCenterArea,
+  selectedArea,
+  onSelectArea
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activeView, setActiveView] = useState<string>('zonas');
@@ -61,6 +66,13 @@ const Sidebar: React.FC<SidebarProps> = ({
       label: 'Análisis IA',
       onClick: () => setActiveView('analisis'),
       active: activeView === 'analisis'
+    },
+    {
+      id: 'presupuestos',
+      icon: <Euro size={20} />,
+      label: 'Presupuestos',
+      onClick: () => setActiveView('presupuestos'),
+      active: activeView === 'presupuestos'
     },
     {
       id: 'estadisticas',
@@ -204,6 +216,52 @@ const Sidebar: React.FC<SidebarProps> = ({
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Vista de Presupuestos */}
+      {!isCollapsed && activeView === 'presupuestos' && (
+        <div className="flex-1 flex flex-col overflow-hidden">
+          {selectedArea ? (
+            <MaterialsPanel 
+              area={selectedArea}
+              onClose={() => onSelectArea(null)}
+            />
+          ) : (
+            <div className="p-4">
+              <div className="p-4 bg-primary-50 rounded-lg border border-primary-200">
+                <div className="flex items-start gap-3">
+                  <Euro className="w-5 h-5 text-primary-600 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-semibold text-primary-900 mb-2">Presupuestos y Materiales</p>
+                    <p className="text-sm text-primary-800 mb-3">
+                      Selecciona una zona guardada para ver su presupuesto detallado y productos recomendados.
+                    </p>
+                    {areas.length > 0 && (
+                      <div className="space-y-2">
+                        <p className="text-xs text-primary-700 font-semibold">Zonas disponibles:</p>
+                        {areas.map((area) => (
+                          <button
+                            key={area.id}
+                            onClick={() => onSelectArea(area)}
+                            className="w-full text-left px-3 py-2 bg-white rounded-lg hover:bg-primary-100 transition-colors border border-primary-200"
+                          >
+                            <p className="text-sm font-semibold text-gray-800">{area.nombre}</p>
+                            <p className="text-xs text-gray-600">{area.areaM2.toFixed(2)} m²</p>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    {areas.length === 0 && (
+                      <p className="text-xs text-primary-700 mt-2">
+                        No hay zonas guardadas. Dibuja una nueva zona para comenzar.
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
