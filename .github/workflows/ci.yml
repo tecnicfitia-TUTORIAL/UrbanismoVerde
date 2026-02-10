@@ -150,4 +150,4 @@ jobs:
           cache-to: type=gha,mode=max
       
       - name: Verify docker-compose config
-        run: docker-compose config
+        run: docker compose config
