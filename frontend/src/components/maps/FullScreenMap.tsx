@@ -1,12 +1,15 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { MapContainer, TileLayer, Polygon, Popup, useMapEvents, LayersControl } from 'react-leaflet';
 import { LatLng } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Area, coloresPorTipo } from '../../types';
 import { AnalysisPanel } from '../panels/AnalysisPanel';
+import { DrawingToolsPanel } from '../panels/DrawingToolsPanel';
+import { DrawingMarkers } from './DrawingMarker';
 
 interface FullScreenMapProps {
   isDrawing: boolean;
+  setIsDrawing: (value: boolean) => void;
   onCompleteDrawing: (coords: [number, number][]) => void;
   areas: Area[];
   onDeleteArea: (id: string) => void;
@@ -33,6 +36,7 @@ const DrawingHandler: React.FC<{
 
 const FullScreenMap: React.FC<FullScreenMapProps> = ({
   isDrawing,
+  setIsDrawing,
   onCompleteDrawing,
   areas,
   onDeleteArea
@@ -42,36 +46,75 @@ const FullScreenMap: React.FC<FullScreenMapProps> = ({
   const [selectedPoint, setSelectedPoint] = useState<{ lat: number; lon: number } | null>(null);
   const [showAnalysis, setShowAnalysis] = useState(false);
 
+  // Deshacer último punto
+  const handleUndoPoint = useCallback(() => {
+    setCurrentPolygon(prev => prev.length > 0 ? prev.slice(0, -1) : prev);
+  }, []);
+
+  // Reiniciar todo
+  const handleResetDrawing = useCallback(() => {
+    setCurrentPolygon([]);
+    setIsDrawing(true);
+  }, [setIsDrawing]);
+
+  // Cancelar dibujo
+  const handleCancelDrawing = useCallback(() => {
+    setCurrentPolygon([]);
+    setIsDrawing(false);
+  }, [setIsDrawing]);
+
+  // Completar polígono
+  const handleCompleteDrawing = useCallback(() => {
+    if (currentPolygon.length >= 3) {
+      onCompleteDrawing(currentPolygon);
+      setCurrentPolygon([]);
+      setIsDrawing(false);
+    }
+  }, [currentPolygon, onCompleteDrawing, setIsDrawing]);
+
   // Manejar click en el mapa para agregar punto
   const handleMapClick = (latlng: LatLng) => {
     const newPoint: [number, number] = [latlng.lat, latlng.lng];
-    const updatedCoords = [...tempCoordsRef.current, newPoint];
-    tempCoordsRef.current = updatedCoords;
-    setCurrentPolygon(updatedCoords);
-
-    // Auto-completar si se hace doble click (más de 2 puntos y se vuelve al inicio)
-    if (updatedCoords.length >= 3) {
-      const firstPoint = updatedCoords[0];
-      const lastPoint = newPoint;
-      const distance = Math.sqrt(
-        Math.pow(firstPoint[0] - lastPoint[0], 2) +
-        Math.pow(firstPoint[1] - lastPoint[1], 2)
-      );
-      
-      // Si el último punto está muy cerca del primero, completar automáticamente
-      if (distance < 0.0001) {
-        onCompleteDrawing(updatedCoords.slice(0, -1)); // Excluir el último punto duplicado
-        setCurrentPolygon([]);
-        tempCoordsRef.current = [];
-      }
-    }
+    setCurrentPolygon(prev => [...prev, newPoint]);
   };
+
+  // Hook para atajos de teclado
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (!isDrawing) return;
+
+      switch(e.key) {
+        case 'z':
+          if (e.ctrlKey || e.metaKey) {
+            e.preventDefault();
+            handleUndoPoint();
+          }
+          break;
+        case 'Escape':
+          e.preventDefault();
+          handleCancelDrawing();
+          break;
+        case 'Enter':
+          if (currentPolygon.length >= 3) {
+            e.preventDefault();
+            handleCompleteDrawing();
+          }
+          break;
+        case 'Backspace':
+          e.preventDefault();
+          handleUndoPoint();
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [isDrawing, currentPolygon, handleUndoPoint, handleCancelDrawing, handleCompleteDrawing]);
 
   // Reiniciar el polígono actual cuando se cancela el dibujo
   React.useEffect(() => {
     if (!isDrawing) {
       setCurrentPolygon([]);
-      tempCoordsRef.current = [];
     }
   }, [isDrawing]);
 
@@ -123,6 +166,16 @@ const FullScreenMap: React.FC<FullScreenMapProps> = ({
             setShowAnalysis(true);
           }}
         />
+
+        {/* Drawing Markers & Lines */}
+        {isDrawing && currentPolygon.length > 0 && (
+          <DrawingMarkers
+            points={currentPolygon}
+            onRemovePoint={(idx) => {
+              setCurrentPolygon(prev => prev.filter((_, i) => i !== idx));
+            }}
+          />
+        )}
 
         {/* Polígono en construcción */}
         {currentPolygon.length >= 2 && (
@@ -176,17 +229,16 @@ const FullScreenMap: React.FC<FullScreenMapProps> = ({
         ))}
       </MapContainer>
 
-      {/* Indicador de modo de dibujo */}
-      {isDrawing && (
-        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-[1000] bg-primary-500 text-white px-4 py-2 rounded-lg shadow-lg">
-          <p className="text-sm font-semibold">
-            🖊️ Modo Dibujo Activo - Haz click para agregar puntos ({currentPolygon.length})
-          </p>
-          <p className="text-xs mt-1">
-            Haz click cerca del primer punto o usa el botón de la barra lateral para completar
-          </p>
-        </div>
-      )}
+      {/* Drawing Tools Panel */}
+      <DrawingToolsPanel
+        isDrawing={isDrawing}
+        pointCount={currentPolygon.length}
+        onUndo={handleUndoPoint}
+        onReset={handleResetDrawing}
+        onComplete={handleCompleteDrawing}
+        onCancel={handleCancelDrawing}
+        minPoints={3}
+      />
 
       {/* Analysis Panel */}
       {showAnalysis && (

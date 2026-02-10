@@ -109,7 +109,6 @@ const Sidebar: React.FC<SidebarProps> = ({
         </button>
       </div>
 
-      {/* Menú de Navegación */}
       <nav className="flex-shrink-0 border-b border-gray-200">
         {menuItems.map((item) => (
           <button
@@ -117,7 +116,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             onClick={item.onClick}
             disabled={item.disabled}
             className={`
-              w-full flex items-center px-4 py-3 transition-colors
+              w-full flex items-center px-4 py-3 transition-colors relative
               ${item.active ? 'bg-primary-50 text-primary-600 border-l-4 border-primary-600' : 'text-gray-700 hover:bg-gray-50'}
               ${item.disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
               ${isCollapsed ? 'justify-center' : 'space-x-3'}
@@ -132,6 +131,14 @@ const Sidebar: React.FC<SidebarProps> = ({
             )}
             {!isCollapsed && item.disabled && (
               <span className="ml-auto text-xs text-gray-400">(próximo)</span>
+            )}
+            {!isCollapsed && item.id === 'dibujar' && isDrawing && (
+              <span className="absolute right-2 top-1/2 -translate-y-1/2">
+                <span className="flex h-3 w-3">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+                </span>
+              </span>
             )}
           </button>
         ))}
