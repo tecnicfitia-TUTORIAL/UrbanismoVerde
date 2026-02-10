@@ -112,3 +112,30 @@ export interface AnalysisResult {
   especiesRecomendadas: string[];
   recomendaciones: string[];
 }
+
+// GeoJSON types for AI analysis
+export interface GeoJSONPolygon {
+  type: 'Polygon';
+  coordinates: number[][][];  // [[[lon, lat], [lon, lat], ...]]
+}
+
+// AI Analysis Response from API
+export interface EspecieRecomendada {
+  nombre_comun: string;
+  nombre_cientifico: string;
+  tipo: string;
+  viabilidad: number;  // 0-1
+  razon: string;
+}
+
+export interface AnalysisResponse {
+  success: boolean;
+  green_score: number;        // 0-100
+  area_m2: number;
+  perimetro_m: number;
+  tags: string[];            // ["Alta radiación solar", ...]
+  especies_recomendadas: EspecieRecomendada[];
+  recomendaciones: string[];
+  processing_time: number;
+  error?: string;
+}
