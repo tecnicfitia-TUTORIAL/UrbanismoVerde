@@ -345,12 +345,17 @@ Para más información, consulta la [documentación de Vercel para Vite](https:/
 
 ---
 
-## 📚 Documentación
+## 📚 Documentación Completa
 
-- [Guía de Arquitectura](./docs/architecture/README.md)
-- [API Documentation](./docs/api/README.md) (Swagger/OpenAPI)
-- [Guía de Despliegue](./docs/deployment/README.md)
-- [Contribución](./CONTRIBUTING.md)
+Para más información detallada, consulta:
+
+- 📖 **[USAGE.md](USAGE.md)** - Guía de uso del mapa y funcionalidades
+- 🚀 **[QUICKSTART.md](QUICKSTART.md)** - Instalación rápida en 3 pasos
+- 🤝 **[CONTRIBUTING.md](CONTRIBUTING.md)** - Cómo contribuir al proyecto
+- 📋 **[IMPLEMENTATION.md](IMPLEMENTATION.md)** - Resumen de implementación técnica
+- 🌱 **[verde.md](verde.md)** - Roadmap, tareas programadas y propuestas
+- 📝 **[docs/CHANGELOG.md](docs/CHANGELOG.md)** - Historial de cambios
+- 🚀 **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)** - Guía completa de despliegue
 
 ---
 
