@@ -7,7 +7,9 @@ import ZonesGalleryContent from '../zones/ZonesGalleryContent';
 import ZoneDetailContent from '../zones/ZoneDetailContent';
 import AnalysisWorkflowContent from '../analysis/AnalysisWorkflowContent';
 import BudgetGalleryContent from '../budget/BudgetGalleryContent';
+import { AnalysisResults } from '../analysis/AnalysisResults';
 import { Area, FormData } from '../../types';
+import { useAnalysis } from '../../hooks/useAnalysis';
 
 // Calcular área usando fórmula de Haversine (aproximación para polígonos pequeños)
 const calcularArea = (coords: [number, number][]): number => {
@@ -37,21 +39,36 @@ const Layout: React.FC = () => {
   const [selectedArea, setSelectedArea] = useState<Area | null>(null);
   const [currentView, setCurrentView] = useState('dashboard');
   const tempCoordsRef = useRef<[number, number][]>([]);
+  
+  // AI Analysis state
+  const { analyze, isAnalyzing, result: analysisResult, reset: resetAnalysis } = useAnalysis();
+  const [showAnalysisResults, setShowAnalysisResults] = useState(false);
 
   const handleStartDrawing = () => {
     setIsDrawing(true);
     tempCoordsRef.current = [];
   };
 
-  const handleCompleteDrawing = (coords: [number, number][]) => {
+  const handleCompleteDrawing = async (coords: [number, number][]) => {
     if (coords.length < 3) {
       alert('Necesitas al menos 3 puntos para crear un área');
       setIsDrawing(false);
       return;
     }
+    
     tempCoordsRef.current = coords;
     setIsDrawing(false);
-    setShowModal(true);
+    
+    // Automatically analyze the drawn polygon
+    console.log('🎯 Polígono completado, iniciando análisis automático...');
+    try {
+      await analyze(coords);
+      setShowAnalysisResults(true);
+    } catch (error) {
+      console.error('Error en análisis automático:', error);
+      // If analysis fails, still allow user to save the zone
+      setShowModal(true);
+    }
   };
 
   const handleSaveArea = (formData: FormData) => {
@@ -60,12 +77,15 @@ const Layout: React.FC = () => {
       return;
     }
 
+    // Calculate area from analysis result if available, otherwise use default calculation
+    const areaM2 = analysisResult?.area_m2 || calcularArea(tempCoordsRef.current);
+
     const newArea: Area = {
       id: `area-${Date.now()}`,
       nombre: formData.nombre,
       tipo: formData.tipo,
       coordenadas: tempCoordsRef.current,
-      areaM2: calcularArea(tempCoordsRef.current),
+      areaM2: areaM2,
       notas: formData.notas || undefined,
       fechaCreacion: new Date()
     };
@@ -73,6 +93,23 @@ const Layout: React.FC = () => {
     setAreas([...areas, newArea]);
     setShowModal(false);
     tempCoordsRef.current = [];
+    
+    // Reset analysis
+    resetAnalysis();
+    setShowAnalysisResults(false);
+  };
+  
+  const handleGenerateBudget = () => {
+    console.log('💰 Generando presupuesto con datos del análisis...');
+    // Close analysis results and open zone form modal to save first
+    setShowAnalysisResults(false);
+    setShowModal(true);
+  };
+  
+  const handleCloseAnalysisResults = () => {
+    setShowAnalysisResults(false);
+    // Give user option to save zone without analysis
+    setShowModal(true);
   };
 
   const handleDeleteArea = (id: string) => {
@@ -89,6 +126,8 @@ const Layout: React.FC = () => {
   const handleCloseModal = () => {
     setShowModal(false);
     tempCoordsRef.current = [];
+    resetAnalysis();
+    setShowAnalysisResults(false);
   };
 
   const handleNavigate = (view: string, data?: any) => {
@@ -175,7 +214,7 @@ const Layout: React.FC = () => {
       />
       
       {showMap ? (
-        <div className="flex-1">
+        <div className="flex-1 relative">
           <FullScreenMap
             isDrawing={isDrawing}
             setIsDrawing={setIsDrawing}
@@ -183,6 +222,33 @@ const Layout: React.FC = () => {
             areas={areas}
             onDeleteArea={handleDeleteArea}
           />
+          
+          {/* Loading overlay while analyzing */}
+          {isAnalyzing && (
+            <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-50">
+              <div className="bg-white rounded-lg p-6 text-center max-w-md">
+                <div className="animate-spin h-12 w-12 border-4 border-green-600 border-t-transparent rounded-full mx-auto mb-4" />
+                <div className="font-semibold text-lg mb-2">Analizando con IA...</div>
+                <div className="text-sm text-gray-600">
+                  Procesando imagen satelital y detectando características
+                </div>
+                <div className="text-xs text-gray-500 mt-2">
+                  Esto puede tardar hasta 10 segundos
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {/* Analysis results overlay */}
+          {showAnalysisResults && analysisResult && (
+            <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-auto">
+              <AnalysisResults
+                analysis={analysisResult}
+                onGenerateBudget={handleGenerateBudget}
+                onClose={handleCloseAnalysisResults}
+              />
+            </div>
+          )}
         </div>
       ) : (
         <main className="flex-1 overflow-y-auto bg-gray-50">
