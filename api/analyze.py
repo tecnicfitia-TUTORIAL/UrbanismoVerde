@@ -671,13 +671,13 @@ def calculate_biodiversity_impact(area_m2: float, especies_nativas_pct: float) -
 
 def segment_surfaces(area_m2: float, seed: int = None) -> dict:
     """Simulate surface segmentation analysis."""
-    if seed is not None:
-        random.seed(seed)
+    # Use instance-specific random generator for thread safety
+    rng = random.Random(seed)
     
-    asfalto_pct = random.uniform(0.25, 0.35)
-    grava_pct = random.uniform(0.45, 0.55)
-    vegetacion_pct = random.uniform(0.05, 0.15)
-    obstaculos_pct = random.uniform(0.08, 0.12)
+    asfalto_pct = rng.uniform(0.25, 0.35)
+    grava_pct = rng.uniform(0.45, 0.55)
+    vegetacion_pct = rng.uniform(0.05, 0.15)
+    obstaculos_pct = rng.uniform(0.08, 0.12)
     
     total_pct = asfalto_pct + grava_pct + vegetacion_pct + obstaculos_pct
     asfalto_pct /= total_pct
@@ -702,8 +702,11 @@ def segment_surfaces(area_m2: float, seed: int = None) -> dict:
     }
 
 
-def analyze_solar_exposure(lat: float, lon: float, area_m2: float) -> dict:
+def analyze_solar_exposure(lat: float, lon: float, area_m2: float, seed: int = None) -> dict:
     """Analyze solar exposure for the location."""
+    # Use instance-specific random generator for thread safety
+    rng = random.Random(seed)
+    
     if lat >= 41.5:
         base_hours = 2200
     elif lat >= 39.5:
@@ -711,7 +714,7 @@ def analyze_solar_exposure(lat: float, lon: float, area_m2: float) -> dict:
     else:
         base_hours = 2600
     
-    shadow_factor = random.uniform(0.75, 0.95)
+    shadow_factor = rng.uniform(0.75, 0.95)
     horas_sol_anuales = int(base_hours * shadow_factor)
     
     if horas_sol_anuales >= 2200:
