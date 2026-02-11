@@ -170,11 +170,11 @@ if (result && result.success) {
 
 ```json
 {
-  "jspdf": "^2.5.x",
-  "jspdf-autotable": "^3.8.x",
-  "@react-google-maps/api": "^2.19.x",
-  "html2canvas": "^1.4.x",
-  "react-to-print": "^2.15.x"
+  "jspdf": "^4.1.0",
+  "jspdf-autotable": "^5.0.7",
+  "@react-google-maps/api": "^2.19.3",
+  "html2canvas": "^1.4.1",
+  "react-to-print": "^2.15.1"
 }
 ```
 

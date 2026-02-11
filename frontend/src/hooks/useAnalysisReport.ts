@@ -152,8 +152,9 @@ export function useAnalysisReport(options: UseAnalysisReportOptions): UseAnalysi
     console.log('🔄 Recalculando análisis con sub-zonas...');
     // TODO: Implement recalculation logic
     // This would need to call the analysis API again with selected sub-zones
+    // When implemented, use subZones state to filter the polygon
     console.warn('⚠️ Recalculación no implementada aún');
-  }, [subZones]);
+  }, []); // No dependencies - will be implemented later with proper API call
 
   return {
     // State

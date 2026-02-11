@@ -5,7 +5,7 @@
  */
 
 import React, { useState } from 'react';
-import { X, Calendar, MapPin } from 'lucide-react';
+import { X, Calendar, MapPin, CheckCircle } from 'lucide-react';
 import { AnalysisResponse, GeoJSONPolygon } from '../../types';
 import { SatelliteMap } from './SatelliteMap';
 import { ReportSummary } from './ReportSummary';
@@ -34,6 +34,7 @@ export const AnalysisReportPage: React.FC<AnalysisReportPageProps> = ({
 }) => {
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [saveZoneName, setSaveZoneName] = useState(zoneName);
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
   const {
     isSaving,
@@ -63,8 +64,8 @@ export const AnalysisReportPage: React.FC<AnalysisReportPageProps> = ({
     const saved = await saveToDatabase(saveZoneName);
     if (saved) {
       setShowSaveDialog(false);
-      // Optionally show success message
-      alert('Análisis guardado exitosamente');
+      setShowSuccessMessage(true);
+      setTimeout(() => setShowSuccessMessage(false), 3000);
     }
   };
 
@@ -147,6 +148,16 @@ export const AnalysisReportPage: React.FC<AnalysisReportPageProps> = ({
           <div className="flex items-center gap-2">
             <X size={20} />
             <span>{error}</span>
+          </div>
+        </div>
+      )}
+
+      {/* Success Toast */}
+      {showSuccessMessage && (
+        <div className="fixed bottom-4 right-4 bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg z-50 max-w-md">
+          <div className="flex items-center gap-2">
+            <CheckCircle size={20} />
+            <span>Análisis guardado exitosamente</span>
           </div>
         </div>
       )}
