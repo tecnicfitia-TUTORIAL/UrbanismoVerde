@@ -10,6 +10,7 @@ import { AnalysisResponse, GeoJSONPolygon } from '../../types';
 import { SatelliteMap } from './SatelliteMap';
 import { ReportSummary } from './ReportSummary';
 import { useAnalysisReport } from '../../hooks/useAnalysisReport';
+import { Z_INDEX } from '../../constants/zIndex';
 
 interface AnalysisReportPageProps {
   analysisResult: AnalysisResponse;
@@ -164,8 +165,15 @@ export const AnalysisReportPage: React.FC<AnalysisReportPageProps> = ({
 
       {/* Save Dialog */}
       {showSaveDialog && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
+          style={{ zIndex: Z_INDEX.SAVE_DIALOG_OVERLAY }}
+          onClick={() => setShowSaveDialog(false)}
+        >
+          <div 
+            className="bg-white rounded-lg shadow-xl max-w-md w-full p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
             <h3 className="text-xl font-semibold text-gray-900 mb-4">
               Guardar Análisis
             </h3>
@@ -179,6 +187,7 @@ export const AnalysisReportPage: React.FC<AnalysisReportPageProps> = ({
                 onChange={(e) => setSaveZoneName(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 placeholder="Ej: Azotea Edificio Central"
+                autoFocus
               />
             </div>
             <div className="flex gap-3">
