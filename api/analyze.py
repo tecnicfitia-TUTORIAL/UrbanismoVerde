@@ -670,7 +670,17 @@ def calculate_biodiversity_impact(area_m2: float, especies_nativas_pct: float) -
 # =====================================================
 
 def segment_surfaces(area_m2: float, seed: int = None) -> dict:
-    """Simulate surface segmentation analysis."""
+    """
+    Simulate surface segmentation analysis.
+    
+    Args:
+        area_m2: Total roof area
+        seed: Random seed for reproducibility. If None, uses system time (non-deterministic).
+              For testing, provide a seed value for consistent results.
+        
+    Returns:
+        dict with segmented surface areas
+    """
     # Use instance-specific random generator for thread safety
     rng = random.Random(seed)
     
@@ -703,7 +713,19 @@ def segment_surfaces(area_m2: float, seed: int = None) -> dict:
 
 
 def analyze_solar_exposure(lat: float, lon: float, area_m2: float, seed: int = None) -> dict:
-    """Analyze solar exposure for the location."""
+    """
+    Analyze solar exposure for the location.
+    
+    Args:
+        lat: Latitude
+        lon: Longitude
+        area_m2: Roof area
+        seed: Random seed for reproducibility. If None, uses system time (non-deterministic).
+              For testing, provide a seed value for consistent results.
+        
+    Returns:
+        dict with solar exposure metrics
+    """
     # Use instance-specific random generator for thread safety
     rng = random.Random(seed)
     
