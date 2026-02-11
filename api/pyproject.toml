@@ -1,0 +1,13 @@
+[project]
+name = "urbanismo-verde-api"
+version = "1.0.0"
+description = "API Python para análisis de cubiertas verdes urbanas"
+requires-python = ">=3.9"
+dependencies = []
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.uv]
+dev-dependencies = []
