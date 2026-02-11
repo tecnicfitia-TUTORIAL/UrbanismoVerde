@@ -1,16 +1,11 @@
 {
-  "buildCommand": "npm --prefix frontend install && npm --prefix frontend run build",
+  "buildCommand": "cd frontend && npm install && npm run build",
   "outputDirectory": "frontend/dist",
   "installCommand": "echo 'Skip root install'",
-  "functions": {
-    "api/analyze.py": {
-      "runtime": "python3.9"
-    }
-  },
-  "rewrites": [
+  "routes": [
     {
-      "source": "/api/analyze",
-      "destination": "/api/analyze.py"
+      "src": "/api/analyze",
+      "dest": "/api/analyze.py"
     }
   ]
 }
