@@ -1,0 +1,137 @@
+/**
+ * Dashboard Component Styles
+ * Environmental metrics cards with enhanced visual design
+ */
+
+/* Environmental Metric Cards */
+.environmental-metric-card {
+  @apply bg-white rounded-xl shadow-md border-2 border-gray-100 p-6 hover:shadow-xl transition-all duration-300;
+  position: relative;
+  overflow: hidden;
+}
+
+.environmental-metric-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--gradient-start), var(--gradient-end));
+  opacity: 0.8;
+}
+
+.environmental-metric-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--border-color);
+}
+
+/* CO2 Card Theme */
+.environmental-metric-card:nth-child(1) {
+  --gradient-start: #10b981;
+  --gradient-end: #059669;
+  --border-color: #10b981;
+  --glow-color: rgba(16, 185, 129, 0.4);
+  --glow-color-transparent: rgba(16, 185, 129, 0);
+}
+
+/* Water Card Theme */
+.environmental-metric-card:nth-child(2) {
+  --gradient-start: #3b82f6;
+  --gradient-end: #2563eb;
+  --border-color: #3b82f6;
+  --glow-color: rgba(59, 130, 246, 0.4);
+  --glow-color-transparent: rgba(59, 130, 246, 0);
+}
+
+/* Energy Card Theme */
+.environmental-metric-card:nth-child(3) {
+  --gradient-start: #f59e0b;
+  --gradient-end: #d97706;
+  --border-color: #f59e0b;
+  --glow-color: rgba(245, 158, 11, 0.4);
+  --glow-color-transparent: rgba(245, 158, 11, 0);
+}
+
+/* Icon Styles */
+.environmental-icon {
+  @apply rounded-lg p-3 inline-flex items-center justify-center;
+}
+
+.co2-icon {
+  @apply bg-green-100 text-green-600;
+}
+
+.water-icon {
+  @apply bg-blue-100 text-blue-600;
+}
+
+.energy-icon {
+  @apply bg-orange-100 text-orange-600;
+}
+
+/* Badge Styles */
+.environmental-badge {
+  @apply px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide;
+}
+
+.co2-badge {
+  @apply bg-green-100 text-green-700;
+}
+
+.water-badge {
+  @apply bg-blue-100 text-blue-700;
+}
+
+.energy-badge {
+  @apply bg-orange-100 text-orange-700;
+}
+
+/* Value Display */
+.environmental-value {
+  @apply text-4xl font-bold text-gray-900 mb-1;
+  line-height: 1.2;
+}
+
+.environmental-unit {
+  @apply text-sm font-medium text-gray-600 mb-2;
+}
+
+.environmental-label {
+  @apply text-base font-semibold text-gray-800 mb-3;
+}
+
+.environmental-footer {
+  @apply text-xs text-gray-500 pt-3 border-t border-gray-100;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .environmental-metric-card {
+    @apply p-4;
+  }
+
+  .environmental-value {
+    @apply text-3xl;
+  }
+
+  .environmental-icon {
+    @apply p-2;
+  }
+}
+
+/* Animation for cards */
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 var(--glow-color, rgba(16, 185, 129, 0.4));
+  }
+  50% {
+    box-shadow: 0 0 0 10px var(--glow-color-transparent, rgba(16, 185, 129, 0));
+  }
+}
+
+.environmental-metric-card:hover .co2-icon,
+.environmental-metric-card:hover .water-icon,
+.environmental-metric-card:hover .energy-icon {
+  animation: pulse-glow 2s infinite;
+}

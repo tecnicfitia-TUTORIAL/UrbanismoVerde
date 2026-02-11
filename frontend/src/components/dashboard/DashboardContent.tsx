@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { MapIcon, Brain, Euro, MapPin, Calendar } from 'lucide-react';
+import { MapIcon, Brain, Euro, MapPin, Calendar, Leaf, Droplets, Zap } from 'lucide-react';
 import { Area } from '../../types';
 import StatsCard from '../common/StatsCard';
 import { supabase, TABLES } from '../../config/supabase';
+import './Dashboard.css';
 
 interface DashboardContentProps {
   areas: Area[];
@@ -18,11 +19,17 @@ const DashboardContent: React.FC<DashboardContentProps> = ({ areas, onNavigate }
   });
 
   // Calcular estadísticas locales
+  const totalArea = areas.reduce((sum, a) => sum + a.areaM2, 0) + dbStats.zonasVerdesArea;
+  
   const stats = {
     zonasCreadas: areas.length + dbStats.zonasVerdesCount,
-    areaTotal: areas.reduce((sum, a) => sum + a.areaM2, 0) + dbStats.zonasVerdesArea,
+    areaTotal: totalArea,
     presupuestosGenerados: areas.length, // Un presupuesto simulado por cada zona local
     analisisRealizados: dbStats.analisisCount,
+    // Métricas ambientales basadas en normativa MITECO 2024
+    co2CapturadoAnual: Math.round((totalArea * 5) / 1000 * 10) / 10, // kg -> toneladas (1 decimal)
+    aguaRetenidaAnual: Math.round(totalArea * 240 / 1000 * 10) / 10, // litros -> m³ (1 decimal)
+    ahorroEnergeticoAnual: Math.round(totalArea * 10), // euros
   };
 
   // Load stats from database and subscribe to real-time updates
@@ -176,7 +183,7 @@ const DashboardContent: React.FC<DashboardContentProps> = ({ areas, onNavigate }
         {/* Statistics Section */}
         <div className="mb-8">
           <h2 className="text-2xl font-semibold text-gray-800 mb-4">
-            Estadísticas
+            Estadísticas del Proyecto
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <StatsCard
@@ -204,6 +211,75 @@ const DashboardContent: React.FC<DashboardContentProps> = ({ areas, onNavigate }
               value={stats.analisisRealizados}
               color="orange"
             />
+          </div>
+        </div>
+
+        {/* Environmental Impact Section */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-semibold text-gray-800 mb-2">
+            Impacto Ambiental
+          </h2>
+          <p className="text-sm text-gray-600 mb-4">
+            Beneficios ecosistémicos estimados según normativa MITECO 2024
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="environmental-metric-card">
+              <div className="flex items-center justify-between mb-3">
+                <div className="environmental-icon co2-icon">
+                  <Leaf size={28} />
+                </div>
+                <div className="environmental-badge co2-badge">
+                  Anual
+                </div>
+              </div>
+              <div className="environmental-value">
+                {stats.co2CapturadoAnual.toLocaleString('es-ES', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}
+              </div>
+              <div className="environmental-unit">toneladas CO₂</div>
+              <div className="environmental-label">Captura de Carbono</div>
+              <div className="environmental-footer">
+                {/* 1 tree captures ~5kg CO₂/year */}
+                ~{(stats.co2CapturadoAnual * 1000 / 5).toFixed(0)} árboles equivalentes
+              </div>
+            </div>
+
+            <div className="environmental-metric-card">
+              <div className="flex items-center justify-between mb-3">
+                <div className="environmental-icon water-icon">
+                  <Droplets size={28} />
+                </div>
+                <div className="environmental-badge water-badge">
+                  Anual
+                </div>
+              </div>
+              <div className="environmental-value">
+                {stats.aguaRetenidaAnual.toLocaleString('es-ES', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}
+              </div>
+              <div className="environmental-unit">m³ de agua</div>
+              <div className="environmental-label">Retención Pluvial</div>
+              <div className="environmental-footer">
+                60% precipitación Madrid (400mm)
+              </div>
+            </div>
+
+            <div className="environmental-metric-card">
+              <div className="flex items-center justify-between mb-3">
+                <div className="environmental-icon energy-icon">
+                  <Zap size={28} />
+                </div>
+                <div className="environmental-badge energy-badge">
+                  Anual
+                </div>
+              </div>
+              <div className="environmental-value">
+                {stats.ahorroEnergeticoAnual.toLocaleString('es-ES')}
+              </div>
+              <div className="environmental-unit">€ ahorrados</div>
+              <div className="environmental-label">Ahorro Energético</div>
+              <div className="environmental-footer">
+                Reducción isla de calor urbano
+              </div>
+            </div>
           </div>
         </div>
 
