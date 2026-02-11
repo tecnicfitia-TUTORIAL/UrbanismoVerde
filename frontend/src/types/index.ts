@@ -139,3 +139,38 @@ export interface AnalysisResponse {
   processing_time: number;
   error?: string;
 }
+
+// Extended analysis data with costs and benefits
+export interface CostBenefitData {
+  inversion_inicial: number;
+  ahorro_anual: number;
+  roi_porcentaje: number;
+  amortizacion_anos: number;
+  subvenciones_disponibles: number;
+}
+
+// Subzone for satellite map selection
+export interface SubZone {
+  id: string;
+  polygon: GeoJSONPolygon;
+  area_m2: number;
+  selected: boolean;
+}
+
+// Saved analysis record
+export interface SavedAnalysis {
+  zonaVerdeId: string;
+  analisisId: string;
+  timestamp: Date;
+}
+
+// Report generation data
+export interface ReportData {
+  id: string;
+  analisis_id: string;
+  formato: 'pdf' | 'html' | 'json';
+  contenido?: string;
+  url_pdf?: string;
+  generado_por?: string;
+  created_at: Date;
+}
