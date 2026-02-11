@@ -138,6 +138,45 @@ export interface AnalysisResponse {
   recomendaciones: string[];
   processing_time: number;
   error?: string;
+  
+  // Urban regeneration modules
+  poblacion_datos?: PoblacionDatos;
+  deficit_verde?: DeficitVerde;
+  priorizacion?: Priorizacion;
+}
+
+// Module A: Population Benefited
+export interface PoblacionDatos {
+  densidad_barrio_hab_km2: number;
+  edificio_viviendas: number;
+  edificio_personas_estimadas: number;
+  beneficiarios_directos_radio_50m: number;
+  beneficiarios_indirectos_radio_200m: number;
+  coste_por_persona: number;
+}
+
+// Module B: Green Space Deficit
+export interface DeficitVerde {
+  verde_actual_m2_hab: number;
+  oms_minimo: number;
+  deficit: number;
+  con_cubierta_m2_hab: number;
+  mejora_pct: number;
+  prioridad: 'alta' | 'media' | 'baja';
+}
+
+// Module C: Prioritization System
+export interface Priorizacion {
+  score_total: number;
+  clasificacion: 'urgente' | 'alta' | 'media' | 'baja';
+  recomendacion: string;
+  factores: {
+    densidad_poblacional: number;
+    deficit_verde: number;
+    temperatura: number;
+    vulnerabilidad_social: number;
+    viabilidad_tecnica: number;
+  };
 }
 
 // Extended analysis data with costs and benefits

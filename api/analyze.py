@@ -901,6 +901,195 @@ def calculate_subsidy_amount(coste_total: float, porcentaje: int, tope_maximo: f
 
 
 # =====================================================
+# URBAN REGENERATION DATA MODULES
+# =====================================================
+
+def agregar_datos_poblacion(analisis_result: dict, coordinates: list) -> dict:
+    """
+    Module A: Add population benefited data
+    
+    Simple estimation based on area (will be enhanced with OSM in frontend).
+    Assumes high-density urban area typical of Madrid.
+    """
+    area_m2 = analisis_result.get('area_m2', 0)
+    
+    # Estimation for high-density areas (e.g., Madrid city center ~12,000 hab/km²)
+    densidad_estimada = 12000  # hab/km²
+    area_km2 = area_m2 / 1_000_000
+    
+    # Estimate building housing units (assuming typical 3-story building, 2 units per floor)
+    edificio_viviendas = 40  # default estimate
+    edificio_personas = 100  # default estimate (2.5 persons/household)
+    
+    # Beneficiaries in radius (50m = direct, 200m = indirect)
+    # Rule of thumb: 50m radius affects ~400 people, 200m radius ~2400 people in high density
+    beneficiarios_50m = 400
+    beneficiarios_200m = 2400
+    
+    # Cost per person
+    coste_total = analisis_result.get('presupuesto', {}).get('coste_total_inicial_eur', 0)
+    coste_por_persona = round(coste_total / beneficiarios_50m) if beneficiarios_50m > 0 else 0
+    
+    analisis_result['poblacion_datos'] = {
+        'densidad_barrio_hab_km2': densidad_estimada,
+        'edificio_viviendas': edificio_viviendas,
+        'edificio_personas_estimadas': edificio_personas,
+        'beneficiarios_directos_radio_50m': beneficiarios_50m,
+        'beneficiarios_indirectos_radio_200m': beneficiarios_200m,
+        'coste_por_persona': coste_por_persona
+    }
+    
+    return analisis_result
+
+
+def agregar_deficit_verde(analisis_result: dict, poblacion: int = None) -> dict:
+    """
+    Module B: Add green space deficit analysis
+    
+    Uses area data and estimates current green space per capita.
+    Real implementation will use OSM data in frontend.
+    """
+    area_cubierta = analisis_result.get('area_m2', 0)
+    
+    # Use population estimate if not provided
+    if poblacion is None:
+        poblacion = analisis_result.get('poblacion_datos', {}).get('beneficiarios_directos_radio_50m', 400)
+    
+    # Average green space in Madrid: ~6.2 m²/hab (below WHO recommendation)
+    verde_actual = 6.2
+    oms_minimo = 9.0
+    deficit = verde_actual - oms_minimo
+    
+    # Calculate improvement with new green roof
+    con_cubierta = verde_actual + (area_cubierta / poblacion) if poblacion > 0 else verde_actual
+    mejora = ((con_cubierta - verde_actual) / verde_actual) * 100 if verde_actual > 0 else 0
+    
+    # Priority classification based on current green space
+    if verde_actual < 3:
+        prioridad = 'alta'
+    elif verde_actual < 6:
+        prioridad = 'media'
+    else:
+        prioridad = 'baja'
+    
+    analisis_result['deficit_verde'] = {
+        'verde_actual_m2_hab': round(verde_actual, 2),
+        'oms_minimo': oms_minimo,
+        'deficit': round(deficit, 2),
+        'con_cubierta_m2_hab': round(con_cubierta, 2),
+        'mejora_pct': round(mejora, 1),
+        'prioridad': prioridad
+    }
+    
+    return analisis_result
+
+
+def calcular_priorizacion(analisis_result: dict) -> dict:
+    """
+    Module C: Multi-criteria prioritization system
+    
+    Scoring based on:
+    - Population density (0-25 points)
+    - Green space deficit (0-25 points)
+    - Temperature/heat island (0-20 points)
+    - Social vulnerability (0-15 points)
+    - Technical viability (0-15 points)
+    """
+    # Extract data from analysis
+    densidad = analisis_result.get('poblacion_datos', {}).get('densidad_barrio_hab_km2', 8000)
+    deficit = analisis_result.get('deficit_verde', {}).get('deficit', -3.8)
+    
+    # Temperature estimation (use location or default)
+    # Madrid summer average: ~32°C, can reach 35-40°C in heat waves
+    temperatura = 32  # default estimate
+    
+    # Viability from green score (rough mapping)
+    green_score = analisis_result.get('green_score', 50)
+    if green_score >= 70:
+        viabilidad = 'alta'
+    elif green_score >= 40:
+        viabilidad = 'media'
+    else:
+        viabilidad = 'baja'
+    
+    # Calculate scores
+    # 1. Population density (0-25 points)
+    if densidad > 15000:
+        score_densidad = 25
+    elif densidad > 10000:
+        score_densidad = 20
+    elif densidad > 5000:
+        score_densidad = 15
+    elif densidad > 2000:
+        score_densidad = 10
+    else:
+        score_densidad = 5
+    
+    # 2. Green space deficit (0-25 points)
+    if deficit < -6:  # < 3 m²/hab
+        score_deficit = 25
+    elif deficit < -3:  # 3-6 m²/hab
+        score_deficit = 20
+    elif deficit < 0:  # 6-9 m²/hab
+        score_deficit = 15
+    else:  # > 9 m²/hab
+        score_deficit = 5
+    
+    # 3. Temperature/heat island (0-20 points)
+    if temperatura > 35:
+        score_temp = 20
+    elif temperatura > 33:
+        score_temp = 15
+    elif temperatura > 30:
+        score_temp = 10
+    else:
+        score_temp = 5
+    
+    # 4. Social vulnerability (0-15 points) - default medium
+    score_vulnerabilidad = 10
+    
+    # 5. Technical viability (0-15 points)
+    if viabilidad == 'alta':
+        score_viabilidad = 15
+    elif viabilidad == 'media':
+        score_viabilidad = 10
+    else:
+        score_viabilidad = 5
+    
+    # Total score
+    score_total = score_densidad + score_deficit + score_temp + score_vulnerabilidad + score_viabilidad
+    
+    # Classification
+    if score_total >= 85:
+        clasificacion = 'urgente'
+        recomendacion = '⚠️ IMPLEMENTAR URGENTE: Zona prioritaria por alta densidad, déficit verde crítico y temperatura elevada.'
+    elif score_total >= 70:
+        clasificacion = 'alta'
+        recomendacion = '🔴 PRIORIDAD ALTA: Zona con necesidad significativa de regeneración verde.'
+    elif score_total >= 50:
+        clasificacion = 'media'
+        recomendacion = '🟡 PRIORIDAD MEDIA: Implementar según disponibilidad presupuestaria.'
+    else:
+        clasificacion = 'baja'
+        recomendacion = '🟢 PRIORIDAD BAJA: Zona con menor necesidad relativa.'
+    
+    analisis_result['priorizacion'] = {
+        'score_total': round(score_total, 1),
+        'clasificacion': clasificacion,
+        'recomendacion': recomendacion,
+        'factores': {
+            'densidad_poblacional': round(score_densidad, 1),
+            'deficit_verde': round(score_deficit, 1),
+            'temperatura': round(score_temp, 1),
+            'vulnerabilidad_social': round(score_vulnerabilidad, 1),
+            'viabilidad_tecnica': round(score_viabilidad, 1)
+        }
+    }
+    
+    return analisis_result
+
+
+# =====================================================
 # ANALYSIS ENGINE - 3-LAYER ARCHITECTURE
 # =====================================================
 
@@ -1044,7 +1233,8 @@ class AnalysisEngine:
             amortizacion_anos=amortizacion_anos
         )
         
-        return {
+        # Build initial result dict
+        result = {
             'success': True,
             'green_score': green_score,
             'area_m2': round(area_m2, 2),
@@ -1108,6 +1298,13 @@ class AnalysisEngine:
             'recomendaciones_tecnicas': recomendaciones,
             'tags': tags
         }
+        
+        # Add urban regeneration modules
+        result = agregar_datos_poblacion(result, self.coordinates)
+        result = agregar_deficit_verde(result)
+        result = calcular_priorizacion(result)
+        
+        return result
     
     def _calculate_green_score(
         self, 
