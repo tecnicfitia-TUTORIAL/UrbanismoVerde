@@ -55,6 +55,11 @@ export const ReportSummary: React.FC<ReportSummaryProps> = ({
   const viabilidad = getViabilidad(analysis.green_score);
   const viabilidadColor = getViabilidadColor(analysis.green_score);
 
+  // Defensive validations for undefined arrays
+  const especies = analysis?.especies_recomendadas || [];
+  const recomendaciones = analysis?.recomendaciones || [];
+  const tags = analysis?.tags || [];
+
   // Calculate costs and benefits
   const costePorM2 = 150;
   const inversionInicial = analysis.area_m2 * costePorM2;
@@ -112,36 +117,44 @@ export const ReportSummary: React.FC<ReportSummaryProps> = ({
           <div className="flex items-center gap-2 mb-4">
             <Leaf className="text-green-600" size={24} />
             <h3 className="text-lg font-semibold text-gray-900">
-              Especies Recomendadas ({analysis.especies_recomendadas.length})
+              Especies Recomendadas ({especies.length})
             </h3>
           </div>
 
-          <div className="space-y-3 max-h-64 overflow-y-auto">
-            {analysis.especies_recomendadas.slice(0, 5).map((especie, index) => (
-              <div
-                key={index}
-                className="flex items-start justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-              >
-                <div className="flex-1">
-                  <div className="font-medium text-gray-900">{especie.nombre_comun}</div>
-                  <div className="text-sm text-gray-600 italic">
-                    {especie.nombre_cientifico}
+          {especies.length > 0 ? (
+            <>
+              <div className="space-y-3 max-h-64 overflow-y-auto">
+                {especies.slice(0, 5).map((especie, index) => (
+                  <div
+                    key={index}
+                    className="flex items-start justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                  >
+                    <div className="flex-1">
+                      <div className="font-medium text-gray-900">{especie?.nombre_comun || 'N/A'}</div>
+                      <div className="text-sm text-gray-600 italic">
+                        {especie?.nombre_cientifico || ''}
+                      </div>
+                      <div className="text-xs text-gray-500 mt-1">{especie?.tipo || ''}</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-sm font-medium text-green-600">
+                        {((especie?.viabilidad || 0) * 100).toFixed(0)}%
+                      </div>
+                      <div className="text-xs text-gray-500">viabilidad</div>
+                    </div>
                   </div>
-                  <div className="text-xs text-gray-500 mt-1">{especie.tipo}</div>
-                </div>
-                <div className="text-right">
-                  <div className="text-sm font-medium text-green-600">
-                    {(especie.viabilidad * 100).toFixed(0)}%
-                  </div>
-                  <div className="text-xs text-gray-500">viabilidad</div>
-                </div>
+                ))}
               </div>
-            ))}
-          </div>
 
-          {analysis.especies_recomendadas.length > 5 && (
-            <div className="mt-3 text-sm text-gray-500 text-center">
-              +{analysis.especies_recomendadas.length - 5} especies más
+              {especies.length > 5 && (
+                <div className="mt-3 text-sm text-gray-500 text-center">
+                  +{especies.length - 5} especies más
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              No hay especies recomendadas disponibles
             </div>
           )}
         </div>
@@ -184,25 +197,31 @@ export const ReportSummary: React.FC<ReportSummaryProps> = ({
           <div className="flex items-center gap-2 mb-4">
             <AlertCircle className="text-orange-600" size={24} />
             <h3 className="text-lg font-semibold text-gray-900">
-              Recomendaciones ({analysis.recomendaciones.length})
+              Recomendaciones ({recomendaciones.length})
             </h3>
           </div>
 
-          <div className="space-y-2 max-h-64 overflow-y-auto">
-            {analysis.recomendaciones.map((rec, index) => (
-              <div
-                key={index}
-                className="flex items-start gap-2 p-3 bg-orange-50 rounded-lg text-sm"
-              >
-                <CheckCircle className="text-orange-600 flex-shrink-0 mt-0.5" size={16} />
-                <span className="text-gray-700">{rec}</span>
-              </div>
-            ))}
-          </div>
+          {recomendaciones.length > 0 ? (
+            <div className="space-y-2 max-h-64 overflow-y-auto">
+              {recomendaciones.map((rec, index) => (
+                <div
+                  key={index}
+                  className="flex items-start gap-2 p-3 bg-orange-50 rounded-lg text-sm"
+                >
+                  <CheckCircle className="text-orange-600 flex-shrink-0 mt-0.5" size={16} />
+                  <span className="text-gray-700">{rec}</span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              No hay recomendaciones disponibles
+            </div>
+          )}
         </div>
 
         {/* Characteristics Tags */}
-        {analysis.tags && analysis.tags.length > 0 && (
+        {tags && tags.length > 0 && (
           <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
             <div className="flex items-center gap-2 mb-4">
               <MapPin className="text-purple-600" size={24} />
@@ -210,7 +229,7 @@ export const ReportSummary: React.FC<ReportSummaryProps> = ({
             </div>
 
             <div className="flex flex-wrap gap-2">
-              {analysis.tags.map((tag, index) => (
+              {tags.map((tag, index) => (
                 <span
                   key={index}
                   className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-medium"

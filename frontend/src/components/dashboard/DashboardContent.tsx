@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { MapIcon, Brain, Euro, MapPin, Calendar } from 'lucide-react';
 import { Area } from '../../types';
 import StatsCard from '../common/StatsCard';
+import { supabase, TABLES } from '../../config/supabase';
 
 interface DashboardContentProps {
   areas: Area[];
@@ -9,13 +10,93 @@ interface DashboardContentProps {
 }
 
 const DashboardContent: React.FC<DashboardContentProps> = ({ areas, onNavigate }) => {
-  // Calcular estadísticas
+  // State for database stats
+  const [dbStats, setDbStats] = useState({
+    zonasVerdesCount: 0,
+    zonasVerdesArea: 0,
+    analisisCount: 0,
+  });
+
+  // Calcular estadísticas locales
   const stats = {
-    zonasCreadas: areas.length,
-    areaTotal: areas.reduce((sum, a) => sum + a.areaM2, 0),
-    presupuestosGenerados: areas.length, // Un presupuesto simulado por cada zona
-    analisisRealizados: 0 // TODO: Implementar cuando haya sistema de análisis con persistencia
+    zonasCreadas: areas.length + dbStats.zonasVerdesCount,
+    areaTotal: areas.reduce((sum, a) => sum + a.areaM2, 0) + dbStats.zonasVerdesArea,
+    presupuestosGenerados: areas.length, // Un presupuesto simulado por cada zona local
+    analisisRealizados: dbStats.analisisCount,
   };
+
+  // Load stats from database and subscribe to real-time updates
+  useEffect(() => {
+    loadDatabaseStats();
+
+    // Subscribe to real-time updates
+    const subscription = supabase
+      .channel('dashboard-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: TABLES.ZONAS_VERDES,
+        },
+        () => {
+          console.log('🔄 Zonas verdes actualizadas, recargando stats...');
+          loadDatabaseStats();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: TABLES.ANALISIS,
+        },
+        () => {
+          console.log('🔄 Análisis actualizados, recargando stats...');
+          loadDatabaseStats();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  async function loadDatabaseStats() {
+    try {
+      // Count zonas verdes
+      const { count: zonasCount } = await supabase
+        .from(TABLES.ZONAS_VERDES)
+        .select('*', { count: 'exact', head: true });
+
+      // Calculate total area from database
+      const { data: zonas } = await supabase
+        .from(TABLES.ZONAS_VERDES)
+        .select('area_m2');
+
+      const zonasArea = zonas?.reduce((sum, z) => sum + (z.area_m2 || 0), 0) || 0;
+
+      // Count analysis
+      const { count: analisisCount } = await supabase
+        .from(TABLES.ANALISIS)
+        .select('*', { count: 'exact', head: true });
+
+      setDbStats({
+        zonasVerdesCount: zonasCount || 0,
+        zonasVerdesArea: zonasArea,
+        analisisCount: analisisCount || 0,
+      });
+
+      console.log('📊 Dashboard stats loaded:', {
+        zonasVerdes: zonasCount,
+        zonasArea,
+        analisis: analisisCount,
+      });
+    } catch (error) {
+      console.error('Error loading dashboard stats:', error);
+    }
+  }
 
   // Obtener últimas 5 zonas
   const recentAreas = [...areas]
