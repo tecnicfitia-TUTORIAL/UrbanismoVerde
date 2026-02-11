@@ -287,12 +287,11 @@ Ver guía completa en: **[docs/DEPLOYMENT_VERCEL.md](./docs/DEPLOYMENT_VERCEL.md
 ```bash
 # Opción 1: Desde Vercel Dashboard
 # 1. Importar repositorio en vercel.com
-# 2. Configurar Root Directory: frontend
+# 2. Configurar Root Directory: . (raíz, o dejarlo vacío)
 # 3. Agregar variables de entorno
 # 4. Deploy
 
 # Opción 2: Desde CLI
-cd frontend
 vercel
 ```
 
