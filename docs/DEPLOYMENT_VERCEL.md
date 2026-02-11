@@ -56,10 +56,13 @@ Verifica que no haya errores. El build debe generar una carpeta `dist/`.
 
 ### 3. Verificar vercel.json
 
-El archivo raíz `vercel.json` está configurado de forma simplificada para trabajar con Root Directory:
+El archivo raíz `vercel.json` está configurado para compilar desde la raíz usando `npm --prefix`:
 
 ```json
 {
+  "buildCommand": "npm --prefix frontend install && npm --prefix frontend run build",
+  "outputDirectory": "frontend/dist",
+  "installCommand": "echo 'Skip root install'",
   "functions": {
     "api/analyze.py": {
       "runtime": "python3.9"
@@ -76,9 +79,10 @@ El archivo raíz `vercel.json` está configurado de forma simplificada para trab
 
 **⚠️ IMPORTANTE**: 
 - Este archivo `vercel.json` debe estar en la **raíz del repositorio**, no dentro de `frontend/`
-- Al usar esta configuración, debes configurar **Root Directory** a `frontend` en **Project Settings → General → Root Directory** del Vercel Dashboard
-- Esto permite que Vercel acceda directamente al directorio frontend sin necesidad de comandos `cd`
-- El directorio `api/` (que contiene `analyze.py`) está en la raíz del repositorio, y Vercel lo accede independientemente del Root Directory configurado
+- Con esta configuración, debes configurar **Root Directory** a `.` (raíz) o dejarlo vacío en **Project Settings → General → Root Directory** del Vercel Dashboard
+- Esto permite que Vercel detecte tanto el directorio `frontend/` como el directorio `api/` correctamente
+- El comando `npm --prefix frontend` permite ejecutar comandos npm en el subdirectorio frontend desde la raíz
+- Esta estructura mantiene el monorepo organizado (frontend/ + api/ separados)
 
 ---
 
@@ -96,10 +100,12 @@ El archivo raíz `vercel.json` está configurado de forma simplificada para trab
 #### 2. Configurar Proyecto
 
 **Configure Project:**
-- **Framework Preset**: `Vite`
-- **Root Directory**: `frontend` ⚠️ MUY IMPORTANTE
-- **Build Command**: `npm run build` (auto-detectado)
-- **Output Directory**: `dist` (auto-detectado)
+- **Framework Preset**: `Other` (o `Vite` si prefieres)
+- **Root Directory**: `.` (raíz, o dejarlo vacío) ⚠️ MUY IMPORTANTE
+- **Build Command**: (usar del vercel.json)
+- **Output Directory**: (usar del vercel.json)
+
+**Nota**: Vercel usará automáticamente los comandos definidos en `vercel.json`.
 
 #### 3. Agregar Variables de Entorno
 
