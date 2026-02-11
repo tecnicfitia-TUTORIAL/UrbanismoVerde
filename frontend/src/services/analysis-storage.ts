@@ -6,6 +6,7 @@
 
 import { supabase, TABLES, getCurrentUser } from '../config/supabase';
 import { AnalysisResponse, GeoJSONPolygon, SavedAnalysis } from '../types';
+import { adaptAnalysisData } from './analysis-adapter';
 
 /**
  * Save complete analysis to database
@@ -101,7 +102,6 @@ async function saveToAnalisisTable(
   analysisData: AnalysisResponse
 ): Promise<string> {
   // Adapt analysis data to ensure all fields exist
-  const { adaptAnalysisData } = await import('./analysis-adapter');
   const adaptedData = adaptAnalysisData(analysisData as any);
 
   // Extract all data sections
