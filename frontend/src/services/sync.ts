@@ -17,7 +17,7 @@ export interface SyncStatus {
 }
 
 // Configuration constants
-const DEFAULT_SYNC_INTERVAL = 30000; // 30 seconds
+const DEFAULT_SYNC_INTERVAL = 10 * 60 * 1000; // 10 minutes (600,000 ms)
 const MAX_SYNC_RETRIES = 5;
 
 class SyncServiceClass {
@@ -53,6 +53,8 @@ class SyncServiceClass {
       this.sync();
     }, this.syncInterval);
 
+    console.log(`✅ Sync service iniciado (intervalo: ${this.syncInterval / 1000 / 60} minutos)`);
+
     // Listen for online/offline events
     window.addEventListener('online', () => {
       console.log('Network back online, syncing...');
@@ -72,7 +74,7 @@ class SyncServiceClass {
     if (this.intervalId) {
       clearInterval(this.intervalId);
       this.intervalId = null;
-      console.log('Sync service stopped');
+      console.log('🛑 Sync service detenido');
     }
   }
 
@@ -102,7 +104,7 @@ class SyncServiceClass {
     this.notifyListeners();
 
     try {
-      console.log('Starting sync...');
+      console.log('🔄 Starting sync...');
 
       // Process sync queue
       await this.processSyncQueue();
@@ -117,9 +119,9 @@ class SyncServiceClass {
       await this.syncEspecies();
 
       this.lastSyncTime = Date.now();
-      console.log('Sync completed successfully');
+      console.log('✅ Sync completed successfully');
     } catch (error) {
-      console.error('Sync error:', error);
+      console.error('❌ Error in sync:', error);
     } finally {
       this.isSyncing = false;
       this.notifyListeners();
@@ -216,7 +218,7 @@ class SyncServiceClass {
           data.map(item => ({ id: item.id, data: item })),
           true
         );
-        console.log(`Synced ${data.length} zonas verdes`);
+        console.log(`✅ Synced ${data.length} zonas verdes`);
       }
     } catch (error) {
       console.error('Error syncing zonas verdes:', error);
@@ -242,7 +244,7 @@ class SyncServiceClass {
           data.map(item => ({ id: item.id, data: item })),
           true
         );
-        console.log(`Synced ${data.length} analisis`);
+        console.log(`✅ Synced ${data.length} analisis`);
       }
     } catch (error) {
       console.error('Error syncing analisis:', error);
@@ -267,7 +269,7 @@ class SyncServiceClass {
           data.map(item => ({ id: item.id, data: item })),
           true
         );
-        console.log(`Synced ${data.length} especies`);
+        console.log(`✅ Synced ${data.length} especies`);
       }
     } catch (error) {
       console.error('Error syncing especies:', error);

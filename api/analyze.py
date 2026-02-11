@@ -30,15 +30,22 @@ def calculate_area_simple(coordinates):
 class handler(BaseHTTPRequestHandler):
     def do_POST(self):
         try:
+            # Log para debugging
+            print(f"[ANALYZE] Request received from {self.headers.get('origin')}")
+            
             content_length = int(self.headers.get('Content-Length', 0))
             body = self.rfile.read(content_length)
             data = json.loads(body.decode('utf-8'))
+            
+            print(f"[ANALYZE] Polygon data: {data.get('polygon', {}).get('type')}")
             
             polygon = data.get('polygon', {})
             coordinates = polygon.get('coordinates', [[]])[0]
             
             # Cálculo simple de área
             area_m2 = calculate_area_simple(coordinates)
+            
+            print(f"[ANALYZE] Calculated area: {area_m2} m²")
             
             result = {
                 'success': True,
@@ -173,7 +180,7 @@ class handler(BaseHTTPRequestHandler):
                         'recomendada_pecv': True
                     }
                 ],
-                'recomendaciones': [
+                'recomendaciones_tecnicas': [
                     '⚠️ CRÍTICO: Verificar capacidad estructural del edificio',
                     '⚠️ Revisar impermeabilización antes de instalación',
                     'Instalar sistema de drenaje perimetral',
@@ -184,6 +191,8 @@ class handler(BaseHTTPRequestHandler):
                 'processing_time': 0.5
             }
             
+            print(f"[ANALYZE] Response ready, status: {result['success']}")
+            
             self.send_response(200)
             self.send_header('Content-Type', 'application/json')
             self.send_header('Access-Control-Allow-Origin', '*')
@@ -191,6 +200,7 @@ class handler(BaseHTTPRequestHandler):
             self.wfile.write(json.dumps(result).encode('utf-8'))
             
         except Exception as e:
+            print(f"[ANALYZE] ERROR: {str(e)}")
             self.send_response(500)
             self.send_header('Content-Type', 'application/json')
             self.send_header('Access-Control-Allow-Origin', '*')
@@ -204,3 +214,16 @@ class handler(BaseHTTPRequestHandler):
         self.send_header('Access-Control-Allow-Methods', 'POST, OPTIONS')
         self.send_header('Access-Control-Allow-Headers', 'Content-Type')
         self.end_headers()
+    
+    def do_GET(self):
+        # Health check endpoint
+        self.send_response(200)
+        self.send_header('Content-Type', 'application/json')
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.end_headers()
+        response = {
+            'status': 'ok',
+            'service': 'analyze',
+            'version': '1.0.0'
+        }
+        self.wfile.write(json.dumps(response).encode('utf-8'))
