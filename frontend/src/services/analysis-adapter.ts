@@ -131,7 +131,7 @@ export function adaptAnalysisData(
       programa: 'PECV Madrid 2025',
       monto_estimado_eur: Math.round(legacy.area_m2 * 75)
     },
-    tags: legacy.tags || ['Análisis migrado', 'Requiere re-análisis'],
+    tags: legacy.tags || ['Análisis migrado', 'Requiere reanálisis'],
     especies_recomendadas: legacy.especies_recomendadas || [],
     recomendaciones: legacy.recomendaciones || []
   };
