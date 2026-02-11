@@ -78,9 +78,9 @@ export async function register(): Promise<ServiceWorkerRegistration | null> {
     if (error.name === 'SecurityError') {
       console.warn('🔒 Service Worker bloqueado por política de seguridad');
     } else if (error.name === 'InvalidStateError') {
-      console.warn('⚠️ Service Worker en estado inválido - limpiando...');
-      // Intentar limpiar y re-registrar
-      await unregisterAll();
+      console.warn('⚠️ Service Worker en estado inválido');
+      // Informar al usuario - la limpieza manual será necesaria
+      console.log('💡 Solución: Abre DevTools → Application → Service Workers → Unregister All');
     } else {
       console.error('❌ Error registrando Service Worker:', error);
     }
