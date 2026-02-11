@@ -91,7 +91,7 @@ const SearchControl: React.FC<SearchControlProps> = ({ onLocationSelected }) => 
   return (
     <div 
       ref={containerRef}
-      className="absolute top-4 left-4 z-[1000] w-80"
+      className="absolute bottom-4 left-4 z-[1000] w-80"
     >
       {/* Search Input */}
       <div className="relative">
@@ -117,14 +117,14 @@ const SearchControl: React.FC<SearchControlProps> = ({ onLocationSelected }) => 
 
         {/* Loading indicator */}
         {isSearching && (
-          <div className="absolute top-full mt-2 w-full bg-white rounded-lg shadow-lg p-3 text-center text-sm text-gray-600">
+          <div className="absolute bottom-full mb-2 w-full bg-white rounded-lg shadow-lg p-3 text-center text-sm text-gray-600">
             Buscando...
           </div>
         )}
 
-        {/* Results dropdown */}
+        {/* Results dropdown - now opens upward */}
         {showResults && results.length > 0 && !isSearching && (
-          <div className="absolute top-full mt-2 w-full bg-white rounded-lg shadow-lg max-h-80 overflow-y-auto">
+          <div className="absolute bottom-full mb-2 w-full bg-white rounded-lg shadow-lg max-h-80 overflow-y-auto">
             {results.map((result) => (
               <button
                 key={result.raw.place_id}
@@ -142,9 +142,9 @@ const SearchControl: React.FC<SearchControlProps> = ({ onLocationSelected }) => 
           </div>
         )}
 
-        {/* No results message */}
+        {/* No results message - now opens upward */}
         {showResults && results.length === 0 && !isSearching && query.trim().length >= 3 && (
-          <div className="absolute top-full mt-2 w-full bg-white rounded-lg shadow-lg p-3 text-center text-sm text-gray-600">
+          <div className="absolute bottom-full mb-2 w-full bg-white rounded-lg shadow-lg p-3 text-center text-sm text-gray-600">
             No se encontraron resultados
           </div>
         )}

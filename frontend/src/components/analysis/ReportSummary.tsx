@@ -6,6 +6,7 @@
 
 import React from 'react';
 import { AnalysisResponse } from '../../types';
+import { adaptAnalysisData } from '../../services/analysis-adapter';
 import {
   TrendingUp,
   MapPin,
@@ -51,20 +52,36 @@ export const ReportSummary: React.FC<ReportSummaryProps> = ({
   isSaving = false,
   isGeneratingPDF = false,
 }) => {
-  const scoreColorClass = getScoreColor(analysis.green_score);
-  const viabilidad = getViabilidad(analysis.green_score);
-  const viabilidadColor = getViabilidadColor(analysis.green_score);
+  // Adaptar datos para compatibilidad retroactiva
+  const adaptedAnalysis = adaptAnalysisData(analysis as any);
+  
+  const scoreColorClass = getScoreColor(adaptedAnalysis.green_score);
+  const viabilidad = getViabilidad(adaptedAnalysis.green_score);
+  const viabilidadColor = getViabilidadColor(adaptedAnalysis.green_score);
 
-  // Defensive validations for undefined arrays
-  const especies = analysis?.especies_recomendadas || [];
-  const recomendaciones = analysis?.recomendaciones || [];
-  const tags = analysis?.tags || [];
+  // Extraer datos con valores seguros
+  const especies = adaptedAnalysis.especies_recomendadas || [];
+  const recomendaciones = adaptedAnalysis.recomendaciones || [];
+  const tags = adaptedAnalysis.tags || [];
+  const beneficios = adaptedAnalysis.beneficios_ecosistemicos || {
+    co2_capturado_kg_anual: 0,
+    ahorro_energia_eur_anual: 0
+  };
+  const presupuesto = adaptedAnalysis.presupuesto || {
+    coste_total_inicial_eur: 0,
+    mantenimiento_anual_eur: 0,
+    desglose: {}
+  };
+  const roi_data = adaptedAnalysis.roi_ambiental || {
+    roi_porcentaje: 0,
+    amortizacion_anos: 0,
+    ahorro_anual_eur: 0
+  };
 
-  // Calculate costs and benefits
-  const costePorM2 = 150;
-  const inversionInicial = analysis.area_m2 * costePorM2;
-  const ahorroAnual = analysis.area_m2 * 7.95;
-  const roi = (ahorroAnual / inversionInicial) * 100;
+  // Use adapted values or fallback to calculated ones
+  const inversionInicial = presupuesto.coste_total_inicial_eur || (adaptedAnalysis.area_m2 * 150);
+  const ahorroAnual = roi_data.ahorro_anual_eur || beneficios.ahorro_energia_eur_anual || (adaptedAnalysis.area_m2 * 7.95);
+  const roi = roi_data.roi_porcentaje || ((ahorroAnual / inversionInicial) * 100);
 
   return (
     <div className="h-full flex flex-col bg-gray-50 overflow-y-auto">
@@ -81,7 +98,7 @@ export const ReportSummary: React.FC<ReportSummaryProps> = ({
           <div className={`mb-4 p-4 rounded-lg border-2 ${scoreColorClass}`}>
             <div className="text-center">
               <div className="text-3xl font-bold mb-1">
-                {analysis.green_score.toFixed(1)}
+                {adaptedAnalysis.green_score.toFixed(1)}
               </div>
               <div className="text-sm font-medium">Green Score</div>
             </div>
@@ -92,7 +109,7 @@ export const ReportSummary: React.FC<ReportSummaryProps> = ({
             <div className="bg-gray-50 p-3 rounded">
               <div className="text-gray-600 mb-1">Área</div>
               <div className="font-semibold text-gray-900">
-                {analysis.area_m2.toLocaleString('es-ES')} m²
+                {adaptedAnalysis.area_m2.toLocaleString('es-ES')} m²
               </div>
             </div>
             <div className="bg-gray-50 p-3 rounded">
@@ -106,7 +123,7 @@ export const ReportSummary: React.FC<ReportSummaryProps> = ({
             <div className="bg-gray-50 p-3 rounded">
               <div className="text-gray-600 mb-1">Perímetro</div>
               <div className="font-semibold text-gray-900">
-                {analysis.perimetro_m.toFixed(0)} m
+                {adaptedAnalysis.perimetro_m.toFixed(0)} m
               </div>
             </div>
           </div>

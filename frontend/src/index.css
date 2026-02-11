@@ -20,3 +20,19 @@ body {
   width: 100%;
   height: 100vh;
 }
+
+/* Mobile responsive adjustments for search control */
+@media (max-width: 768px) {
+  /* Adjust search control on mobile to avoid conflicts with map controls */
+  .leaflet-control-container .leaflet-bottom {
+    bottom: 60px !important;
+  }
+  
+  /* Ensure search bar is above mobile navigation if present */
+  .absolute.bottom-4.left-4 {
+    bottom: 80px;
+    left: 12px;
+    right: 12px;
+    width: auto !important;
+  }
+}
