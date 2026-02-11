@@ -1,0 +1,40 @@
+{
+  "name": "EcoUrbe AI - Regeneración Urbana Inteligente",
+  "short_name": "EcoUrbe",
+  "description": "Plataforma inteligente para la identificación y regeneración de espacios urbanos con soluciones verdes",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#10b981",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ],
+  "categories": ["utilities", "environment", "productivity"],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Nueva Zona Verde",
+      "short_name": "Nueva Zona",
+      "description": "Crear una nueva zona verde",
+      "url": "/?action=new",
+      "icons": [
+        {
+          "src": "/icon.svg",
+          "sizes": "any",
+          "type": "image/svg+xml"
+        }
+      ]
+    }
+  ]
+}

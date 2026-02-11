@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <!-- Background circle -->
+  <circle cx="100" cy="100" r="95" fill="#10b981" stroke="#059669" stroke-width="3"/>
+  
+  <!-- Tree trunk -->
+  <rect x="90" y="110" width="20" height="40" fill="#92400e" rx="2"/>
+  
+  <!-- Tree foliage - multiple circles for a fuller look -->
+  <circle cx="100" cy="85" r="35" fill="#34d399"/>
+  <circle cx="80" cy="95" r="28" fill="#6ee7b7"/>
+  <circle cx="120" cy="95" r="28" fill="#6ee7b7"/>
+  <circle cx="100" cy="105" r="25" fill="#a7f3d0"/>
+  
+  <!-- Text "EcoUrbe" -->
+  <text x="100" y="175" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="white" text-anchor="middle">
+    EcoUrbe
+  </text>
+</svg>
