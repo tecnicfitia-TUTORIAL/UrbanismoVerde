@@ -58,7 +58,7 @@ const ZoneDetailContent: React.FC<ZoneDetailContentProps> = ({
   // Load analysis data from database on component mount
   useEffect(() => {
     loadAnalisisData();
-  }, [area.id]);
+  }, [area.nombre]); // Use area.nombre since that's what we query by
 
   async function loadAnalisisData() {
     setLoadingAnalisis(true);
@@ -325,7 +325,7 @@ const ZoneDetailContent: React.FC<ZoneDetailContentProps> = ({
                         Factor Verde
                       </h3>
                       <div className="text-4xl font-bold text-green-700 mb-2">
-                        {analisis.factor_verde?.toFixed(2) || '0.65'}
+                        {analisis.factor_verde?.toFixed(2) ?? '0.65'}
                       </div>
                       <p className="text-sm text-green-700">
                         Cumple con normativa PECV Madrid 2025
@@ -341,28 +341,28 @@ const ZoneDetailContent: React.FC<ZoneDetailContentProps> = ({
                         <div className="bg-blue-50 rounded-lg p-4">
                           <div className="text-sm text-blue-700 mb-1">CO₂ Capturado</div>
                           <div className="text-2xl font-bold text-blue-900">
-                            {analisis.co2_capturado_kg_anual?.toLocaleString('es-ES') || 0} kg/año
+                            {(analisis.co2_capturado_kg_anual ?? 0).toLocaleString('es-ES')} kg/año
                           </div>
                         </div>
                         <div className="bg-cyan-50 rounded-lg p-4">
                           <div className="text-sm text-cyan-700 mb-1">Agua Retenida</div>
                           <div className="text-2xl font-bold text-cyan-900">
-                            {analisis.agua_retenida_litros_anual?.toLocaleString('es-ES') || 0} L/año
+                            {(analisis.agua_retenida_litros_anual ?? 0).toLocaleString('es-ES')} L/año
                           </div>
                         </div>
                         <div className="bg-orange-50 rounded-lg p-4">
                           <div className="text-sm text-orange-700 mb-1">Reducción Temperatura</div>
                           <div className="text-2xl font-bold text-orange-900">
-                            -{analisis.reduccion_temperatura_c?.toFixed(1) || '1.5'}°C
+                            -{(analisis.reduccion_temperatura_c ?? 1.5).toFixed(1)}°C
                           </div>
                         </div>
                         <div className="bg-yellow-50 rounded-lg p-4">
                           <div className="text-sm text-yellow-700 mb-1">Ahorro Energético</div>
                           <div className="text-2xl font-bold text-yellow-900">
-                            {analisis.ahorro_energia_kwh_anual?.toLocaleString('es-ES') || 0} kWh/año
+                            {(analisis.ahorro_energia_kwh_anual ?? 0).toLocaleString('es-ES')} kWh/año
                           </div>
                           <div className="text-xs text-yellow-700 mt-1">
-                            €{analisis.ahorro_energia_eur_anual?.toLocaleString('es-ES') || 0}/año
+                            €{(analisis.ahorro_energia_eur_anual ?? 0).toLocaleString('es-ES')}/año
                           </div>
                         </div>
                       </div>
@@ -455,10 +455,10 @@ const ZoneDetailContent: React.FC<ZoneDetailContentProps> = ({
                         Inversión Inicial
                       </h3>
                       <div className="text-4xl font-bold text-purple-700 mb-2">
-                        €{analisis.coste_total_inicial_eur?.toLocaleString('es-ES') || 0}
+                        €{(analisis.coste_total_inicial_eur ?? 0).toLocaleString('es-ES')}
                       </div>
                       <p className="text-sm text-purple-700">
-                        {analisis.coste_por_m2_eur || 150} €/m² • Vida útil: {analisis.vida_util_anos || 25} años
+                        {analisis.coste_por_m2_eur ?? 150} €/m² • Vida útil: {analisis.vida_util_anos ?? 25} años
                       </p>
                     </div>
 
@@ -479,12 +479,12 @@ const ZoneDetailContent: React.FC<ZoneDetailContentProps> = ({
                             <div key={idx} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
                               <div className="flex items-center gap-3">
                                 <span className={`px-2 py-1 rounded text-xs font-semibold ${item.color}`}>
-                                  {((item.value / analisis.coste_total_inicial_eur) * 100).toFixed(0)}%
+                                  {analisis.coste_total_inicial_eur ? ((item.value / analisis.coste_total_inicial_eur) * 100).toFixed(0) : '0'}%
                                 </span>
                                 <span className="text-sm font-medium text-gray-900">{item.label}</span>
                               </div>
                               <span className="text-lg font-bold text-gray-900">
-                                €{item.value?.toLocaleString('es-ES') || 0}
+                                €{(item.value ?? 0).toLocaleString('es-ES')}
                               </span>
                             </div>
                           ))}
@@ -498,7 +498,7 @@ const ZoneDetailContent: React.FC<ZoneDetailContentProps> = ({
                         Mantenimiento Anual
                       </h3>
                       <div className="text-2xl font-bold text-yellow-900">
-                        €{analisis.mantenimiento_anual_eur?.toLocaleString('es-ES') || 0}/año
+                        €{(analisis.mantenimiento_anual_eur ?? 0).toLocaleString('es-ES')}/año
                       </div>
                       <p className="text-xs text-yellow-700 mt-1">
                         Incluye riego, poda y fertilización
@@ -514,25 +514,25 @@ const ZoneDetailContent: React.FC<ZoneDetailContentProps> = ({
                         <div className="bg-green-50 rounded-lg p-4">
                           <div className="text-sm text-green-700 mb-1">ROI Ambiental</div>
                           <div className="text-3xl font-bold text-green-900">
-                            {analisis.roi_porcentaje?.toFixed(2) || '6.67'}%
+                            {(analisis.roi_porcentaje ?? 6.67).toFixed(2)}%
                           </div>
                         </div>
                         <div className="bg-blue-50 rounded-lg p-4">
                           <div className="text-sm text-blue-700 mb-1">Periodo de Amortización</div>
                           <div className="text-3xl font-bold text-blue-900">
-                            {analisis.amortizacion_anos?.toFixed(1) || '15.0'} años
+                            {(analisis.amortizacion_anos ?? 15.0).toFixed(1)} años
                           </div>
                         </div>
                         <div className="bg-indigo-50 rounded-lg p-4">
                           <div className="text-sm text-indigo-700 mb-1">Ahorro Anual</div>
                           <div className="text-2xl font-bold text-indigo-900">
-                            €{analisis.ahorro_anual_eur?.toLocaleString('es-ES') || 0}/año
+                            €{(analisis.ahorro_anual_eur ?? 0).toLocaleString('es-ES')}/año
                           </div>
                         </div>
                         <div className="bg-purple-50 rounded-lg p-4">
                           <div className="text-sm text-purple-700 mb-1">Ahorro a 25 Años</div>
                           <div className="text-2xl font-bold text-purple-900">
-                            €{analisis.ahorro_25_anos_eur?.toLocaleString('es-ES') || 0}
+                            €{(analisis.ahorro_25_anos_eur ?? 0).toLocaleString('es-ES')}
                           </div>
                         </div>
                       </div>
@@ -548,19 +548,19 @@ const ZoneDetailContent: React.FC<ZoneDetailContentProps> = ({
                           <div className="flex justify-between items-center">
                             <span className="text-sm text-green-700">Programa:</span>
                             <span className="font-semibold text-green-900">
-                              {analisis.subvencion_programa || 'PECV Madrid 2025'}
+                              {analisis.subvencion_programa ?? 'PECV Madrid 2025'}
                             </span>
                           </div>
                           <div className="flex justify-between items-center">
                             <span className="text-sm text-green-700">Porcentaje de Cobertura:</span>
                             <span className="font-semibold text-green-900">
-                              {analisis.subvencion_porcentaje || 50}%
+                              {analisis.subvencion_porcentaje ?? 50}%
                             </span>
                           </div>
                           <div className="flex justify-between items-center pt-3 border-t border-green-200">
                             <span className="text-sm font-semibold text-green-800">Monto Estimado:</span>
                             <span className="text-2xl font-bold text-green-900">
-                              €{analisis.subvencion_monto_estimado_eur?.toLocaleString('es-ES') || 0}
+                              €{(analisis.subvencion_monto_estimado_eur ?? 0).toLocaleString('es-ES')}
                             </span>
                           </div>
                         </div>
