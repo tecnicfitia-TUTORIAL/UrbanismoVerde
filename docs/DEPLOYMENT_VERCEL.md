@@ -56,36 +56,25 @@ Verifica que no haya errores. El build debe generar una carpeta `dist/`.
 
 ### 3. Verificar vercel.json
 
-El archivo `frontend/vercel.json` ya está configurado:
+El archivo raíz `vercel.json` está configurado de forma simplificada para trabajar con Root Directory:
 
 ```json
 {
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist",
-  "framework": "vite",
+  "functions": {
+    "api/analyze.py": {
+      "runtime": "python3.9"
+    }
+  },
   "rewrites": [
     {
-      "source": "/(.*)",
-      "destination": "/index.html"
+      "source": "/api/analyze",
+      "destination": "/api/analyze.py"
     }
-  ],
-  "headers": [
-    {
-      "source": "/service-worker.js",
-      "headers": [
-        {
-          "key": "Service-Worker-Allowed",
-          "value": "/"
-        }
-      ]
-    }
-  ],
-  "env": {
-    "VITE_SUPABASE_URL": "@supabase_url",
-    "VITE_SUPABASE_ANON_KEY": "@supabase_anon_key"
-  }
+  ]
 }
 ```
+
+**⚠️ IMPORTANTE**: Al usar esta configuración, debes configurar **Root Directory** a `frontend` en el Vercel Dashboard durante el setup del proyecto. Esto permite que Vercel acceda directamente al directorio frontend sin necesidad de comandos `cd`.
 
 ---
 
