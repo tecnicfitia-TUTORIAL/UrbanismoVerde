@@ -74,7 +74,11 @@ El archivo raíz `vercel.json` está configurado de forma simplificada para trab
 }
 ```
 
-**⚠️ IMPORTANTE**: Al usar esta configuración, debes configurar **Root Directory** a `frontend` en el Vercel Dashboard durante el setup del proyecto. Esto permite que Vercel acceda directamente al directorio frontend sin necesidad de comandos `cd`.
+**⚠️ IMPORTANTE**: 
+- Este archivo `vercel.json` debe estar en la **raíz del repositorio**, no dentro de `frontend/`
+- Al usar esta configuración, debes configurar **Root Directory** a `frontend` en **Project Settings → General → Root Directory** del Vercel Dashboard
+- Esto permite que Vercel acceda directamente al directorio frontend sin necesidad de comandos `cd`
+- El directorio `api/` (que contiene `analyze.py`) está en la raíz del repositorio, y Vercel lo accede independientemente del Root Directory configurado
 
 ---
 
