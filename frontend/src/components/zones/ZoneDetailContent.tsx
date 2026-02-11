@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, MapIcon, Calendar, Edit2, Trash2, Brain, Euro, History, Loader2 } from 'lucide-react';
+import { ArrowLeft, MapIcon, Edit2, Trash2, Brain, Euro, History, Loader2 } from 'lucide-react';
 import { Area } from '../../types';
 import Breadcrumbs from '../common/Breadcrumbs';
 import { coloresPorTipo } from '../../types';
@@ -54,7 +54,6 @@ const ZoneDetailContent: React.FC<ZoneDetailContentProps> = ({
   const [activeTab, setActiveTab] = useState<'info' | 'analysis' | 'budget' | 'history'>('info');
   const [analisis, setAnalisis] = useState<AnalisisData | null>(null);
   const [loadingAnalisis, setLoadingAnalisis] = useState(true);
-  const [dbZonaId, setDbZonaId] = useState<string | null>(null);
 
   // Load analysis data from database on component mount
   useEffect(() => {
@@ -86,7 +85,6 @@ const ZoneDetailContent: React.FC<ZoneDetailContentProps> = ({
       }
 
       const dbZona = zonas[0];
-      setDbZonaId(dbZona.id);
 
       // Now fetch the analysis for this zona
       const { data: analisisData, error: analisisError } = await supabase
