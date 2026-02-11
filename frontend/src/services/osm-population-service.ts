@@ -60,11 +60,15 @@ export async function calculatePopulationImpact(
     const avgViviendas = buildings50m.length > 0 
       ? Math.round(viviendas50m / buildings50m.length) 
       : 40;
+    
+    const avgPersonas = buildings50m.length > 0
+      ? Math.round(personas50m / buildings50m.length)
+      : 100;
 
     return {
       densidad_hab_km2: Math.round(densidad),
       edificio_viviendas: avgViviendas,
-      edificio_personas: Math.round(personas50m / buildings50m.length) || 100,
+      edificio_personas: avgPersonas,
       beneficiarios_50m: Math.round(personas50m),
       beneficiarios_200m: Math.round(personas200m),
       coste_por_persona: Math.round(costeTotal / personas50m) || 0

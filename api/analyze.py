@@ -904,7 +904,7 @@ def calculate_subsidy_amount(coste_total: float, porcentaje: int, tope_maximo: f
 # URBAN REGENERATION DATA MODULES
 # =====================================================
 
-def agregar_datos_poblacion(analisis_result: dict, coordinates: list) -> dict:
+def add_population_data(analisis_result: dict, coordinates: list) -> dict:
     """
     Module A: Add population benefited data
     
@@ -942,7 +942,7 @@ def agregar_datos_poblacion(analisis_result: dict, coordinates: list) -> dict:
     return analisis_result
 
 
-def agregar_deficit_verde(analisis_result: dict, poblacion: int = None) -> dict:
+def add_green_deficit(analisis_result: dict, poblacion: int = None) -> dict:
     """
     Module B: Add green space deficit analysis
     
@@ -984,7 +984,7 @@ def agregar_deficit_verde(analisis_result: dict, poblacion: int = None) -> dict:
     return analisis_result
 
 
-def calcular_priorizacion(analisis_result: dict) -> dict:
+def calculate_prioritization(analisis_result: dict) -> dict:
     """
     Module C: Multi-criteria prioritization system
     
@@ -1300,9 +1300,9 @@ class AnalysisEngine:
         }
         
         # Add urban regeneration modules
-        result = agregar_datos_poblacion(result, self.coordinates)
-        result = agregar_deficit_verde(result)
-        result = calcular_priorizacion(result)
+        result = add_population_data(result, self.coordinates)
+        result = add_green_deficit(result)
+        result = calculate_prioritization(result)
         
         return result
     

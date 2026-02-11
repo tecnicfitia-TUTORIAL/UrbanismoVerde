@@ -6,6 +6,10 @@
  * and compare against WHO recommendations.
  */
 
+// Constants
+const DEFAULT_GREEN_SPACE_M2_HAB_MADRID = 6.2; // Madrid's average green space per capita
+const WHO_MINIMUM_GREEN_SPACE_M2_HAB = 9.0; // WHO recommendation
+
 interface GreenDeficitData {
   verde_actual_m2_hab: number;
   oms_minimo: number;
@@ -52,10 +56,10 @@ export async function calculateGreenDeficit(
     }, 0);
 
     // m²/hab current
-    const verdeActual = poblacion > 0 ? totalGreenArea / poblacion : 6.2;
+    const verdeActual = poblacion > 0 ? totalGreenArea / poblacion : DEFAULT_GREEN_SPACE_M2_HAB_MADRID;
     
     // WHO recommends minimum 9 m²/hab
-    const omsMinimo = 9.0;
+    const omsMinimo = WHO_MINIMUM_GREEN_SPACE_M2_HAB;
     const deficit = verdeActual - omsMinimo;
     
     // With new green roof
@@ -84,8 +88,8 @@ export async function calculateGreenDeficit(
   } catch (error) {
     console.warn('Green space query error, using estimates:', error);
     // Fallback to Madrid averages
-    const verdeActual = 6.2;
-    const omsMinimo = 9.0;
+    const verdeActual = DEFAULT_GREEN_SPACE_M2_HAB_MADRID;
+    const omsMinimo = WHO_MINIMUM_GREEN_SPACE_M2_HAB;
     const deficit = verdeActual - omsMinimo;
     const conCubierta = poblacion > 0 
       ? verdeActual + (areaCubierta / poblacion) 
