@@ -19,6 +19,7 @@ from http.server import BaseHTTPRequestHandler
 import json
 import time
 import math
+import random
 from typing import List, Dict, Tuple
 
 # =====================================================
@@ -670,8 +671,6 @@ def calculate_biodiversity_impact(area_m2: float, especies_nativas_pct: float) -
 
 def segment_surfaces(area_m2: float, seed: int = None) -> dict:
     """Simulate surface segmentation analysis."""
-    import random
-    
     if seed is not None:
         random.seed(seed)
     
@@ -705,8 +704,6 @@ def segment_surfaces(area_m2: float, seed: int = None) -> dict:
 
 def analyze_solar_exposure(lat: float, lon: float, area_m2: float) -> dict:
     """Analyze solar exposure for the location."""
-    import random
-    
     if lat >= 41.5:
         base_hours = 2200
     elif lat >= 39.5:
