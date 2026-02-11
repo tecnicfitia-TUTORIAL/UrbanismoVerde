@@ -2,25 +2,34 @@
   "version": 2,
   "builds": [
     {
-      "src": "api/**/*.py",
+      "src": "api/analyze.py",
       "use": "@vercel/python"
     },
     {
       "src": "frontend/package.json",
       "use": "@vercel/static-build",
       "config": {
-        "distDir": "frontend/dist"
+        "distDir": "dist"
       }
     }
   ],
   "routes": [
     {
       "src": "/api/analyze",
-      "dest": "/api/analyze.py"
+      "dest": "/api/analyze.py",
+      "methods": ["GET", "POST", "OPTIONS"]
     },
     {
-      "src": "/api/(.*)",
-      "dest": "/api/$1"
+      "src": "/assets/(.*)",
+      "dest": "/frontend/assets/$1"
+    },
+    {
+      "src": "/service-worker.js",
+      "dest": "/frontend/service-worker.js",
+      "headers": {
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        "Service-Worker-Allowed": "/"
+      }
     },
     {
       "src": "/(.*)",
@@ -28,7 +37,7 @@
     }
   ],
   "functions": {
-    "api/*.py": {
+    "api/analyze.py": {
       "runtime": "python3.9",
       "memory": 1024,
       "maxDuration": 10
@@ -44,7 +53,7 @@
         },
         {
           "key": "Access-Control-Allow-Methods",
-          "value": "GET, POST, PUT, DELETE, OPTIONS"
+          "value": "GET, POST, OPTIONS"
         },
         {
           "key": "Access-Control-Allow-Headers",
