@@ -188,6 +188,13 @@ ESPECIES = {
 }
 
 
+# Species selection constants
+MAX_AROMATICAS_SOL_DIRECTO = 3
+MAX_SUCULENTAS_SOL_DIRECTO = 1
+MAX_AROMATICAS_MIXTA = 2
+MAX_SOMBRA_MIXTA = 2
+
+
 def get_species_by_exposure(clasificacion_solar: str, max_especies: int = 4) -> list:
     """
     Filter species by solar exposure classification.
@@ -201,7 +208,8 @@ def get_species_by_exposure(clasificacion_solar: str, max_especies: int = 4) -> 
     """
     if clasificacion_solar == 'SOL_DIRECTO':
         # High sun: aromatics and succulents
-        especies_sol = ESPECIES['aromaticas'][:3] + ESPECIES['suculentas'][:1]
+        especies_sol = (ESPECIES['aromaticas'][:MAX_AROMATICAS_SOL_DIRECTO] + 
+                       ESPECIES['suculentas'][:MAX_SUCULENTAS_SOL_DIRECTO])
         viabilidades = [0.95, 0.92, 0.90, 0.88]
     elif clasificacion_solar == 'SOMBRA':
         # Shade: shade-tolerant species
@@ -209,7 +217,8 @@ def get_species_by_exposure(clasificacion_solar: str, max_especies: int = 4) -> 
         viabilidades = [0.85, 0.82, 0.80]
     else:  # MIXTA
         # Mixed: combination
-        especies_sol = ESPECIES['aromaticas'][:2] + ESPECIES['sombra'][:2]
+        especies_sol = (ESPECIES['aromaticas'][:MAX_AROMATICAS_MIXTA] + 
+                       ESPECIES['sombra'][:MAX_SOMBRA_MIXTA])
         viabilidades = [0.88, 0.85, 0.83, 0.80]
     
     # Add viability and reason

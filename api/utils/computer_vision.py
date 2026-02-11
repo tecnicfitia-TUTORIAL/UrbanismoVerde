@@ -100,8 +100,11 @@ def analyze_solar_exposure(lat: float, lon: float, area_m2: float) -> dict:
         base_hours = 2600
     
     # Simulate shadow factor from surrounding buildings
-    # In production, would use 3D models and sun path analysis
-    shadow_factor = random.uniform(0.75, 0.95)
+    # In production, would use:
+    # - 3D building models (CityGML, OSM Buildings)
+    # - Sun path analysis (solar azimuth/altitude)
+    # - Shadow casting algorithms (ray tracing)
+    shadow_factor = random.uniform(0.75, 0.95)  # TODO: Replace with real shadow analysis
     
     horas_sol_anuales = int(base_hours * shadow_factor)
     
