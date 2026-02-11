@@ -238,6 +238,7 @@ const DashboardContent: React.FC<DashboardContentProps> = ({ areas, onNavigate }
               <div className="environmental-unit">toneladas CO₂</div>
               <div className="environmental-label">Captura de Carbono</div>
               <div className="environmental-footer">
+                {/* 1 tree captures ~5kg CO₂/year */}
                 ~{(stats.co2CapturadoAnual * 1000 / 5).toFixed(0)} árboles equivalentes
               </div>
             </div>

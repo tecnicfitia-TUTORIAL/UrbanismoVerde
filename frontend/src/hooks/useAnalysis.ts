@@ -91,8 +91,8 @@ function validateAnalysisResponse(data: any): data is AnalysisResponse {
 /**
  * Create fallback analysis result
  */
-function createFallbackResult(area_m2: number = 0): AnalysisResponse {
-  console.log('⚠️ Creando resultado fallback con área:', area_m2);
+function createFallbackResult(area_m2: number = 0, errorMessage?: string): AnalysisResponse {
+  console.log('⚠️ Creando resultado fallback con área:', area_m2, 'error:', errorMessage || 'unknown');
   return {
     success: false,
     green_score: 0,
@@ -102,7 +102,7 @@ function createFallbackResult(area_m2: number = 0): AnalysisResponse {
     especies_recomendadas: [],
     recomendaciones: ['Por favor, intente el análisis nuevamente'],
     processing_time: 0,
-    error: 'Failed to analyze area'
+    error: errorMessage || 'Failed to analyze area'
   };
 }
 
@@ -155,7 +155,7 @@ export function useAnalysis(): UseAnalysisReturn {
       // Validate API response
       if (!validateAnalysisResponse(analysisResult)) {
         const errorMsg = 'Respuesta del servidor no válida';
-        console.error('❌ Validación fallida');
+        console.error('❌ Validación fallo');
         setError(errorMsg);
         toast.error('Error en análisis: Respuesta inválida del servidor', {
           duration: 5000,
@@ -163,7 +163,7 @@ export function useAnalysis(): UseAnalysisReturn {
         });
         
         // Return fallback result
-        const fallback = createFallbackResult(analysisResult?.area_m2 || 0);
+        const fallback = createFallbackResult(analysisResult?.area_m2 || 0, errorMsg);
         setResult(fallback);
         return fallback;
       }
@@ -188,8 +188,8 @@ export function useAnalysis(): UseAnalysisReturn {
         setResult(analysisResult);
         return analysisResult;
       } else {
-        const errorMsg = analysisResult.error || 'Análisis falló sin mensaje de error';
-        console.error('❌ Análisis falló:', errorMsg);
+        const errorMsg = analysisResult.error || 'Análisis fallo sin mensaje de error';
+        console.error('❌ Análisis fallo:', errorMsg);
         setError(errorMsg);
         
         // Show error toast with more context
@@ -199,7 +199,7 @@ export function useAnalysis(): UseAnalysisReturn {
         });
         
         // Return fallback result
-        const fallback = createFallbackResult(analysisResult.area_m2);
+        const fallback = createFallbackResult(analysisResult.area_m2, errorMsg);
         setResult(fallback);
         return fallback;
       }
@@ -219,7 +219,7 @@ export function useAnalysis(): UseAnalysisReturn {
       );
       
       // Return fallback result
-      const fallback = createFallbackResult(0);
+      const fallback = createFallbackResult(0, errorMsg);
       setResult(fallback);
       return fallback;
       

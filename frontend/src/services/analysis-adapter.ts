@@ -137,7 +137,7 @@ export function adaptAnalysisData(
 ): NewAnalysisData {
   // Validate input data
   if (!data || typeof data !== 'object') {
-    console.warn('⚠️ adaptAnalysisData: Datos inválidos, retornando formato por defecto');
+    console.warn('⚠️ adaptAnalysisData: Datos invalidos, retornando formato por defecto');
     return createDefaultAnalysisData();
   }
 
@@ -152,12 +152,12 @@ export function adaptAnalysisData(
   
   // Validate critical fields
   if (typeof legacy.area_m2 !== 'number' || legacy.area_m2 < 0) {
-    console.warn('⚠️ area_m2 inválido, usando valor por defecto');
+    console.warn('⚠️ area_m2 invalido, usando valor por defecto');
     legacy.area_m2 = 0;
   }
 
   if (typeof legacy.green_score !== 'number' || legacy.green_score < 0 || legacy.green_score > 100) {
-    console.warn('⚠️ green_score inválido, usando valor por defecto');
+    console.warn('⚠️ green_score invalido, usando valor por defecto');
     legacy.green_score = 0;
   }
 

@@ -31,6 +31,8 @@
   --gradient-start: #10b981;
   --gradient-end: #059669;
   --border-color: #10b981;
+  --glow-color: rgba(16, 185, 129, 0.4);
+  --glow-color-transparent: rgba(16, 185, 129, 0);
 }
 
 /* Water Card Theme */
@@ -38,6 +40,8 @@
   --gradient-start: #3b82f6;
   --gradient-end: #2563eb;
   --border-color: #3b82f6;
+  --glow-color: rgba(59, 130, 246, 0.4);
+  --glow-color-transparent: rgba(59, 130, 246, 0);
 }
 
 /* Energy Card Theme */
@@ -45,6 +49,8 @@
   --gradient-start: #f59e0b;
   --gradient-end: #d97706;
   --border-color: #f59e0b;
+  --glow-color: rgba(245, 158, 11, 0.4);
+  --glow-color-transparent: rgba(245, 158, 11, 0);
 }
 
 /* Icon Styles */
@@ -117,21 +123,15 @@
 /* Animation for cards */
 @keyframes pulse-glow {
   0%, 100% {
-    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+    box-shadow: 0 0 0 0 var(--glow-color, rgba(16, 185, 129, 0.4));
   }
   50% {
-    box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+    box-shadow: 0 0 0 10px var(--glow-color-transparent, rgba(16, 185, 129, 0));
   }
 }
 
-.environmental-metric-card:hover .co2-icon {
-  animation: pulse-glow 2s infinite;
-}
-
-.environmental-metric-card:hover .water-icon {
-  animation: pulse-glow 2s infinite;
-}
-
+.environmental-metric-card:hover .co2-icon,
+.environmental-metric-card:hover .water-icon,
 .environmental-metric-card:hover .energy-icon {
   animation: pulse-glow 2s infinite;
 }
