@@ -138,6 +138,12 @@ export function useAnalysis(): UseAnalysisReturn {
     setError(null);
     setResult(null);
 
+    // Show loading toast
+    const loadingToastId = toast.loading('🔬 Analizando zona con IA...', {
+      duration: 30000, // 30 second timeout
+      icon: '🔬',
+    });
+
     try {
       // Convert coordinates to GeoJSON if needed
       let geoJSONPolygon: GeoJSONPolygon;
@@ -157,7 +163,10 @@ export function useAnalysis(): UseAnalysisReturn {
         const errorMsg = 'Respuesta del servidor no válida';
         console.error('❌ Validación fallo');
         setError(errorMsg);
+        
+        // Dismiss loading toast and show error
         toast.error('Error en análisis: Respuesta inválida del servidor', {
+          id: loadingToastId,
           duration: 5000,
           icon: '⚠️',
         });
@@ -176,10 +185,11 @@ export function useAnalysis(): UseAnalysisReturn {
           time: analysisResult.processing_time
         });
         
-        // Show success toast
+        // Dismiss loading toast and show success
         toast.success(
-          `Análisis completado: Green Score ${analysisResult.green_score.toFixed(1)}/100`,
+          `✅ Análisis completado: Green Score ${analysisResult.green_score.toFixed(1)}/100`,
           {
+            id: loadingToastId,
             duration: 4000,
             icon: '✅',
           }
@@ -192,8 +202,9 @@ export function useAnalysis(): UseAnalysisReturn {
         console.error('❌ Análisis fallo:', errorMsg);
         setError(errorMsg);
         
-        // Show error toast with more context
-        toast.error(`Error en análisis: ${errorMsg}`, {
+        // Dismiss loading toast and show error
+        toast.error(`❌ Error en análisis: ${errorMsg}`, {
+          id: loadingToastId,
           duration: 5000,
           icon: '❌',
         });
@@ -209,10 +220,11 @@ export function useAnalysis(): UseAnalysisReturn {
       console.error('❌ Excepción en análisis:', errorMsg, err);
       setError(errorMsg);
       
-      // Show error toast with user-friendly message
+      // Dismiss loading toast and show error with user-friendly message
       toast.error(
         'No se pudo conectar con el servicio de análisis. Por favor, verifique su conexión.',
         {
+          id: loadingToastId,
           duration: 6000,
           icon: '🔌',
         }
