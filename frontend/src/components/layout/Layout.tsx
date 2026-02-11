@@ -8,8 +8,10 @@ import ZoneDetailContent from '../zones/ZoneDetailContent';
 import AnalysisWorkflowContent from '../analysis/AnalysisWorkflowContent';
 import BudgetGalleryContent from '../budget/BudgetGalleryContent';
 import { AnalysisResults } from '../analysis/AnalysisResults';
-import { Area, FormData } from '../../types';
+import { AnalysisReportPage } from '../analysis/AnalysisReportPage';
+import { Area, FormData, GeoJSONPolygon } from '../../types';
 import { useAnalysis } from '../../hooks/useAnalysis';
+import { coordinatesToGeoJSON } from '../../services/ai-analysis';
 
 // Calcular área usando fórmula de Haversine (aproximación para polígonos pequeños)
 const calcularArea = (coords: [number, number][]): number => {
@@ -43,6 +45,8 @@ const Layout: React.FC = () => {
   // AI Analysis state
   const { analyze, isAnalyzing, result: analysisResult, reset: resetAnalysis } = useAnalysis();
   const [showAnalysisResults, setShowAnalysisResults] = useState(false);
+  const [showAnalysisReport, setShowAnalysisReport] = useState(false);
+  const [currentPolygon, setCurrentPolygon] = useState<GeoJSONPolygon | null>(null);
 
   const handleStartDrawing = () => {
     setIsDrawing(true);
@@ -62,8 +66,18 @@ const Layout: React.FC = () => {
     // Automatically analyze the drawn polygon
     console.log('🎯 Polígono completado, iniciando análisis automático...');
     try {
-      await analyze(coords);
-      setShowAnalysisResults(true);
+      const result = await analyze(coords);
+      if (result && result.success) {
+        // Convert coordinates to GeoJSON for the report page
+        const geoJSONPolygon = coordinatesToGeoJSON(coords);
+        setCurrentPolygon(geoJSONPolygon);
+        
+        // Show new comprehensive report page instead of simple modal
+        setShowAnalysisReport(true);
+      } else {
+        // If analysis fails, still allow user to save the zone
+        setShowModal(true);
+      }
     } catch (error) {
       console.error('Error en análisis automático:', error);
       // If analysis fails, still allow user to save the zone
@@ -104,7 +118,8 @@ const Layout: React.FC = () => {
   
   const handleGenerateBudget = () => {
     console.log('💰 Generando presupuesto con datos del análisis...');
-    // Close analysis results and open zone form modal to save first
+    // Close analysis report and open zone form modal to save first
+    setShowAnalysisReport(false);
     setShowAnalysisResults(false);
     setShowModal(true);
   };
@@ -112,6 +127,19 @@ const Layout: React.FC = () => {
   const handleCloseAnalysisResults = () => {
     setShowAnalysisResults(false);
     // Give user option to save zone without analysis
+    setShowModal(true);
+  };
+
+  const handleCloseAnalysisReport = () => {
+    setShowAnalysisReport(false);
+    setCurrentPolygon(null);
+    // Give user option to save zone
+    setShowModal(true);
+  };
+
+  const handleSaveFromReport = () => {
+    // Close report and open save modal
+    setShowAnalysisReport(false);
     setShowModal(true);
   };
 
@@ -131,6 +159,8 @@ const Layout: React.FC = () => {
     tempCoordsRef.current = [];
     resetAnalysis();
     setShowAnalysisResults(false);
+    setShowAnalysisReport(false);
+    setCurrentPolygon(null);
   };
 
   const handleNavigate = (view: string, data?: any) => {
@@ -259,6 +289,17 @@ const Layout: React.FC = () => {
             {renderContent()}
           </div>
         </main>
+      )}
+
+      {/* New Comprehensive Analysis Report Page */}
+      {showAnalysisReport && analysisResult && currentPolygon && (
+        <AnalysisReportPage
+          analysisResult={analysisResult}
+          polygon={currentPolygon}
+          zoneName={`Zona ${new Date().toLocaleDateString('es-ES')}`}
+          onClose={handleCloseAnalysisReport}
+          onSave={handleSaveFromReport}
+        />
       )}
 
       <ZoneFormModal

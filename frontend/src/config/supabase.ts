@@ -44,6 +44,7 @@ export const TABLES = {
   ANALISIS: 'analisis',
   ESPECIES: 'especies',
   MUNICIPIOS: 'municipios',
+  INFORMES: 'informes',
 } as const;
 
 // Helper function to check connection
@@ -109,4 +110,15 @@ export interface Municipio {
   comunidad_autonoma: string;
   codigo_postal?: string;
   created_at: string;
+}
+
+export interface Informe {
+  id: string;
+  analisis_id: string;
+  formato: 'pdf' | 'html' | 'json';
+  contenido?: string;
+  url_pdf?: string;
+  generado_por?: string;
+  created_at: string;
+  updated_at: string;
 }
