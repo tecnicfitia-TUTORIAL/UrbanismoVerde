@@ -8,6 +8,12 @@ import { supabase, TABLES, getCurrentUser } from '../config/supabase';
 import { AnalysisResponse, GeoJSONPolygon, SavedAnalysis } from '../types';
 import { adaptAnalysisData } from './analysis-adapter';
 
+// Constants for cost and impact calculations
+const DEFAULT_COST_PER_M2 = 150; // €/m² - Base installation cost
+const DEFAULT_CO2_CAPTURE_PER_M2 = 5; // kg/m²/year - CO₂ absorption rate
+const DEFAULT_WATER_RETENTION_PER_M2 = 240; // L/m²/year - Water retention capacity
+const IMPLEMENTATION_DAYS_PER_100M2 = 30; // Days needed per 100m² installation
+
 /**
  * Save complete analysis to database
  * Creates zona_verde and analisis records
@@ -166,16 +172,16 @@ async function saveToAnalisisTable(
   };
 
   // Estimate implementation time in days
-  const tiempoImplementacion = Math.ceil(adaptedData.area_m2 / 100) * 30; // 30 days per 100m2
+  const tiempoImplementacion = Math.ceil(adaptedData.area_m2 / 100) * IMPLEMENTATION_DAYS_PER_100M2;
 
   const analisisData = {
     zona_verde_id: zonaVerdeId,
     tipo_suelo: adaptedData.tags.find(t => t.includes('suelo')) || 'Suelo urbano',
     exposicion_solar: calculateSolarExposure(adaptedData.tags),
     especies_recomendadas: adaptedData.especies_recomendadas,
-    coste_estimado: presupuesto.coste_total_inicial_eur || (adaptedData.area_m2 * 150),
-    impacto_ambiental_co2_anual: beneficios.co2_capturado_kg_anual || (adaptedData.area_m2 * 5),
-    impacto_ambiental_oxigeno_anual: beneficios.agua_retenida_litros_anual || (adaptedData.area_m2 * 240),
+    coste_estimado: presupuesto.coste_total_inicial_eur || (adaptedData.area_m2 * DEFAULT_COST_PER_M2),
+    impacto_ambiental_co2_anual: beneficios.co2_capturado_kg_anual || (adaptedData.area_m2 * DEFAULT_CO2_CAPTURE_PER_M2),
+    impacto_ambiental_oxigeno_anual: beneficios.agua_retenida_litros_anual || (adaptedData.area_m2 * DEFAULT_WATER_RETENTION_PER_M2), // Note: Field name suggests oxygen but stores water retention
     tiempo_implementacion_dias: tiempoImplementacion,
     notas: JSON.stringify(extendedData, null, 2), // Store all extended data as JSON
   };

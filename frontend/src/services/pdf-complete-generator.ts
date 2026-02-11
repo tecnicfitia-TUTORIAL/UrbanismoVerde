@@ -19,6 +19,16 @@ import { adaptAnalysisData } from './analysis-adapter';
 declare module 'jspdf' {
   interface jsPDF {
     autoTable: typeof autoTable;
+    lastAutoTable?: {
+      finalY: number;
+    };
+    internal: {
+      getNumberOfPages(): number;
+      pageSize: {
+        getWidth(): number;
+        getHeight(): number;
+      };
+    };
   }
 }
 
@@ -78,7 +88,7 @@ export async function generateCompletePDF(options: CompletePDFOptions): Promise<
       { align: 'center' }
     );
     doc.text(
-      `Página ${(doc as any).internal.getNumberOfPages()}`,
+      `Página ${doc.internal.getNumberOfPages()}`,
       pageWidth - margin,
       pageHeight - 10,
       { align: 'right' }
@@ -161,7 +171,7 @@ export async function generateCompletePDF(options: CompletePDFOptions): Promise<
     margin: { left: margin, right: margin },
   });
 
-  yPos = (doc as any).lastAutoTable.finalY + 12;
+  yPos = doc.lastAutoTable!.finalY + 12;
 
   // =====================
   // 2. BENEFICIOS ECOSISTÉMICOS
@@ -206,7 +216,7 @@ export async function generateCompletePDF(options: CompletePDFOptions): Promise<
     margin: { left: margin, right: margin },
   });
 
-  yPos = (doc as any).lastAutoTable.finalY + 12;
+  yPos = doc.lastAutoTable!.finalY + 12;
 
   // =====================
   // 3. PRESUPUESTO DETALLADO
@@ -264,7 +274,7 @@ export async function generateCompletePDF(options: CompletePDFOptions): Promise<
     margin: { left: margin, right: margin },
   });
 
-  yPos = (doc as any).lastAutoTable.finalY + 12;
+  yPos = doc.lastAutoTable!.finalY + 12;
 
   // =====================
   // 4. ROI (RETORNO DE INVERSIÓN)
@@ -310,7 +320,7 @@ export async function generateCompletePDF(options: CompletePDFOptions): Promise<
     margin: { left: margin, right: margin },
   });
 
-  yPos = (doc as any).lastAutoTable.finalY + 12;
+  yPos = doc.lastAutoTable!.finalY + 12;
 
   // =====================
   // 5. SUBVENCIONES
@@ -355,7 +365,7 @@ export async function generateCompletePDF(options: CompletePDFOptions): Promise<
       margin: { left: margin, right: margin },
     });
 
-    yPos = (doc as any).lastAutoTable.finalY + 12;
+    yPos = doc.lastAutoTable!.finalY + 12;
   } else {
     doc.setFontSize(11);
     doc.setFont('helvetica', 'normal');
@@ -404,7 +414,7 @@ export async function generateCompletePDF(options: CompletePDFOptions): Promise<
       margin: { left: margin, right: margin },
     });
 
-    yPos = (doc as any).lastAutoTable.finalY + 12;
+    yPos = doc.lastAutoTable!.finalY + 12;
   } else {
     doc.setFontSize(11);
     doc.setFont('helvetica', 'normal');
