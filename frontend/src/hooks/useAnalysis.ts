@@ -138,9 +138,8 @@ export function useAnalysis(): UseAnalysisReturn {
     setError(null);
     setResult(null);
 
-    // Show loading toast
+    // Show loading toast (note: loading toasts persist until dismissed)
     const loadingToastId = toast.loading('🔬 Analizando zona con IA...', {
-      duration: 30000, // 30 second timeout
       icon: '🔬',
     });
 
