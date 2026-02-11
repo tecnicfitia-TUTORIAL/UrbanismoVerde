@@ -316,7 +316,6 @@ const Layout: React.FC = () => {
           polygon={currentPolygon}
           zoneName={`Zona ${new Date().toLocaleDateString('es-ES')}`}
           onClose={handleCloseAnalysisReport}
-          onSave={handleSaveFromReport}
         />
       )}
 
