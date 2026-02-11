@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import toast from 'react-hot-toast';
 import Sidebar from './Sidebar';
 import FullScreenMap from '../maps/FullScreenMap';
 import ZoneFormModal from '../modals/ZoneFormModal';
@@ -54,8 +55,25 @@ const Layout: React.FC = () => {
   };
 
   const handleCompleteDrawing = async (coords: [number, number][]) => {
+    // Validate minimum points
     if (coords.length < 3) {
-      alert('Necesitas al menos 3 puntos para crear un área');
+      toast.error('Polígono inválido: se requieren al menos 3 puntos', {
+        duration: 4000,
+        icon: '⚠️',
+      });
+      setIsDrawing(false);
+      return;
+    }
+    
+    // Calculate approximate area for validation (rough estimate)
+    const areaEstimada = calcularArea(coords);
+    
+    // Validate minimum area (50 m²)
+    if (areaEstimada < 50) {
+      toast.error('Área muy pequeña: se requiere un mínimo de 50 m²', {
+        duration: 4000,
+        icon: '⚠️',
+      });
       setIsDrawing(false);
       return;
     }
@@ -298,7 +316,6 @@ const Layout: React.FC = () => {
           polygon={currentPolygon}
           zoneName={`Zona ${new Date().toLocaleDateString('es-ES')}`}
           onClose={handleCloseAnalysisReport}
-          onSave={handleSaveFromReport}
         />
       )}
 
