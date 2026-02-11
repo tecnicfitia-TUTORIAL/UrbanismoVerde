@@ -16,6 +16,14 @@ import {
   CheckCircle,
   Download,
   Save,
+  Wind,
+  Droplets,
+  Thermometer,
+  Zap,
+  Calculator,
+  TrendingDown,
+  Gift,
+  Receipt,
 } from 'lucide-react';
 
 interface ReportSummaryProps {
@@ -65,33 +73,57 @@ export const ReportSummary: React.FC<ReportSummaryProps> = ({
   const tags = adaptedAnalysis.tags || [];
   const beneficios = adaptedAnalysis.beneficios_ecosistemicos || {
     co2_capturado_kg_anual: 0,
+    agua_retenida_litros_anual: 0,
+    reduccion_temperatura_c: 0,
+    ahorro_energia_kwh_anual: 0,
     ahorro_energia_eur_anual: 0
   };
   const presupuesto = adaptedAnalysis.presupuesto || {
     coste_total_inicial_eur: 0,
     mantenimiento_anual_eur: 0,
-    desglose: {}
+    coste_por_m2_eur: 0,
+    vida_util_anos: 0,
+    desglose: {
+      sustrato_eur: 0,
+      drenaje_eur: 0,
+      membrana_impermeable_eur: 0,
+      plantas_eur: 0,
+      instalacion_eur: 0
+    }
   };
   const roi_data = adaptedAnalysis.roi_ambiental || {
     roi_porcentaje: 0,
     amortizacion_anos: 0,
-    ahorro_anual_eur: 0
+    ahorro_anual_eur: 0,
+    ahorro_25_anos_eur: 0
+  };
+  const subvencion = adaptedAnalysis.subvencion || {
+    elegible: false,
+    porcentaje: 0,
+    programa: 'N/A',
+    monto_estimado_eur: 0
+  };
+  const normativa = adaptedAnalysis.normativa || {
+    factor_verde: 0,
+    cumple_pecv_madrid: false,
+    apto_para_subvencion: false
   };
 
   // Use adapted values or fallback to calculated ones
   const inversionInicial = presupuesto.coste_total_inicial_eur || (adaptedAnalysis.area_m2 * 150);
   const ahorroAnual = roi_data.ahorro_anual_eur || beneficios.ahorro_energia_eur_anual || (adaptedAnalysis.area_m2 * 7.95);
   const roi = roi_data.roi_porcentaje || ((ahorroAnual / inversionInicial) * 100);
+  const costeNeto = inversionInicial - subvencion.monto_estimado_eur;
 
   return (
     <div className="h-full flex flex-col bg-gray-50 overflow-y-auto">
       {/* Panel Content */}
       <div className="flex-1 p-6 space-y-6">
-        {/* Executive Summary Card */}
+        {/* 1. RESUMEN GENERAL */}
         <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
           <div className="flex items-center gap-2 mb-4">
             <TrendingUp className="text-blue-600" size={24} />
-            <h3 className="text-lg font-semibold text-gray-900">Resumen Ejecutivo</h3>
+            <h3 className="text-lg font-semibold text-gray-900">1. Resumen General</h3>
           </div>
 
           {/* Green Score */}
@@ -113,35 +145,220 @@ export const ReportSummary: React.FC<ReportSummaryProps> = ({
               </div>
             </div>
             <div className="bg-gray-50 p-3 rounded">
-              <div className="text-gray-600 mb-1">Viabilidad</div>
-              <div className={`font-semibold ${viabilidadColor}`}>{viabilidad}</div>
-            </div>
-            <div className="bg-gray-50 p-3 rounded">
-              <div className="text-gray-600 mb-1">ROI Estimado</div>
-              <div className="font-semibold text-gray-900">{roi.toFixed(1)}%</div>
-            </div>
-            <div className="bg-gray-50 p-3 rounded">
               <div className="text-gray-600 mb-1">Perímetro</div>
               <div className="font-semibold text-gray-900">
                 {adaptedAnalysis.perimetro_m.toFixed(0)} m
               </div>
             </div>
+            <div className="bg-gray-50 p-3 rounded">
+              <div className="text-gray-600 mb-1">Factor Verde</div>
+              <div className="font-semibold text-gray-900">{normativa.factor_verde.toFixed(2)}</div>
+            </div>
+            <div className="bg-gray-50 p-3 rounded">
+              <div className="text-gray-600 mb-1">Viabilidad</div>
+              <div className={`font-semibold ${viabilidadColor}`}>{viabilidad}</div>
+            </div>
           </div>
         </div>
 
-        {/* Species Recommendations Card */}
+        {/* 2. BENEFICIOS ECOSISTÉMICOS */}
+        <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
+          <div className="flex items-center gap-2 mb-4">
+            <Wind className="text-green-600" size={24} />
+            <h3 className="text-lg font-semibold text-gray-900">2. Beneficios Ecosistémicos</h3>
+          </div>
+
+          <div className="space-y-3 text-sm">
+            <div className="flex items-center justify-between p-3 bg-green-50 rounded">
+              <div className="flex items-center gap-2">
+                <Wind className="text-green-600" size={18} />
+                <span className="text-gray-700">CO₂ Capturado Anual</span>
+              </div>
+              <span className="font-semibold text-gray-900">
+                {beneficios.co2_capturado_kg_anual.toLocaleString('es-ES')} kg/año
+              </span>
+            </div>
+            <div className="flex items-center justify-between p-3 bg-blue-50 rounded">
+              <div className="flex items-center gap-2">
+                <Droplets className="text-blue-600" size={18} />
+                <span className="text-gray-700">Agua Retenida Anual</span>
+              </div>
+              <span className="font-semibold text-gray-900">
+                {beneficios.agua_retenida_litros_anual.toLocaleString('es-ES')} L/año
+              </span>
+            </div>
+            <div className="flex items-center justify-between p-3 bg-orange-50 rounded">
+              <div className="flex items-center gap-2">
+                <Thermometer className="text-orange-600" size={18} />
+                <span className="text-gray-700">Reducción Temperatura</span>
+              </div>
+              <span className="font-semibold text-gray-900">
+                {beneficios.reduccion_temperatura_c.toFixed(1)}°C
+              </span>
+            </div>
+            <div className="flex items-center justify-between p-3 bg-yellow-50 rounded">
+              <div className="flex items-center gap-2">
+                <Zap className="text-yellow-600" size={18} />
+                <span className="text-gray-700">Ahorro Energía Anual</span>
+              </div>
+              <span className="font-semibold text-gray-900">
+                {beneficios.ahorro_energia_kwh_anual.toLocaleString('es-ES')} kWh
+                ({beneficios.ahorro_energia_eur_anual.toLocaleString('es-ES')} €)
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* 3. PRESUPUESTO DETALLADO */}
+        <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
+          <div className="flex items-center gap-2 mb-4">
+            <Receipt className="text-blue-600" size={24} />
+            <h3 className="text-lg font-semibold text-gray-900">3. Presupuesto Detallado</h3>
+          </div>
+
+          <div className="space-y-3 text-sm">
+            <div className="flex justify-between items-center p-3 bg-blue-100 rounded font-semibold">
+              <span className="text-gray-900">Inversión Inicial</span>
+              <span className="text-gray-900">
+                €{inversionInicial.toLocaleString('es-ES', { maximumFractionDigits: 0 })}
+              </span>
+            </div>
+            
+            <div className="pl-4 space-y-2">
+              <div className="flex justify-between items-center p-2 bg-gray-50 rounded text-xs">
+                <span className="text-gray-600">Sustrato</span>
+                <span className="text-gray-900">
+                  €{presupuesto.desglose.sustrato_eur.toLocaleString('es-ES', { maximumFractionDigits: 0 })}
+                </span>
+              </div>
+              <div className="flex justify-between items-center p-2 bg-gray-50 rounded text-xs">
+                <span className="text-gray-600">Drenaje</span>
+                <span className="text-gray-900">
+                  €{presupuesto.desglose.drenaje_eur.toLocaleString('es-ES', { maximumFractionDigits: 0 })}
+                </span>
+              </div>
+              <div className="flex justify-between items-center p-2 bg-gray-50 rounded text-xs">
+                <span className="text-gray-600">Membrana Impermeable</span>
+                <span className="text-gray-900">
+                  €{presupuesto.desglose.membrana_impermeable_eur.toLocaleString('es-ES', { maximumFractionDigits: 0 })}
+                </span>
+              </div>
+              <div className="flex justify-between items-center p-2 bg-gray-50 rounded text-xs">
+                <span className="text-gray-600">Plantas</span>
+                <span className="text-gray-900">
+                  €{presupuesto.desglose.plantas_eur.toLocaleString('es-ES', { maximumFractionDigits: 0 })}
+                </span>
+              </div>
+              <div className="flex justify-between items-center p-2 bg-gray-50 rounded text-xs">
+                <span className="text-gray-600">Instalación</span>
+                <span className="text-gray-900">
+                  €{presupuesto.desglose.instalacion_eur.toLocaleString('es-ES', { maximumFractionDigits: 0 })}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex justify-between items-center p-3 bg-orange-50 rounded">
+              <span className="text-gray-700">Mantenimiento Anual</span>
+              <span className="font-semibold text-gray-900">
+                €{presupuesto.mantenimiento_anual_eur.toLocaleString('es-ES', { maximumFractionDigits: 0 })}
+              </span>
+            </div>
+            <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
+              <span className="text-gray-700">Coste por m²</span>
+              <span className="font-semibold text-gray-900">
+                €{presupuesto.coste_por_m2_eur.toLocaleString('es-ES', { maximumFractionDigits: 0 })}/m²
+              </span>
+            </div>
+            <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
+              <span className="text-gray-700">Vida Útil</span>
+              <span className="font-semibold text-gray-900">{presupuesto.vida_util_anos} años</span>
+            </div>
+          </div>
+        </div>
+
+        {/* 4. ROI (RETORNO DE INVERSIÓN) */}
+        <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
+          <div className="flex items-center gap-2 mb-4">
+            <Calculator className="text-green-600" size={24} />
+            <h3 className="text-lg font-semibold text-gray-900">4. ROI (Retorno de Inversión)</h3>
+          </div>
+
+          <div className="space-y-3 text-sm">
+            <div className="flex justify-between items-center p-3 bg-green-50 rounded">
+              <span className="text-gray-700">Ahorro Anual</span>
+              <span className="font-semibold text-green-600">
+                €{ahorroAnual.toLocaleString('es-ES', { maximumFractionDigits: 0 })}
+              </span>
+            </div>
+            <div className="flex justify-between items-center p-3 bg-blue-50 rounded">
+              <span className="text-gray-700">ROI Porcentaje</span>
+              <span className="font-semibold text-blue-600">{roi.toFixed(1)}%</span>
+            </div>
+            <div className="flex justify-between items-center p-3 bg-purple-50 rounded">
+              <span className="text-gray-700">Amortización</span>
+              <span className="font-semibold text-purple-600">
+                {roi_data.amortizacion_anos.toFixed(1)} años
+              </span>
+            </div>
+            <div className="flex justify-between items-center p-3 bg-green-100 rounded">
+              <span className="text-gray-700">Ahorro Total 25 años</span>
+              <span className="font-semibold text-green-700">
+                €{roi_data.ahorro_25_anos_eur.toLocaleString('es-ES', { maximumFractionDigits: 0 })}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* 5. SUBVENCIONES */}
+        <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
+          <div className="flex items-center gap-2 mb-4">
+            <Gift className="text-purple-600" size={24} />
+            <h3 className="text-lg font-semibold text-gray-900">5. Subvenciones Disponibles</h3>
+          </div>
+
+          {subvencion.elegible ? (
+            <div className="space-y-3 text-sm">
+              <div className="flex justify-between items-center p-3 bg-purple-50 rounded">
+                <span className="text-gray-700">Programa</span>
+                <span className="font-semibold text-gray-900">{subvencion.programa}</span>
+              </div>
+              <div className="flex justify-between items-center p-3 bg-blue-50 rounded">
+                <span className="text-gray-700">Porcentaje Subvención</span>
+                <span className="font-semibold text-blue-600">{subvencion.porcentaje}%</span>
+              </div>
+              <div className="flex justify-between items-center p-3 bg-green-50 rounded">
+                <span className="text-gray-700">Monto Estimado</span>
+                <span className="font-semibold text-green-600">
+                  €{subvencion.monto_estimado_eur.toLocaleString('es-ES', { maximumFractionDigits: 0 })}
+                </span>
+              </div>
+              <div className="flex justify-between items-center p-3 bg-blue-100 rounded font-semibold">
+                <span className="text-gray-900">Coste Neto (con subvención)</span>
+                <span className="text-gray-900">
+                  €{costeNeto.toLocaleString('es-ES', { maximumFractionDigits: 0 })}
+                </span>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              No hay subvenciones disponibles para este proyecto
+            </div>
+          )}
+        </div>
+
+        {/* 6. ESPECIES RECOMENDADAS */}
         <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
           <div className="flex items-center gap-2 mb-4">
             <Leaf className="text-green-600" size={24} />
             <h3 className="text-lg font-semibold text-gray-900">
-              Especies Recomendadas ({especies.length})
+              6. Especies Recomendadas ({especies.length})
             </h3>
           </div>
 
           {especies.length > 0 ? (
             <>
               <div className="space-y-3 max-h-64 overflow-y-auto">
-                {especies.slice(0, 5).map((especie, index) => (
+                {especies.map((especie, index) => (
                   <div
                     key={index}
                     className="flex items-start justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
@@ -162,12 +379,6 @@ export const ReportSummary: React.FC<ReportSummaryProps> = ({
                   </div>
                 ))}
               </div>
-
-              {especies.length > 5 && (
-                <div className="mt-3 text-sm text-gray-500 text-center">
-                  +{especies.length - 5} especies más
-                </div>
-              )}
             </>
           ) : (
             <div className="text-center py-8 text-gray-500">
@@ -176,49 +387,16 @@ export const ReportSummary: React.FC<ReportSummaryProps> = ({
           )}
         </div>
 
-        {/* Costs & Benefits Card */}
-        <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
-          <div className="flex items-center gap-2 mb-4">
-            <DollarSign className="text-blue-600" size={24} />
-            <h3 className="text-lg font-semibold text-gray-900">Costos & Beneficios</h3>
-          </div>
-
-          <div className="space-y-3 text-sm">
-            <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
-              <span className="text-gray-700">Inversión inicial</span>
-              <span className="font-semibold text-gray-900">
-                €{inversionInicial.toLocaleString('es-ES', { maximumFractionDigits: 0 })}
-              </span>
-            </div>
-            <div className="flex justify-between items-center p-3 bg-green-50 rounded">
-              <span className="text-gray-700">Ahorro anual</span>
-              <span className="font-semibold text-green-600">
-                €{ahorroAnual.toLocaleString('es-ES', { maximumFractionDigits: 0 })}
-              </span>
-            </div>
-            <div className="flex justify-between items-center p-3 bg-blue-50 rounded">
-              <span className="text-gray-700">Subvenciones disponibles</span>
-              <span className="font-semibold text-blue-600">30-50%</span>
-            </div>
-            <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
-              <span className="text-gray-700">Amortización</span>
-              <span className="font-semibold text-gray-900">
-                {(inversionInicial / ahorroAnual).toFixed(1)} años
-              </span>
-            </div>
-          </div>
-        </div>
-
         {/* Recommendations Card */}
-        <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
-          <div className="flex items-center gap-2 mb-4">
-            <AlertCircle className="text-orange-600" size={24} />
-            <h3 className="text-lg font-semibold text-gray-900">
-              Recomendaciones ({recomendaciones.length})
-            </h3>
-          </div>
+        {recomendaciones.length > 0 && (
+          <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
+            <div className="flex items-center gap-2 mb-4">
+              <AlertCircle className="text-orange-600" size={24} />
+              <h3 className="text-lg font-semibold text-gray-900">
+                Recomendaciones Técnicas ({recomendaciones.length})
+              </h3>
+            </div>
 
-          {recomendaciones.length > 0 ? (
             <div className="space-y-2 max-h-64 overflow-y-auto">
               {recomendaciones.map((rec, index) => (
                 <div
@@ -230,12 +408,8 @@ export const ReportSummary: React.FC<ReportSummaryProps> = ({
                 </div>
               ))}
             </div>
-          ) : (
-            <div className="text-center py-8 text-gray-500">
-              No hay recomendaciones disponibles
-            </div>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Characteristics Tags */}
         {tags && tags.length > 0 && (

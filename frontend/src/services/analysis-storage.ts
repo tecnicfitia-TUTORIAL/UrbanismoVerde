@@ -6,6 +6,13 @@
 
 import { supabase, TABLES, getCurrentUser } from '../config/supabase';
 import { AnalysisResponse, GeoJSONPolygon, SavedAnalysis } from '../types';
+import { adaptAnalysisData } from './analysis-adapter';
+
+// Constants for cost and impact calculations
+const DEFAULT_COST_PER_M2 = 150; // €/m² - Base installation cost
+const DEFAULT_CO2_CAPTURE_PER_M2 = 5; // kg/m²/year - CO₂ absorption rate
+const DEFAULT_WATER_RETENTION_PER_M2 = 240; // L/m²/year - Water retention capacity
+const IMPLEMENTATION_DAYS_PER_100M2 = 30; // Days needed per 100m² installation
 
 /**
  * Save complete analysis to database
@@ -94,29 +101,89 @@ async function createZonaVerde(
 }
 
 /**
- * Save to analisis table
+ * Save to analisis table with ALL data fields
  */
 async function saveToAnalisisTable(
   zonaVerdeId: string,
   analysisData: AnalysisResponse
 ): Promise<string> {
-  // Calculate estimated cost based on area and green score
-  const costePorM2 = 150; // Base cost per m2
-  const costeEstimado = analysisData.area_m2 * costePorM2;
+  // Adapt analysis data to ensure all fields exist
+  const adaptedData = adaptAnalysisData(analysisData as any);
+
+  // Extract all data sections
+  const beneficios = adaptedData.beneficios_ecosistemicos || {};
+  const presupuesto = adaptedData.presupuesto || {};
+  const roi = adaptedData.roi_ambiental || {};
+  const subvencion = adaptedData.subvencion || {};
+  const normativa = adaptedData.normativa || {};
+
+  // Create comprehensive notes with all data in JSON format for easy retrieval
+  const extendedData = {
+    green_score: adaptedData.green_score,
+    area_m2: adaptedData.area_m2,
+    perimetro_m: adaptedData.perimetro_m,
+    
+    normativa: {
+      factor_verde: normativa.factor_verde,
+      cumple_pecv_madrid: normativa.cumple_pecv_madrid,
+      cumple_miteco: normativa.cumple_miteco,
+      apto_para_subvencion: normativa.apto_para_subvencion,
+      requisitos: normativa.requisitos
+    },
+    
+    beneficios_ecosistemicos: {
+      co2_capturado_kg_anual: beneficios.co2_capturado_kg_anual,
+      agua_retenida_litros_anual: beneficios.agua_retenida_litros_anual,
+      reduccion_temperatura_c: beneficios.reduccion_temperatura_c,
+      ahorro_energia_kwh_anual: beneficios.ahorro_energia_kwh_anual,
+      ahorro_energia_eur_anual: beneficios.ahorro_energia_eur_anual
+    },
+    
+    presupuesto: {
+      coste_total_inicial_eur: presupuesto.coste_total_inicial_eur,
+      desglose: {
+        sustrato_eur: presupuesto.desglose?.sustrato_eur || 0,
+        drenaje_eur: presupuesto.desglose?.drenaje_eur || 0,
+        membrana_impermeable_eur: presupuesto.desglose?.membrana_impermeable_eur || 0,
+        plantas_eur: presupuesto.desglose?.plantas_eur || 0,
+        instalacion_eur: presupuesto.desglose?.instalacion_eur || 0
+      },
+      mantenimiento_anual_eur: presupuesto.mantenimiento_anual_eur,
+      coste_por_m2_eur: presupuesto.coste_por_m2_eur,
+      vida_util_anos: presupuesto.vida_util_anos
+    },
+    
+    roi_ambiental: {
+      roi_porcentaje: roi.roi_porcentaje,
+      amortizacion_anos: roi.amortizacion_anos,
+      ahorro_anual_eur: roi.ahorro_anual_eur,
+      ahorro_25_anos_eur: roi.ahorro_25_anos_eur
+    },
+    
+    subvencion: {
+      elegible: subvencion.elegible,
+      porcentaje: subvencion.porcentaje,
+      programa: subvencion.programa,
+      monto_estimado_eur: subvencion.monto_estimado_eur
+    },
+    
+    tags: adaptedData.tags,
+    recomendaciones: adaptedData.recomendaciones
+  };
 
   // Estimate implementation time in days
-  const tiempoImplementacion = Math.ceil(analysisData.area_m2 / 100) * 30; // 30 days per 100m2
+  const tiempoImplementacion = Math.ceil(adaptedData.area_m2 / 100) * IMPLEMENTATION_DAYS_PER_100M2;
 
   const analisisData = {
     zona_verde_id: zonaVerdeId,
-    tipo_suelo: analysisData.tags.find(t => t.includes('suelo')) || 'Suelo urbano',
-    exposicion_solar: calculateSolarExposure(analysisData.tags),
-    especies_recomendadas: analysisData.especies_recomendadas,
-    coste_estimado: costeEstimado,
-    impacto_ambiental_co2_anual: analysisData.area_m2 * 0.5, // Estimated CO2 absorption
-    impacto_ambiental_oxigeno_anual: analysisData.area_m2 * 0.8, // Estimated O2 production
+    tipo_suelo: adaptedData.tags.find(t => t.includes('suelo')) || 'Suelo urbano',
+    exposicion_solar: calculateSolarExposure(adaptedData.tags),
+    especies_recomendadas: adaptedData.especies_recomendadas,
+    coste_estimado: presupuesto.coste_total_inicial_eur || (adaptedData.area_m2 * DEFAULT_COST_PER_M2),
+    impacto_ambiental_co2_anual: beneficios.co2_capturado_kg_anual || (adaptedData.area_m2 * DEFAULT_CO2_CAPTURE_PER_M2),
+    impacto_ambiental_oxigeno_anual: beneficios.agua_retenida_litros_anual || (adaptedData.area_m2 * DEFAULT_WATER_RETENTION_PER_M2), // Note: Field name suggests oxygen but stores water retention
     tiempo_implementacion_dias: tiempoImplementacion,
-    notas: `Green Score: ${analysisData.green_score}. ${analysisData.recomendaciones.join('. ')}`,
+    notas: JSON.stringify(extendedData, null, 2), // Store all extended data as JSON
   };
 
   const { data, error } = await supabase
@@ -134,6 +201,7 @@ async function saveToAnalisisTable(
     throw new Error('No data returned from analysis save');
   }
 
+  console.log('✅ Análisis guardado con todos los datos:', data.id);
   return data.id;
 }
 
