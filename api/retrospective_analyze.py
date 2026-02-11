@@ -22,7 +22,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from standards.idae_formulas import calculate_energy_savings, calculate_thermal_improvement
 from standards.miteco_2024 import calculate_ecosystem_benefits, calculate_economic_value_ecosystem_services
-from standards.costs_2024 import COSTES_CUBIERTA_VERDE_M2
+from standards.costs_2024 import get_cost_per_type
 
 # =====================================================
 # CONSTANTS
@@ -181,12 +181,13 @@ def calculate_projection(data: dict, baseline: dict) -> dict:
     # ==========================================
     
     # Initial cost (€/m²) varies by roof type
+    # Using midpoint of cost range from costs_2024.py
     coste_m2_map = {
-        'extensiva': COSTES_CUBIERTA_VERDE_M2.get('extensiva', 150),
-        'semi-intensiva': COSTES_CUBIERTA_VERDE_M2.get('semi_intensiva', 200),
-        'intensiva': COSTES_CUBIERTA_VERDE_M2.get('intensiva', 300)
+        'extensiva': 115,      # Average of 80-150
+        'semi-intensiva': 175,  # Between extensiva and intensiva
+        'intensiva': 200        # Average of 150-250
     }
-    coste_m2 = coste_m2_map.get(tipo_cubierta, 150)
+    coste_m2 = coste_m2_map.get(tipo_cubierta, 115)
     coste_inicial = area_verde_m2 * coste_m2
     
     # Annual maintenance (3-5% of initial cost)
