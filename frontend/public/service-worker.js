@@ -25,7 +25,15 @@ self.addEventListener('install', (event) => {
     caches.open(CACHE_NAME)
       .then(cache => {
         console.log('Caching app shell');
-        return cache.addAll(PRECACHE_URLS);
+        // Use Promise.allSettled to handle individual cache failures gracefully
+        return Promise.allSettled(
+          PRECACHE_URLS.map(url => 
+            cache.add(url).catch(err => {
+              console.warn(`Failed to cache ${url}:`, err);
+              return null;
+            })
+          )
+        );
       })
       .then(() => self.skipWaiting())
   );
