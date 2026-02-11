@@ -186,7 +186,7 @@ export function useAnalysis(): UseAnalysisReturn {
         
         // Dismiss loading toast and show success
         toast.success(
-          `✅ Análisis completado: Green Score ${analysisResult.green_score.toFixed(1)}/100`,
+          `Análisis completado: Green Score ${analysisResult.green_score.toFixed(1)}/100`,
           {
             id: loadingToastId,
             duration: 4000,
@@ -202,7 +202,7 @@ export function useAnalysis(): UseAnalysisReturn {
         setError(errorMsg);
         
         // Dismiss loading toast and show error
-        toast.error(`❌ Error en análisis: ${errorMsg}`, {
+        toast.error(`Error en análisis: ${errorMsg}`, {
           id: loadingToastId,
           duration: 5000,
           icon: '❌',

@@ -57,7 +57,7 @@ const Layout: React.FC = () => {
   const handleCompleteDrawing = async (coords: [number, number][]) => {
     // Validate minimum points
     if (coords.length < 3) {
-      toast.error('❌ Polígono inválido: se requieren al menos 3 puntos', {
+      toast.error('Polígono inválido: se requieren al menos 3 puntos', {
         duration: 4000,
         icon: '⚠️',
       });
@@ -70,7 +70,7 @@ const Layout: React.FC = () => {
     
     // Validate minimum area (50 m²)
     if (areaEstimada < 50) {
-      toast.error('❌ Área muy pequeña: se requiere un mínimo de 50 m²', {
+      toast.error('Área muy pequeña: se requiere un mínimo de 50 m²', {
         duration: 4000,
         icon: '⚠️',
       });
