@@ -171,8 +171,7 @@ export const AnalysisReportPage: React.FC<AnalysisReportPageProps> = ({
           onClick={() => setShowSaveDialog(false)}
         >
           <div 
-            className="relative bg-white rounded-lg shadow-xl max-w-md w-full p-6"
-            style={{ zIndex: Z_INDEX.SAVE_DIALOG_CONTENT }}
+            className="bg-white rounded-lg shadow-xl max-w-md w-full p-6"
             onClick={(e) => e.stopPropagation()}
           >
             <h3 className="text-xl font-semibold text-gray-900 mb-4">

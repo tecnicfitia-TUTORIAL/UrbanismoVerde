@@ -12,8 +12,8 @@ export const Z_INDEX = {
   /** Regular UI elements like panels, sidebar, search controls */
   UI_ELEMENTS: 1000,
   
-  /** Page overlays like AnalysisReportPage, loading states, toasts */
-  PAGE_OVERLAY: 50,
+  /** Page overlays like AnalysisReportPage, loading states, toasts - appear above UI */
+  PAGE_OVERLAY: 1500,
   
   /** Zone form modal (highest priority for data input) */
   ZONE_FORM_MODAL: 2000,
@@ -21,7 +21,7 @@ export const Z_INDEX = {
   /** Save/confirmation dialogs that appear above page overlays */
   SAVE_DIALOG_OVERLAY: 10000,
   
-  /** Content within save/confirmation dialogs */
+  /** Content within save/confirmation dialogs (not needed but kept for clarity) */
   SAVE_DIALOG_CONTENT: 10001,
 } as const;
 
