@@ -8,7 +8,7 @@ import { useState, useCallback } from 'react';
 import toast from 'react-hot-toast';
 import { AnalysisResponse, GeoJSONPolygon, SavedAnalysis, SubZone } from '../types';
 import { saveAnalysis, generateReport } from '../services/analysis-storage';
-import { generatePDFReport, downloadPDFReport } from '../services/pdf-generator';
+import { generateCompletePDF, downloadCompletePDF } from '../services/pdf-complete-generator';
 
 interface UseAnalysisReportOptions {
   analysisResult: AnalysisResponse;
@@ -86,14 +86,14 @@ export function useAnalysisReport(options: UseAnalysisReportOptions): UseAnalysi
    * Generate PDF report
    */
   const generatePDF = useCallback(async (): Promise<void> => {
-    console.log('📄 Generando PDF...');
+    console.log('📄 Generando PDF completo...');
     setIsGeneratingPDF(true);
     setError(null);
 
-    const toastId = toast.loading('Generando PDF...');
+    const toastId = toast.loading('Generando PDF completo...');
 
     try {
-      const blob = await generatePDFReport({
+      const blob = await generateCompletePDF({
         analysisResult,
         polygon,
         zoneName,
@@ -108,8 +108,8 @@ export function useAnalysisReport(options: UseAnalysisReportOptions): UseAnalysi
         await generateReport(savedAnalysisId, 'pdf', undefined, url);
       }
 
-      console.log('✅ PDF generado exitosamente');
-      toast.success('✅ PDF generado correctamente', { id: toastId });
+      console.log('✅ PDF completo generado exitosamente');
+      toast.success('✅ PDF completo generado correctamente', { id: toastId });
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Error generando PDF';
       console.error('❌ Error generando PDF:', errorMsg);
@@ -124,14 +124,14 @@ export function useAnalysisReport(options: UseAnalysisReportOptions): UseAnalysi
    * Download PDF report
    */
   const downloadPDF = useCallback(async (filename?: string): Promise<void> => {
-    console.log('📥 Descargando PDF...');
+    console.log('📥 Descargando PDF completo...');
     setIsGeneratingPDF(true);
     setError(null);
 
-    const toastId = toast.loading('Descargando PDF...');
+    const toastId = toast.loading('Descargando PDF completo...');
 
     try {
-      await downloadPDFReport(
+      await downloadCompletePDF(
         {
           analysisResult,
           polygon,
@@ -140,8 +140,8 @@ export function useAnalysisReport(options: UseAnalysisReportOptions): UseAnalysi
         filename
       );
 
-      console.log('✅ PDF descargado');
-      toast.success('✅ PDF descargado correctamente', { id: toastId });
+      console.log('✅ PDF completo descargado');
+      toast.success('✅ PDF completo descargado correctamente', { id: toastId });
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Error descargando PDF';
       console.error('❌ Error descargando PDF:', errorMsg);
