@@ -9,6 +9,15 @@ interface SearchControlProps {
   onLocationSelected?: (lat: number, lng: number, label: string) => void;
 }
 
+// Container styles for search control positioning
+const SEARCH_CONTAINER_CLASSES = 
+  'absolute bottom-6 left-6 z-[1000] w-80 max-w-[400px] min-w-[320px] ' +
+  'md:w-80 max-md:left-3 max-md:right-3 max-md:bottom-20 max-md:w-auto';
+
+// Search input wrapper styles
+const SEARCH_INPUT_WRAPPER_CLASSES = 
+  'flex items-center bg-white rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.15)] p-3';
+
 const SearchControl: React.FC<SearchControlProps> = ({ onLocationSelected }) => {
   const map = useMap();
   const [query, setQuery] = useState('');
@@ -91,18 +100,18 @@ const SearchControl: React.FC<SearchControlProps> = ({ onLocationSelected }) => 
   return (
     <div 
       ref={containerRef}
-      className="absolute bottom-4 left-4 z-[1000] w-80"
+      className={SEARCH_CONTAINER_CLASSES}
     >
       {/* Search Input */}
       <div className="relative">
-        <div className="flex items-center bg-white rounded-lg shadow-lg">
+        <div className={SEARCH_INPUT_WRAPPER_CLASSES}>
           <Search className="absolute left-3 text-gray-400 w-5 h-5" />
           <input
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Buscar dirección..."
-            className="w-full py-3 pl-10 pr-10 text-sm border-none rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full py-2 pl-10 pr-10 text-sm border-none rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-transparent"
           />
           {query && (
             <button
