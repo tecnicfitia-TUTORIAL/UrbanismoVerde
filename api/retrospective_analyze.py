@@ -40,6 +40,13 @@ COSTE_AGUA_EUR_M3 = 2.0
 # Discount rate for NPV calculation
 TASA_DESCUENTO = 0.03  # 3%
 
+# Payback constants
+INFINITE_PAYBACK_YEARS = 999  # Indicates non-viable investment (no positive returns)
+
+# Quality of life index calculation constants
+QUALITY_FACTORS_COUNT = 3  # Number of factors: temperature, area, biodiversity
+QUALITY_INDEX_SCALE = 10  # Scale 0-10 for quality of life index
+
 # =====================================================
 # BASELINE CALCULATIONS (Current State - BEFORE)
 # =====================================================
@@ -302,7 +309,7 @@ def calculate_roi(projection: dict, comparison: dict) -> dict:
     roi_pct = (beneficio_neto_anual / coste_inicial * 100) if coste_inicial > 0 else 0
     
     # Payback period (years)
-    payback = coste_inicial / beneficio_neto_anual if beneficio_neto_anual > 0 else 999
+    payback = coste_inicial / beneficio_neto_anual if beneficio_neto_anual > 0 else INFINITE_PAYBACK_YEARS
     
     # Net Present Value (NPV) with 3% discount rate
     vnp = -coste_inicial
@@ -378,13 +385,15 @@ def calculate_ecosystem_value(projection: dict, baseline: dict) -> dict:
     valor_total_25_anos = eco_value['valor_25_anos_eur']
     
     # Quality of life improvement index (0-10 scale)
-    # Based on area size, temperature reduction, biodiversity
-    temp_factor = min(projection['reduccion_temperatura_c'] / 2, 1)  # Max 1
-    area_factor = min(area_m2 / 500, 1)  # Max 1 at 500m²
-    bio_factor = projection['biodiversidad_mejora_pct'] / 100
+    # Based on three factors: temperature reduction, area size, and biodiversity improvement
+    # Each factor normalized to 0-1 range, then averaged and scaled to 0-10
+    temp_factor = min(projection['reduccion_temperatura_c'] / 2, 1)  # Max 1 at 2°C reduction
+    area_factor = min(area_m2 / 500, 1)  # Max 1 at 500m² (optimal urban roof size)
+    bio_factor = projection['biodiversidad_mejora_pct'] / 100  # Percentage to 0-1
     
-    calidad_vida_indice = int((temp_factor + area_factor + bio_factor) / 3 * 10)
-    calidad_vida_indice = max(1, min(10, calidad_vida_indice))  # Clamp 1-10
+    # Average the three factors and scale to 0-10 index
+    calidad_vida_indice = int((temp_factor + area_factor + bio_factor) / QUALITY_FACTORS_COUNT * QUALITY_INDEX_SCALE)
+    calidad_vida_indice = max(1, min(10, calidad_vida_indice))  # Clamp to 1-10 range
     
     return {
         'valor_ecosistemico_total_eur': round(valor_total_25_anos, 2),
