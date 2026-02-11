@@ -24,6 +24,9 @@ import {
   TrendingDown,
   Gift,
   Receipt,
+  Users,
+  TreeDeciduous,
+  Target,
 } from 'lucide-react';
 
 interface ReportSummaryProps {
@@ -161,11 +164,149 @@ export const ReportSummary: React.FC<ReportSummaryProps> = ({
           </div>
         </div>
 
+        {/* MÓDULO A: POBLACIÓN BENEFICIADA */}
+        {analysis.poblacion_datos && (
+          <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
+            <div className="flex items-center gap-2 mb-4">
+              <Users className="text-blue-600" size={24} />
+              <h3 className="text-lg font-semibold text-gray-900">2. Población Beneficiada</h3>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className="p-4 bg-blue-50 rounded-lg text-center">
+                <p className="text-xs text-gray-600 mb-1">Densidad del Barrio</p>
+                <p className="text-xl font-bold text-blue-600">
+                  {analysis.poblacion_datos.densidad_barrio_hab_km2.toLocaleString('es-ES')}
+                </p>
+                <p className="text-xs text-gray-500">hab/km²</p>
+              </div>
+              
+              <div className="p-4 bg-green-50 rounded-lg text-center">
+                <p className="text-xs text-gray-600 mb-1">Beneficiarios Directos (50m)</p>
+                <p className="text-xl font-bold text-green-600">
+                  ~{analysis.poblacion_datos.beneficiarios_directos_radio_50m}
+                </p>
+                <p className="text-xs text-gray-500">personas</p>
+              </div>
+              
+              <div className="p-4 bg-purple-50 rounded-lg text-center">
+                <p className="text-xs text-gray-600 mb-1">Coste por Persona</p>
+                <p className="text-xl font-bold text-purple-600">
+                  €{analysis.poblacion_datos.coste_por_persona}
+                </p>
+                <p className="text-xs text-gray-500">inversión una sola vez</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* MÓDULO B: DÉFICIT VERDE */}
+        {analysis.deficit_verde && (
+          <div className="bg-white rounded-lg shadow-md p-6 border-2 border-orange-200">
+            <div className="flex items-center gap-2 mb-4">
+              <TreeDeciduous className="text-orange-600" size={24} />
+              <h3 className="text-lg font-semibold text-gray-900">3. Déficit Verde del Barrio</h3>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-gray-700">Espacios verdes actuales</span>
+                  <span className="font-bold text-red-600">
+                    {analysis.deficit_verde.verde_actual_m2_hab} m²/hab
+                  </span>
+                </div>
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-gray-700">OMS recomienda mínimo</span>
+                  <span className="font-bold text-green-600">
+                    {analysis.deficit_verde.oms_minimo} m²/hab
+                  </span>
+                </div>
+                <div className="p-3 bg-red-50 rounded-lg">
+                  <div className="flex justify-between items-center">
+                    <span className="font-semibold text-red-700 text-sm">Déficit</span>
+                    <span className="text-lg font-bold text-red-700">
+                      {analysis.deficit_verde.deficit} m²/hab ⚠️
+                    </span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <div className="p-4 bg-green-50 rounded-lg">
+                  <p className="text-xs text-gray-600 mb-2">Con esta cubierta verde</p>
+                  <p className="text-2xl font-bold text-green-600">
+                    {analysis.deficit_verde.con_cubierta_m2_hab} m²/hab
+                  </p>
+                  <p className="text-xs text-green-700 mt-2">
+                    +{analysis.deficit_verde.mejora_pct}% de mejora
+                  </p>
+                </div>
+                
+                <div className="p-3 bg-orange-100 rounded-lg">
+                  <p className="text-xs font-semibold text-orange-800">
+                    Prioridad: {analysis.deficit_verde.prioridad.toUpperCase()}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* MÓDULO C: PRIORIZACIÓN */}
+        {analysis.priorizacion && (
+          <div className="bg-gradient-to-r from-red-50 to-orange-50 rounded-lg shadow-md p-6 border-2 border-red-200">
+            <div className="flex items-center gap-2 mb-4">
+              <Target className="text-red-600" size={24} />
+              <h3 className="text-lg font-semibold text-gray-900">4. Índice de Prioridad</h3>
+            </div>
+            
+            <div className="text-center mb-4">
+              <p className="text-4xl font-bold text-red-600 mb-1">
+                {analysis.priorizacion.score_total}/100
+              </p>
+              <p className="text-sm font-semibold text-red-700 uppercase">
+                {analysis.priorizacion.clasificacion}
+              </p>
+              <p className="text-xs text-gray-700 mt-2">
+                {analysis.priorizacion.recomendacion}
+              </p>
+            </div>
+            
+            <div className="space-y-2">
+              <div className="flex justify-between items-center p-2 bg-white rounded text-xs">
+                <span>Densidad Poblacional</span>
+                <span className="font-semibold">
+                  {analysis.priorizacion.factores.densidad_poblacional}/25
+                </span>
+              </div>
+              <div className="flex justify-between items-center p-2 bg-white rounded text-xs">
+                <span>Déficit Verde</span>
+                <span className="font-semibold">
+                  {analysis.priorizacion.factores.deficit_verde}/25
+                </span>
+              </div>
+              <div className="flex justify-between items-center p-2 bg-white rounded text-xs">
+                <span>Temperatura (Isla de Calor)</span>
+                <span className="font-semibold">
+                  {analysis.priorizacion.factores.temperatura}/20
+                </span>
+              </div>
+              <div className="flex justify-between items-center p-2 bg-white rounded text-xs">
+                <span>Viabilidad Técnica</span>
+                <span className="font-semibold">
+                  {analysis.priorizacion.factores.viabilidad_tecnica}/15
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* 2. BENEFICIOS ECOSISTÉMICOS */}
         <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
           <div className="flex items-center gap-2 mb-4">
             <Wind className="text-green-600" size={24} />
-            <h3 className="text-lg font-semibold text-gray-900">2. Beneficios Ecosistémicos</h3>
+            <h3 className="text-lg font-semibold text-gray-900">5. Beneficios Ecosistémicos</h3>
           </div>
 
           <div className="space-y-3 text-sm">
@@ -213,7 +354,7 @@ export const ReportSummary: React.FC<ReportSummaryProps> = ({
         <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
           <div className="flex items-center gap-2 mb-4">
             <Receipt className="text-blue-600" size={24} />
-            <h3 className="text-lg font-semibold text-gray-900">3. Presupuesto Detallado</h3>
+            <h3 className="text-lg font-semibold text-gray-900">6. Presupuesto Detallado</h3>
           </div>
 
           <div className="space-y-3 text-sm">
@@ -280,7 +421,7 @@ export const ReportSummary: React.FC<ReportSummaryProps> = ({
         <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
           <div className="flex items-center gap-2 mb-4">
             <Calculator className="text-green-600" size={24} />
-            <h3 className="text-lg font-semibold text-gray-900">4. ROI (Retorno de Inversión)</h3>
+            <h3 className="text-lg font-semibold text-gray-900">7. ROI (Retorno de Inversión)</h3>
           </div>
 
           <div className="space-y-3 text-sm">
@@ -313,7 +454,7 @@ export const ReportSummary: React.FC<ReportSummaryProps> = ({
         <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
           <div className="flex items-center gap-2 mb-4">
             <Gift className="text-purple-600" size={24} />
-            <h3 className="text-lg font-semibold text-gray-900">5. Subvenciones Disponibles</h3>
+            <h3 className="text-lg font-semibold text-gray-900">8. Subvenciones Disponibles</h3>
           </div>
 
           {subvencion.elegible ? (
@@ -351,7 +492,7 @@ export const ReportSummary: React.FC<ReportSummaryProps> = ({
           <div className="flex items-center gap-2 mb-4">
             <Leaf className="text-green-600" size={24} />
             <h3 className="text-lg font-semibold text-gray-900">
-              6. Especies Recomendadas ({especies.length})
+              9. Especies Recomendadas ({especies.length})
             </h3>
           </div>
 
