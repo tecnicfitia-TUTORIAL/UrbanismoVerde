@@ -2,6 +2,12 @@
 -- Fecha: 2026-02-12
 -- Propósito: Crear políticas públicas para SELECT/INSERT/UPDATE/DELETE en analisis
 
+-- ⚠️ SECURITY WARNING: These policies allow unrestricted access for TESTING ONLY
+-- For production environments:
+-- 1. Use a separate database with restricted policies
+-- 2. Implement authentication-based policies (see 002_enable_rls.sql for examples)
+-- 3. Add user_id validation and role-based access control
+
 -- Habilitar RLS
 ALTER TABLE analisis ENABLE ROW LEVEL SECURITY;
 

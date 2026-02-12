@@ -21,7 +21,13 @@ This migration drops and recreates the `analisis` table with BIGINT columns for 
 
 This migration adds public policies for SELECT/INSERT/UPDATE/DELETE operations on the `analisis` table, allowing testing without authentication.
 
-**Note**: For production environments, consider implementing more restrictive policies based on user authentication.
+**⚠️ SECURITY WARNING**: These policies allow unrestricted access and are intended for TESTING ONLY.
+
+**For production environments**:
+1. Use a separate database with restricted policies
+2. Implement authentication-based policies (see `002_enable_rls.sql` for examples)
+3. Add user_id validation and role-based access control
+4. Consider restricting INSERT/UPDATE/DELETE to authenticated users only
 
 ## How to Apply Migrations
 

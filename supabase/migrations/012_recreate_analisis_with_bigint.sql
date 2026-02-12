@@ -40,7 +40,7 @@ CREATE TABLE analisis (
   
   -- Subvenciones (BIGINT - valores grandes)
   subvencion_elegible BOOLEAN DEFAULT true,
-  subvencion_porcentaje BIGINT,
+  subvencion_porcentaje INTEGER CHECK (subvencion_porcentaje >= 0 AND subvencion_porcentaje <= 100),
   subvencion_programa VARCHAR(255),
   subvencion_monto_estimado_eur BIGINT,
   
