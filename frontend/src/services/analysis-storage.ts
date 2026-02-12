@@ -12,6 +12,15 @@ import { adaptAnalysisData } from './analysis-adapter';
 const DEFAULT_COST_PER_M2 = 150; // €/m² - Base installation cost
 const DEFAULT_CO2_CAPTURE_PER_M2 = 5; // kg/m²/year - CO₂ absorption rate
 const DEFAULT_WATER_RETENTION_PER_M2 = 240; // L/m²/year - Water retention capacity
+const DEFAULT_ENERGY_SAVINGS_KWH_PER_M2 = 40; // kWh/m²/year - Energy savings from cooling
+const DEFAULT_ENERGY_SAVINGS_EUR_PER_M2 = 10; // €/m²/year - Annual energy cost savings
+const DEFAULT_MAINTENANCE_PER_M2 = 8; // €/m²/year - Annual maintenance cost
+const DEFAULT_SAVINGS_25_YEARS_PER_M2 = 250; // €/m²/25 years - Total savings over lifespan
+const DEFAULT_ROI_PERCENTAGE = 6.67; // % - Default return on investment
+const DEFAULT_AMORTIZATION_YEARS = 15.0; // years - Default payback period
+const DEFAULT_SUBSIDY_PERCENTAGE = 50; // % - Default subsidy eligibility
+const DEFAULT_VIDA_UTIL_ANOS = 25; // years - Expected project lifespan
+const DEFAULT_GREEN_SCORE = 75; // Default green score when not provided
 const IMPLEMENTATION_DAYS_PER_100M2 = 30; // Days needed per 100m² installation
 
 /**
@@ -107,110 +116,45 @@ async function saveToAnalisisTable(
   zonaVerdeId: string,
   analysisData: AnalysisResponse
 ): Promise<string> {
-  // Adapt analysis data to ensure all fields exist
   const adaptedData = adaptAnalysisData(analysisData as any);
-
-  // Extract all data sections
   const beneficios = adaptedData.beneficios_ecosistemicos || {};
   const presupuesto = adaptedData.presupuesto || {};
   const roi = adaptedData.roi_ambiental || {};
   const subvencion = adaptedData.subvencion || {};
   const normativa = adaptedData.normativa || {};
 
-  // Create comprehensive notes with all data in JSON format for easy retrieval
-  const extendedData = {
-    green_score: adaptedData.green_score,
-    area_m2: adaptedData.area_m2,
-    perimetro_m: adaptedData.perimetro_m,
-    
-    normativa: {
-      factor_verde: normativa.factor_verde,
-      cumple_pecv_madrid: normativa.cumple_pecv_madrid,
-      cumple_miteco: normativa.cumple_miteco,
-      apto_para_subvencion: normativa.apto_para_subvencion,
-      requisitos: normativa.requisitos
-    },
-    
-    beneficios_ecosistemicos: {
-      co2_capturado_kg_anual: beneficios.co2_capturado_kg_anual,
-      agua_retenida_litros_anual: beneficios.agua_retenida_litros_anual,
-      reduccion_temperatura_c: beneficios.reduccion_temperatura_c,
-      ahorro_energia_kwh_anual: beneficios.ahorro_energia_kwh_anual,
-      ahorro_energia_eur_anual: beneficios.ahorro_energia_eur_anual
-    },
-    
-    presupuesto: {
-      coste_total_inicial_eur: presupuesto.coste_total_inicial_eur,
-      desglose: {
-        sustrato_eur: presupuesto.desglose?.sustrato_eur || 0,
-        drenaje_eur: presupuesto.desglose?.drenaje_eur || 0,
-        membrana_impermeable_eur: presupuesto.desglose?.membrana_impermeable_eur || 0,
-        plantas_eur: presupuesto.desglose?.plantas_eur || 0,
-        instalacion_eur: presupuesto.desglose?.instalacion_eur || 0
-      },
-      mantenimiento_anual_eur: presupuesto.mantenimiento_anual_eur,
-      coste_por_m2_eur: presupuesto.coste_por_m2_eur,
-      vida_util_anos: presupuesto.vida_util_anos
-    },
-    
-    roi_ambiental: {
-      roi_porcentaje: roi.roi_porcentaje,
-      amortizacion_anos: roi.amortizacion_anos,
-      ahorro_anual_eur: roi.ahorro_anual_eur,
-      ahorro_25_anos_eur: roi.ahorro_25_anos_eur
-    },
-    
-    subvencion: {
-      elegible: subvencion.elegible,
-      porcentaje: subvencion.porcentaje,
-      programa: subvencion.programa,
-      monto_estimado_eur: subvencion.monto_estimado_eur
-    },
-    
-    tags: adaptedData.tags,
-    recomendaciones: adaptedData.recomendaciones
-  };
-
-  // Estimate implementation time in days
-  const tiempoImplementacion = Math.ceil(adaptedData.area_m2 / 100) * IMPLEMENTATION_DAYS_PER_100M2;
-
   const analisisData = {
     zona_verde_id: zonaVerdeId,
-    tipo_suelo: adaptedData.tags.find(t => t.includes('suelo')) || 'Suelo urbano',
-    exposicion_solar: calculateSolarExposure(adaptedData.tags),
-    especies_recomendadas: adaptedData.especies_recomendadas,
-    coste_estimado: presupuesto.coste_total_inicial_eur || (adaptedData.area_m2 * DEFAULT_COST_PER_M2),
-    impacto_ambiental_co2_anual: beneficios.co2_capturado_kg_anual || (adaptedData.area_m2 * DEFAULT_CO2_CAPTURE_PER_M2),
-    impacto_ambiental_oxigeno_anual: beneficios.agua_retenida_litros_anual || (adaptedData.area_m2 * DEFAULT_WATER_RETENTION_PER_M2), // Note: Field name suggests oxygen but stores water retention
-    tiempo_implementacion_dias: tiempoImplementacion,
-    notas: JSON.stringify(extendedData, null, 2), // Store all extended data as JSON
-    
-    // Beneficios ecosistémicos (migration 005)
+    green_score: adaptedData.green_score || DEFAULT_GREEN_SCORE,
+    viabilidad: getViabilidad(adaptedData.green_score || DEFAULT_GREEN_SCORE),
     factor_verde: normativa.factor_verde || 0.65,
-    co2_capturado_kg_anual: beneficios.co2_capturado_kg_anual || Math.round(adaptedData.area_m2 * DEFAULT_CO2_CAPTURE_PER_M2),
-    agua_retenida_litros_anual: beneficios.agua_retenida_litros_anual || Math.round(adaptedData.area_m2 * DEFAULT_WATER_RETENTION_PER_M2),
+    
+    co2_capturado_kg_anual: beneficios.co2_capturado_kg_anual || Math.round((adaptedData.area_m2 || 0) * DEFAULT_CO2_CAPTURE_PER_M2),
+    agua_retenida_litros_anual: beneficios.agua_retenida_litros_anual || Math.round((adaptedData.area_m2 || 0) * DEFAULT_WATER_RETENTION_PER_M2),
     reduccion_temperatura_c: beneficios.reduccion_temperatura_c || 1.5,
-    ahorro_energia_kwh_anual: beneficios.ahorro_energia_kwh_anual,
-    ahorro_energia_eur_anual: beneficios.ahorro_energia_eur_anual,
+    ahorro_energia_kwh_anual: beneficios.ahorro_energia_kwh_anual || Math.round((adaptedData.area_m2 || 0) * DEFAULT_ENERGY_SAVINGS_KWH_PER_M2),
+    ahorro_energia_eur_anual: beneficios.ahorro_energia_eur_anual || Math.round((adaptedData.area_m2 || 0) * DEFAULT_ENERGY_SAVINGS_EUR_PER_M2),
     
-    // Presupuesto detallado (migration 005)
-    coste_total_inicial_eur: presupuesto.coste_total_inicial_eur || Math.round(adaptedData.area_m2 * DEFAULT_COST_PER_M2),
-    presupuesto_desglose: presupuesto.desglose,
-    mantenimiento_anual_eur: presupuesto.mantenimiento_anual_eur,
-    coste_por_m2_eur: presupuesto.coste_por_m2_eur || DEFAULT_COST_PER_M2,
-    vida_util_anos: presupuesto.vida_util_anos || 25,
+    coste_total_inicial_eur: presupuesto.coste_total_inicial_eur || Math.round((adaptedData.area_m2 || 0) * DEFAULT_COST_PER_M2),
+    presupuesto_desglose: presupuesto.desglose || {},
+    mantenimiento_anual_eur: presupuesto.mantenimiento_anual_eur || Math.round((adaptedData.area_m2 || 0) * DEFAULT_MAINTENANCE_PER_M2),
+    coste_por_m2_eur: DEFAULT_COST_PER_M2,
+    vida_util_anos: DEFAULT_VIDA_UTIL_ANOS,
     
-    // ROI ambiental (migration 007)
-    roi_porcentaje: roi.roi_porcentaje,
-    amortizacion_anos: roi.amortizacion_anos,
-    ahorro_anual_eur: roi.ahorro_anual_eur,
-    ahorro_25_anos_eur: roi.ahorro_25_anos_eur,
+    roi_porcentaje: roi.roi_porcentaje || DEFAULT_ROI_PERCENTAGE,
+    amortizacion_anos: roi.amortizacion_anos || DEFAULT_AMORTIZATION_YEARS,
+    ahorro_anual_eur: roi.ahorro_anual_eur || Math.round((adaptedData.area_m2 || 0) * DEFAULT_ENERGY_SAVINGS_EUR_PER_M2),
+    ahorro_25_anos_eur: roi.ahorro_25_anos_eur || Math.round((adaptedData.area_m2 || 0) * DEFAULT_SAVINGS_25_YEARS_PER_M2),
     
-    // Subvenciones (migration 005)
-    subvencion_elegible: subvencion.elegible !== undefined ? subvencion.elegible : true,
-    subvencion_porcentaje: subvencion.porcentaje,
-    subvencion_programa: subvencion.programa,
-    subvencion_monto_estimado_eur: subvencion.monto_estimado_eur,
+    // Default to true if elegible is not explicitly set to false
+    subvencion_elegible: subvencion.elegible !== false,
+    subvencion_porcentaje: subvencion.porcentaje || DEFAULT_SUBSIDY_PERCENTAGE,
+    subvencion_programa: subvencion.programa || 'PECV Madrid 2025',
+    subvencion_monto_estimado_eur: subvencion.monto_estimado_eur || Math.round((presupuesto.coste_total_inicial_eur || 0) * (DEFAULT_SUBSIDY_PERCENTAGE / 100)),
+    
+    especies_recomendadas: adaptedData.especies_recomendadas || [],
+    recomendaciones: adaptedData.recomendaciones || [],
+    notas: `Análisis guardado el ${new Date().toLocaleDateString('es-ES')}`
   };
 
   const { data, error } = await supabase
@@ -219,16 +163,10 @@ async function saveToAnalisisTable(
     .select('id')
     .single();
 
-  if (error) {
-    console.error('Error guardando análisis:', error);
-    throw new Error(`Failed to save analysis: ${error.message}`);
-  }
+  if (error) throw new Error(`Failed to save analysis: ${error.message}`);
+  if (!data) throw new Error('No data returned from analysis save');
 
-  if (!data) {
-    throw new Error('No data returned from analysis save');
-  }
-
-  console.log('✅ Análisis guardado con todos los datos:', data.id);
+  console.log('✅ Análisis guardado:', data.id);
   return data.id;
 }
 
@@ -314,10 +252,10 @@ export async function getReportsByAnalisisId(analisisId: string) {
 // Helper functions
 
 function getViabilidad(greenScore: number): string {
-  if (greenScore >= 70) return 'Alta';
-  if (greenScore >= 50) return 'Media';
-  if (greenScore >= 30) return 'Baja';
-  return 'Nula';
+  if (greenScore >= 70) return 'alta';
+  if (greenScore >= 50) return 'media';
+  if (greenScore >= 30) return 'baja';
+  return 'nula';
 }
 
 function calculateSolarExposure(tags: string[]): number {
