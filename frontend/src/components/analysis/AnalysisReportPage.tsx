@@ -4,13 +4,14 @@
  * Complete landing page for analysis results with satellite map and summary panel
  */
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { X, Calendar, MapPin, CheckCircle, Layers } from 'lucide-react';
 import { AnalysisResponse, GeoJSONPolygon, TipoEspecializacion } from '../../types';
 import { SatelliteMap } from './SatelliteMap';
 import { ReportSummary } from './ReportSummary';
 import { SpecializationPanel } from './SpecializationPanel';
 import { useAnalysisReport } from '../../hooks/useAnalysisReport';
+import { adaptAnalysisData } from '../../services/analysis-adapter';
 import { Z_INDEX } from '../../constants/zIndex';
 import toast from 'react-hot-toast';
 
@@ -40,6 +41,9 @@ export const AnalysisReportPage: React.FC<AnalysisReportPageProps> = ({
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [showSpecializationModal, setShowSpecializationModal] = useState(false);
   const [savedAnalysisId, setSavedAnalysisId] = useState<string | null>(null);
+
+  // Adapt analysis data for presupuesto access
+  const adaptedAnalysis = useMemo(() => adaptAnalysisData(analysisResult as any), [analysisResult]);
 
   const {
     isSaving,
@@ -205,7 +209,7 @@ export const AnalysisReportPage: React.FC<AnalysisReportPageProps> = ({
                   area_m2: analysisResult.area_m2,
                   green_score: analysisResult.green_score,
                   especies_recomendadas: analysisResult.especies_recomendadas || [],
-                  presupuesto_eur: analysisResult.presupuesto?.coste_total_inicial_eur,
+                  presupuesto_eur: adaptedAnalysis.presupuesto?.coste_total_inicial_eur,
                 }}
                 onSelectType={handleSpecializationTypeSelect}
               />
