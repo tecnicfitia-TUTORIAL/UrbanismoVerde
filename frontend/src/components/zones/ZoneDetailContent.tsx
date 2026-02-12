@@ -143,7 +143,9 @@ const ZoneDetailContent: React.FC<ZoneDetailContentProps> = ({
 
       // Note: We use .select('*') instead of listing specific columns to avoid
       // 406 errors if database schema doesn't match TypeScript interface exactly.
-      // The AnalisisData interface defines the expected structure for type safety.
+      // This is safer for production where migrations may not be synchronized with code deploys.
+      // The AnalisisData interface provides type safety and defines expected structure.
+      // RLS policies on the analisis table ensure only authorized data is returned.
       const { data: analisisData, error: analisisError } = await supabase
         .from(TABLES.ANALISIS)
         .select('*')
