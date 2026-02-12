@@ -13,7 +13,7 @@ Architecture:
 from http.server import BaseHTTPRequestHandler
 import json
 import math
-import random
+import random  # Used for deterministic topography simulation (seeded by area for reproducibility)
 from typing import Dict, Any, List
 
 
@@ -100,18 +100,21 @@ def analyze_topography(area_m2: float, coordinates: List = None) -> Dict[str, An
     - Satellite altimetry
     - Cadastral topographic data
     
-    For now, simulate based on area size and typical patterns.
+    For MVP, simulates topography deterministically based on area size.
+    Uses seeded random generation to ensure consistent results for the same lot,
+    which is crucial for budget reproducibility and testing.
     
     Args:
         area_m2: Lot area
-        coordinates: Optional coordinates for elevation lookup
+        coordinates: Optional coordinates for elevation lookup (not used in simulation)
         
     Returns:
         Dict with topography analysis
     """
     # Simulate slope (in reality would come from elevation data)
-    # Larger lots tend to have more variation
-    random.seed(int(area_m2))  # Deterministic for same area
+    # Larger lots tend to have more topographic variation
+    # Seed with area ensures deterministic, reproducible results for same input
+    random.seed(int(area_m2))
     
     pendiente_promedio_porcentaje = random.uniform(0.5, 12.0)
     desnivel_max_m = (area_m2 ** 0.5) * (pendiente_promedio_porcentaje / 100.0) * 0.5
