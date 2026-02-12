@@ -438,16 +438,16 @@ const ZoneDetailContent: React.FC<ZoneDetailContentProps> = ({
 
                     {/* ========== SECTION 3: BENEFICIOS ECOSISTÉMICOS ========== */}
                     <div className="bg-white rounded-lg border border-gray-200 p-6">
-                      <h3 className="text-xl font-bold text-gray-900 mb-6">5. Beneficios Ecosistémicos</h3>
+                      <h3 className="text-xl font-bold text-gray-900 mb-6">2. Beneficios Ecosistémicos</h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                         {/* CO2 */}
                         <div className="bg-green-50 rounded-lg p-4 border border-green-200">
                           <div className="text-sm text-green-700 font-semibold mb-1">CO₂ Capturado Anual</div>
                           <div className="text-3xl font-bold text-green-900">
-                            {(analisis.co2_capturado_kg_anual / 1000).toLocaleString('es-ES', { maximumFractionDigits: 0 })} t
+                            {((analisis.co2_capturado_kg_anual ?? 0) / 1000).toLocaleString('es-ES', { maximumFractionDigits: 0 })} t
                           </div>
                           <div className="text-xs text-green-600 mt-1">
-                            {analisis.co2_capturado_kg_anual.toLocaleString('es-ES')} kg/año
+                            {(analisis.co2_capturado_kg_anual ?? 0).toLocaleString('es-ES')} kg/año
                           </div>
                         </div>
                         
@@ -455,10 +455,10 @@ const ZoneDetailContent: React.FC<ZoneDetailContentProps> = ({
                         <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
                           <div className="text-sm text-blue-700 font-semibold mb-1">Agua Retenida Anual</div>
                           <div className="text-3xl font-bold text-blue-900">
-                            {(analisis.agua_retenida_litros_anual / 1000000).toLocaleString('es-ES', { maximumFractionDigits: 1 })} M
+                            {((analisis.agua_retenida_litros_anual ?? 0) / 1000000).toLocaleString('es-ES', { maximumFractionDigits: 1 })} M
                           </div>
                           <div className="text-xs text-blue-600 mt-1">
-                            {analisis.agua_retenida_litros_anual.toLocaleString('es-ES')} L/año
+                            {(analisis.agua_retenida_litros_anual ?? 0).toLocaleString('es-ES')} L/año
                           </div>
                         </div>
                         
@@ -475,10 +475,10 @@ const ZoneDetailContent: React.FC<ZoneDetailContentProps> = ({
                         <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-200">
                           <div className="text-sm text-yellow-700 font-semibold mb-1">Ahorro Energía Anual</div>
                           <div className="text-2xl font-bold text-yellow-900">
-                            {(analisis.ahorro_energia_kwh_anual / 1000000).toLocaleString('es-ES', { maximumFractionDigits: 1 })} M kWh
+                            {((analisis.ahorro_energia_kwh_anual ?? 0) / 1000000).toLocaleString('es-ES', { maximumFractionDigits: 1 })} M kWh
                           </div>
                           <div className="text-xs text-yellow-600 mt-1">
-                            €{analisis.ahorro_energia_eur_anual.toLocaleString('es-ES')}
+                            €{(analisis.ahorro_energia_eur_anual ?? 0).toLocaleString('es-ES')}
                           </div>
                         </div>
                       </div>
@@ -486,7 +486,7 @@ const ZoneDetailContent: React.FC<ZoneDetailContentProps> = ({
 
                     {/* ========== SECTION 4: PRESUPUESTO DETALLADO ========== */}
                     <div className="bg-white rounded-lg border border-gray-200 p-6">
-                      <h3 className="text-xl font-bold text-gray-900 mb-6">6. Presupuesto Detallado</h3>
+                      <h3 className="text-xl font-bold text-gray-900 mb-6">3. Presupuesto Detallado</h3>
                       
                       {/* Inversión Inicial */}
                       <div className="bg-purple-50 rounded-lg p-6 border-2 border-purple-300 mb-6">
@@ -494,7 +494,7 @@ const ZoneDetailContent: React.FC<ZoneDetailContentProps> = ({
                           <div>
                             <div className="text-sm text-purple-700 font-semibold mb-1">Inversión Inicial</div>
                             <div className="text-4xl font-black text-purple-900">
-                              €{(analisis.coste_total_inicial_eur / 1000000).toLocaleString('es-ES', { maximumFractionDigits: 2 })}M
+                              €{((analisis.coste_total_inicial_eur ?? 0) / 1000000).toLocaleString('es-ES', { maximumFractionDigits: 2 })}M
                             </div>
                           </div>
                           <div className="text-right">
@@ -508,7 +508,7 @@ const ZoneDetailContent: React.FC<ZoneDetailContentProps> = ({
                           <div>
                             <span className="text-purple-700">Mantenimiento Anual:</span>
                             <span className="font-bold text-purple-900 ml-2">
-                              €{analisis.mantenimiento_anual_eur.toLocaleString('es-ES')}
+                              €{(analisis.mantenimiento_anual_eur ?? 0).toLocaleString('es-ES')}
                             </span>
                           </div>
                           <div>
@@ -562,12 +562,12 @@ const ZoneDetailContent: React.FC<ZoneDetailContentProps> = ({
 
                     {/* ========== SECTION 5: ROI ========== */}
                     <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-lg border border-indigo-200 p-6">
-                      <h3 className="text-xl font-bold text-gray-900 mb-6">7. ROI (Retorno de Inversión)</h3>
+                      <h3 className="text-xl font-bold text-gray-900 mb-6">4. ROI (Retorno de Inversión)</h3>
                       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                         <div className="bg-white rounded-lg p-4">
                           <div className="text-sm text-indigo-700 mb-1">Ahorro Anual</div>
                           <div className="text-2xl font-bold text-indigo-900">
-                            €{analisis.ahorro_anual_eur.toLocaleString('es-ES')}
+                            €{(analisis.ahorro_anual_eur ?? 0).toLocaleString('es-ES')}
                           </div>
                         </div>
                         <div className="bg-white rounded-lg p-4">
@@ -585,7 +585,7 @@ const ZoneDetailContent: React.FC<ZoneDetailContentProps> = ({
                         <div className="bg-white rounded-lg p-4">
                           <div className="text-sm text-purple-700 mb-1">Ahorro Total 25 años</div>
                           <div className="text-xl font-bold text-purple-900">
-                            €{(analisis.ahorro_25_anos_eur / 1000000).toLocaleString('es-ES', { maximumFractionDigits: 1 })}M
+                            €{((analisis.ahorro_25_anos_eur ?? 0) / 1000000).toLocaleString('es-ES', { maximumFractionDigits: 1 })}M
                           </div>
                         </div>
                       </div>
@@ -594,7 +594,7 @@ const ZoneDetailContent: React.FC<ZoneDetailContentProps> = ({
                     {/* ========== SECTION 6: SUBVENCIONES ========== */}
                     {analisis.subvencion_elegible && (
                       <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg border-2 border-green-300 p-6">
-                        <h3 className="text-xl font-bold text-gray-900 mb-6">8. Subvenciones Disponibles</h3>
+                        <h3 className="text-xl font-bold text-gray-900 mb-6">5. Subvenciones Disponibles</h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           <div>
                             <div className="text-sm text-green-700 mb-1">Programa</div>
@@ -609,11 +609,11 @@ const ZoneDetailContent: React.FC<ZoneDetailContentProps> = ({
                           <div>
                             <div className="text-sm text-green-700 mb-1">Monto Estimado</div>
                             <div className="text-4xl font-black text-green-900 mb-4">
-                              €{(analisis.subvencion_monto_estimado_eur / 1000000).toLocaleString('es-ES', { maximumFractionDigits: 2 })}M
+                              €{((analisis.subvencion_monto_estimado_eur ?? 0) / 1000000).toLocaleString('es-ES', { maximumFractionDigits: 2 })}M
                             </div>
                             <div className="text-sm text-green-700 mb-1">Coste Neto (con subvención)</div>
                             <div className="text-3xl font-bold text-green-900">
-                              €{((analisis.coste_total_inicial_eur - analisis.subvencion_monto_estimado_eur) / 1000000).toLocaleString('es-ES', { maximumFractionDigits: 2 })}M
+                              €{(((analisis.coste_total_inicial_eur ?? 0) - (analisis.subvencion_monto_estimado_eur ?? 0)) / 1000000).toLocaleString('es-ES', { maximumFractionDigits: 2 })}M
                             </div>
                           </div>
                         </div>
@@ -624,7 +624,7 @@ const ZoneDetailContent: React.FC<ZoneDetailContentProps> = ({
                     {analisis.especies_recomendadas && analisis.especies_recomendadas.length > 0 && (
                       <div className="bg-white rounded-lg border border-gray-200 p-6">
                         <h3 className="text-xl font-bold text-gray-900 mb-6">
-                          9. Especies Recomendadas ({analisis.especies_recomendadas.length})
+                          6. Especies Recomendadas ({analisis.especies_recomendadas.length})
                         </h3>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                           {analisis.especies_recomendadas.slice(0, 6).map((especie: any, idx: number) => (
