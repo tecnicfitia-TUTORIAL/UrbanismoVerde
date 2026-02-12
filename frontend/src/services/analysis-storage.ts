@@ -12,6 +12,14 @@ import { adaptAnalysisData } from './analysis-adapter';
 const DEFAULT_COST_PER_M2 = 150; // €/m² - Base installation cost
 const DEFAULT_CO2_CAPTURE_PER_M2 = 5; // kg/m²/year - CO₂ absorption rate
 const DEFAULT_WATER_RETENTION_PER_M2 = 240; // L/m²/year - Water retention capacity
+const DEFAULT_ENERGY_SAVINGS_KWH_PER_M2 = 40; // kWh/m²/year - Energy savings from cooling
+const DEFAULT_ENERGY_SAVINGS_EUR_PER_M2 = 10; // €/m²/year - Annual energy cost savings
+const DEFAULT_MAINTENANCE_PER_M2 = 8; // €/m²/year - Annual maintenance cost
+const DEFAULT_SAVINGS_25_YEARS_PER_M2 = 250; // €/m²/25 years - Total savings over lifespan
+const DEFAULT_ROI_PERCENTAGE = 6.67; // % - Default return on investment
+const DEFAULT_AMORTIZATION_YEARS = 15.0; // years - Default payback period
+const DEFAULT_SUBSIDY_PERCENTAGE = 50; // % - Default subsidy eligibility
+const DEFAULT_VIDA_UTIL_ANOS = 25; // years - Expected project lifespan
 const IMPLEMENTATION_DAYS_PER_100M2 = 30; // Days needed per 100m² installation
 
 /**
@@ -120,27 +128,27 @@ async function saveToAnalisisTable(
     viabilidad: getViabilidad(adaptedData.green_score || 75),
     factor_verde: normativa.factor_verde || 0.65,
     
-    co2_capturado_kg_anual: beneficios.co2_capturado_kg_anual || Math.round((adaptedData.area_m2 || 0) * 5),
-    agua_retenida_litros_anual: beneficios.agua_retenida_litros_anual || Math.round((adaptedData.area_m2 || 0) * 240),
+    co2_capturado_kg_anual: beneficios.co2_capturado_kg_anual || Math.round((adaptedData.area_m2 || 0) * DEFAULT_CO2_CAPTURE_PER_M2),
+    agua_retenida_litros_anual: beneficios.agua_retenida_litros_anual || Math.round((adaptedData.area_m2 || 0) * DEFAULT_WATER_RETENTION_PER_M2),
     reduccion_temperatura_c: beneficios.reduccion_temperatura_c || 1.5,
-    ahorro_energia_kwh_anual: beneficios.ahorro_energia_kwh_anual || Math.round((adaptedData.area_m2 || 0) * 40),
-    ahorro_energia_eur_anual: beneficios.ahorro_energia_eur_anual || Math.round((adaptedData.area_m2 || 0) * 10),
+    ahorro_energia_kwh_anual: beneficios.ahorro_energia_kwh_anual || Math.round((adaptedData.area_m2 || 0) * DEFAULT_ENERGY_SAVINGS_KWH_PER_M2),
+    ahorro_energia_eur_anual: beneficios.ahorro_energia_eur_anual || Math.round((adaptedData.area_m2 || 0) * DEFAULT_ENERGY_SAVINGS_EUR_PER_M2),
     
-    coste_total_inicial_eur: presupuesto.coste_total_inicial_eur || Math.round((adaptedData.area_m2 || 0) * 150),
+    coste_total_inicial_eur: presupuesto.coste_total_inicial_eur || Math.round((adaptedData.area_m2 || 0) * DEFAULT_COST_PER_M2),
     presupuesto_desglose: presupuesto.desglose || {},
-    mantenimiento_anual_eur: presupuesto.mantenimiento_anual_eur || Math.round((adaptedData.area_m2 || 0) * 8),
-    coste_por_m2_eur: 150,
-    vida_util_anos: 25,
+    mantenimiento_anual_eur: presupuesto.mantenimiento_anual_eur || Math.round((adaptedData.area_m2 || 0) * DEFAULT_MAINTENANCE_PER_M2),
+    coste_por_m2_eur: DEFAULT_COST_PER_M2,
+    vida_util_anos: DEFAULT_VIDA_UTIL_ANOS,
     
-    roi_porcentaje: roi.roi_porcentaje || 6.67,
-    amortizacion_anos: roi.amortizacion_anos || 15.0,
-    ahorro_anual_eur: roi.ahorro_anual_eur || Math.round((adaptedData.area_m2 || 0) * 10),
-    ahorro_25_anos_eur: roi.ahorro_25_anos_eur || Math.round((adaptedData.area_m2 || 0) * 250),
+    roi_porcentaje: roi.roi_porcentaje || DEFAULT_ROI_PERCENTAGE,
+    amortizacion_anos: roi.amortizacion_anos || DEFAULT_AMORTIZATION_YEARS,
+    ahorro_anual_eur: roi.ahorro_anual_eur || Math.round((adaptedData.area_m2 || 0) * DEFAULT_ENERGY_SAVINGS_EUR_PER_M2),
+    ahorro_25_anos_eur: roi.ahorro_25_anos_eur || Math.round((adaptedData.area_m2 || 0) * DEFAULT_SAVINGS_25_YEARS_PER_M2),
     
     subvencion_elegible: subvencion.elegible !== false,
-    subvencion_porcentaje: subvencion.porcentaje || 50,
+    subvencion_porcentaje: subvencion.porcentaje || DEFAULT_SUBSIDY_PERCENTAGE,
     subvencion_programa: subvencion.programa || 'PECV Madrid 2025',
-    subvencion_monto_estimado_eur: subvencion.monto_estimado_eur || Math.round((presupuesto.coste_total_inicial_eur || 0) * 0.5),
+    subvencion_monto_estimado_eur: subvencion.monto_estimado_eur || Math.round((presupuesto.coste_total_inicial_eur || 0) * (DEFAULT_SUBSIDY_PERCENTAGE / 100)),
     
     especies_recomendadas: adaptedData.especies_recomendadas || [],
     recomendaciones: adaptedData.recomendaciones || [],
