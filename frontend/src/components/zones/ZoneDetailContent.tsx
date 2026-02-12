@@ -342,164 +342,343 @@ const ZoneDetailContent: React.FC<ZoneDetailContentProps> = ({
           <div className="p-6">
             {activeTab === 'info' && (
               <div className="space-y-6">
-                {/* Map Preview */}
-                <div className="bg-gray-100 rounded-lg h-64 flex items-center justify-center relative overflow-hidden">
-                  <div 
-                    className="absolute inset-0"
-                    style={{ backgroundColor: coloresPorTipo[area.tipo] + '10' }}
-                  >
-                    <MapIcon 
-                      size={120} 
-                      className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-20"
-                      style={{ color: coloresPorTipo[area.tipo] }}
-                    />
+                {/* ========== SECTION 1: BASIC ZONE INFO ========== */}
+                <div className="bg-white rounded-lg border border-gray-200 p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Datos Generales</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div>
+                      <div className="text-sm text-gray-600 mb-1">Área</div>
+                      <div className="text-xl font-bold text-gray-900">
+                        {area.areaM2.toLocaleString('es-ES', { maximumFractionDigits: 2 })} m²
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-sm text-gray-600 mb-1">Perímetro</div>
+                      <div className="text-xl font-bold text-gray-900">
+                        {perimetro.toLocaleString('es-ES')} m
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-sm text-gray-600 mb-1">Tipo</div>
+                      <div className="text-xl font-bold text-gray-900 capitalize">
+                        {area.tipo.replace('_', ' ')}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-sm text-gray-600 mb-1">Puntos</div>
+                      <div className="text-xl font-bold text-gray-900">
+                        {area.coordenadas.length}
+                      </div>
+                    </div>
                   </div>
-                  <span className="relative text-gray-600 text-sm">Vista previa del mapa</span>
-                </div>
-
-                {/* Info Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <h3 className="text-sm font-semibold text-gray-700 mb-3">Datos Generales</h3>
-                    <dl className="space-y-2">
-                      <div className="flex justify-between">
-                        <dt className="text-sm text-gray-600">Área:</dt>
-                        <dd className="text-sm font-semibold text-gray-900">{area.areaM2.toFixed(2)} m²</dd>
-                      </div>
-                      <div className="flex justify-between">
-                        <dt className="text-sm text-gray-600">Perímetro:</dt>
-                        <dd className="text-sm font-semibold text-gray-900">{perimetro.toFixed(2)} m</dd>
-                      </div>
-                      <div className="flex justify-between">
-                        <dt className="text-sm text-gray-600">Tipo:</dt>
-                        <dd className="text-sm font-semibold text-gray-900">{area.tipo.replace('_', ' ')}</dd>
-                      </div>
-                      <div className="flex justify-between">
-                        <dt className="text-sm text-gray-600">Puntos:</dt>
-                        <dd className="text-sm font-semibold text-gray-900">{area.coordenadas.length}</dd>
-                      </div>
-                    </dl>
-                  </div>
-
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <h3 className="text-sm font-semibold text-gray-700 mb-3">Coordenadas</h3>
-                    <div className="space-y-1 max-h-32 overflow-y-auto text-xs font-mono text-gray-600">
-                      {area.coordenadas.slice(0, 5).map((coord, idx) => (
-                        <div key={idx}>
+                  
+                  {/* Coordenadas */}
+                  <div className="mt-4">
+                    <div className="text-sm text-gray-600 mb-2">Coordenadas</div>
+                    <div className="bg-gray-50 rounded-lg p-3 max-h-32 overflow-y-auto">
+                      {area.coordenadas.slice(0, 4).map((coord, idx) => (
+                        <div key={idx} className="text-sm font-mono text-gray-700">
                           [{coord[0].toFixed(6)}, {coord[1].toFixed(6)}]
                         </div>
                       ))}
-                      {area.coordenadas.length > 5 && (
-                        <div className="text-gray-400">
-                          ... y {area.coordenadas.length - 5} más
+                      {area.coordenadas.length > 4 && (
+                        <div className="text-sm text-gray-500 italic">
+                          ...y {area.coordenadas.length - 4} puntos más
                         </div>
                       )}
                     </div>
                   </div>
                 </div>
 
-                {/* Notes */}
-                {area.notas && (
-                  <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-                    <h3 className="text-sm font-semibold text-blue-900 mb-2">Notas</h3>
-                    <p className="text-sm text-blue-800">{area.notas}</p>
-                  </div>
-                )}
-
-                {/* Analysis Summary Preview */}
+                {/* ========== SECTION 2: RESUMEN GENERAL (IF ANALYSIS EXISTS) ========== */}
                 {analisis ? (
                   <>
-                    <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg border-2 border-green-200 p-6">
-                      <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-lg font-semibold text-green-900">
-                          📊 Resumen del Análisis
-                        </h3>
-                        <button
-                          onClick={() => setActiveTab('analysis')}
-                          className="text-sm text-green-700 hover:text-green-900 font-medium flex items-center gap-1"
-                        >
-                          Ver detalles completos →
-                        </button>
-                      </div>
-                      
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {/* Green Score + Viabilidad */}
+                    <div className="bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 rounded-xl p-8 border-2 border-green-300">
+                      <h3 className="text-xl font-bold text-green-900 mb-6">1. Resumen General</h3>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                         {/* Green Score */}
                         <div className="text-center">
-                          <div className="text-3xl font-bold text-green-700 mb-1">
-                            {analisis.green_score ?? 0}
+                          <div className="text-5xl font-black text-green-700 mb-2">
+                            {analisis.green_score?.toFixed(1) ?? '0'}
                           </div>
-                          <div className="text-xs text-green-600">Green Score</div>
-                          <div className={`mt-2 px-2 py-1 rounded-full text-xs font-semibold ${getViabilityColorClasses(analisis.viabilidad)}`}>
-                            {analisis.viabilidad?.toUpperCase()}
-                          </div>
+                          <div className="text-sm text-green-600 font-semibold">Green Score</div>
                         </div>
                         
-                        {/* CO2 */}
+                        {/* Área */}
                         <div className="text-center">
-                          <div className="text-3xl font-bold text-blue-700 mb-1">
-                            {((analisis.co2_capturado_kg_anual ?? 0) / KG_TO_TONNES).toFixed(1)}
+                          <div className="text-3xl font-bold text-gray-700 mb-2">
+                            {area.areaM2.toLocaleString('es-ES', { maximumFractionDigits: 2 })} m²
                           </div>
-                          <div className="text-xs text-blue-600">Toneladas CO₂/año</div>
+                          <div className="text-sm text-gray-600">Área</div>
                         </div>
                         
-                        {/* Water */}
+                        {/* Factor Verde */}
                         <div className="text-center">
-                          <div className="text-3xl font-bold text-cyan-700 mb-1">
-                            {((analisis.agua_retenida_litros_anual ?? 0) / LITERS_TO_M3).toFixed(0)}
+                          <div className="text-3xl font-bold text-green-700 mb-2">
+                            {analisis.factor_verde?.toFixed(2) ?? '0.65'}
                           </div>
-                          <div className="text-xs text-cyan-600">m³ Agua/año</div>
+                          <div className="text-sm text-green-600">Factor Verde</div>
                         </div>
                         
-                        {/* Cost */}
+                        {/* Viabilidad */}
                         <div className="text-center">
-                          <div className="text-3xl font-bold text-purple-700 mb-1">
-                            €{((analisis.coste_total_inicial_eur ?? 0) / EUR_TO_K).toFixed(0)}k
+                          <div className={`inline-block px-4 py-2 rounded-full text-lg font-bold ${
+                            analisis.viabilidad === 'alta' ? 'bg-green-500 text-white' :
+                            analisis.viabilidad === 'media' ? 'bg-yellow-500 text-white' :
+                            analisis.viabilidad === 'baja' ? 'bg-orange-500 text-white' :
+                            'bg-red-500 text-white'
+                          }`}>
+                            {analisis.viabilidad?.toUpperCase() ?? 'MEDIA'}
                           </div>
-                          <div className="text-xs text-purple-600">Inversión inicial</div>
+                          <div className="text-sm text-gray-600 mt-2">Viabilidad</div>
                         </div>
                       </div>
                     </div>
-                    
-                    {/* Quick Actions */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <button
-                        onClick={() => setActiveTab('analysis')}
-                        className="p-4 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg transition-colors text-left"
-                      >
-                        <div className="text-sm font-semibold text-blue-900 mb-1">Análisis IA</div>
-                        <div className="text-xs text-blue-700">Ver métricas detalladas</div>
-                      </button>
-                      
-                      <button
-                        onClick={() => setActiveTab('budget')}
-                        className="p-4 bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded-lg transition-colors text-left"
-                      >
-                        <div className="text-sm font-semibold text-purple-900 mb-1">Presupuesto</div>
-                        <div className="text-xs text-purple-700">Ver desglose de costes</div>
-                      </button>
-                      
-                      <button
-                        onClick={() => onNavigate('analisis-zone', area)}
-                        className="p-4 bg-green-50 hover:bg-green-100 border border-green-200 rounded-lg transition-colors text-left"
-                      >
-                        <div className="text-sm font-semibold text-green-900 mb-1">Re-analizar</div>
-                        <div className="text-xs text-green-700">Actualizar análisis</div>
-                      </button>
+
+                    {/* ========== SECTION 3: BENEFICIOS ECOSISTÉMICOS ========== */}
+                    <div className="bg-white rounded-lg border border-gray-200 p-6">
+                      <h3 className="text-xl font-bold text-gray-900 mb-6">5. Beneficios Ecosistémicos</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        {/* CO2 */}
+                        <div className="bg-green-50 rounded-lg p-4 border border-green-200">
+                          <div className="text-sm text-green-700 font-semibold mb-1">CO₂ Capturado Anual</div>
+                          <div className="text-3xl font-bold text-green-900">
+                            {(analisis.co2_capturado_kg_anual / 1000).toLocaleString('es-ES', { maximumFractionDigits: 0 })} t
+                          </div>
+                          <div className="text-xs text-green-600 mt-1">
+                            {analisis.co2_capturado_kg_anual.toLocaleString('es-ES')} kg/año
+                          </div>
+                        </div>
+                        
+                        {/* Agua */}
+                        <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                          <div className="text-sm text-blue-700 font-semibold mb-1">Agua Retenida Anual</div>
+                          <div className="text-3xl font-bold text-blue-900">
+                            {(analisis.agua_retenida_litros_anual / 1000000).toLocaleString('es-ES', { maximumFractionDigits: 1 })} M
+                          </div>
+                          <div className="text-xs text-blue-600 mt-1">
+                            {analisis.agua_retenida_litros_anual.toLocaleString('es-ES')} L/año
+                          </div>
+                        </div>
+                        
+                        {/* Temperatura */}
+                        <div className="bg-orange-50 rounded-lg p-4 border border-orange-200">
+                          <div className="text-sm text-orange-700 font-semibold mb-1">Reducción Temperatura</div>
+                          <div className="text-3xl font-bold text-orange-900">
+                            {analisis.reduccion_temperatura_c?.toFixed(1) ?? '1.5'}°C
+                          </div>
+                          <div className="text-xs text-orange-600 mt-1">Isla de calor urbano</div>
+                        </div>
+                        
+                        {/* Energía */}
+                        <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-200">
+                          <div className="text-sm text-yellow-700 font-semibold mb-1">Ahorro Energía Anual</div>
+                          <div className="text-2xl font-bold text-yellow-900">
+                            {(analisis.ahorro_energia_kwh_anual / 1000000).toLocaleString('es-ES', { maximumFractionDigits: 1 })} M kWh
+                          </div>
+                          <div className="text-xs text-yellow-600 mt-1">
+                            €{analisis.ahorro_energia_eur_anual.toLocaleString('es-ES')}
+                          </div>
+                        </div>
+                      </div>
                     </div>
+
+                    {/* ========== SECTION 4: PRESUPUESTO DETALLADO ========== */}
+                    <div className="bg-white rounded-lg border border-gray-200 p-6">
+                      <h3 className="text-xl font-bold text-gray-900 mb-6">6. Presupuesto Detallado</h3>
+                      
+                      {/* Inversión Inicial */}
+                      <div className="bg-purple-50 rounded-lg p-6 border-2 border-purple-300 mb-6">
+                        <div className="flex items-center justify-between mb-4">
+                          <div>
+                            <div className="text-sm text-purple-700 font-semibold mb-1">Inversión Inicial</div>
+                            <div className="text-4xl font-black text-purple-900">
+                              €{(analisis.coste_total_inicial_eur / 1000000).toLocaleString('es-ES', { maximumFractionDigits: 2 })}M
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-sm text-purple-700">Coste por m²</div>
+                            <div className="text-2xl font-bold text-purple-900">
+                              €{analisis.coste_por_m2_eur?.toLocaleString('es-ES') ?? '235'}/m²
+                            </div>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4 text-sm">
+                          <div>
+                            <span className="text-purple-700">Mantenimiento Anual:</span>
+                            <span className="font-bold text-purple-900 ml-2">
+                              €{analisis.mantenimiento_anual_eur.toLocaleString('es-ES')}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-purple-700">Vida Útil:</span>
+                            <span className="font-bold text-purple-900 ml-2">
+                              {analisis.vida_util_anos ?? 25} años
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Desglose */}
+                      {analisis.presupuesto_desglose && (
+                        <div className="space-y-3">
+                          <h4 className="font-semibold text-gray-900 mb-3">Desglose de Inversión</h4>
+                          {[
+                            { label: 'Sustrato', value: analisis.presupuesto_desglose.sustrato_eur, color: 'bg-amber-500' },
+                            { label: 'Drenaje', value: analisis.presupuesto_desglose.drenaje_eur, color: 'bg-blue-500' },
+                            { label: 'Membrana Impermeable', value: analisis.presupuesto_desglose.membrana_impermeable_eur, color: 'bg-gray-500' },
+                            { label: 'Plantas', value: analisis.presupuesto_desglose.plantas_eur, color: 'bg-green-500' },
+                            { label: 'Instalación', value: analisis.presupuesto_desglose.instalacion_eur, color: 'bg-purple-500' }
+                          ].map((item, idx) => {
+                            const percentage = analisis.coste_total_inicial_eur 
+                              ? ((item.value / analisis.coste_total_inicial_eur) * 100).toFixed(1)
+                              : '0';
+                            return (
+                              <div key={idx} className="flex items-center gap-3">
+                                <div className="flex-1">
+                                  <div className="flex items-center justify-between mb-1">
+                                    <span className="text-sm font-medium text-gray-700">{item.label}</span>
+                                    <span className="text-sm font-bold text-gray-900">
+                                      €{item.value.toLocaleString('es-ES')}
+                                    </span>
+                                  </div>
+                                  <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                                    <div 
+                                      className={`h-full ${item.color}`}
+                                      style={{ width: `${percentage}%` }}
+                                    />
+                                  </div>
+                                </div>
+                                <span className="text-xs font-semibold text-gray-600 w-12 text-right">
+                                  {percentage}%
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* ========== SECTION 5: ROI ========== */}
+                    <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-lg border border-indigo-200 p-6">
+                      <h3 className="text-xl font-bold text-gray-900 mb-6">7. ROI (Retorno de Inversión)</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div className="bg-white rounded-lg p-4">
+                          <div className="text-sm text-indigo-700 mb-1">Ahorro Anual</div>
+                          <div className="text-2xl font-bold text-indigo-900">
+                            €{analisis.ahorro_anual_eur.toLocaleString('es-ES')}
+                          </div>
+                        </div>
+                        <div className="bg-white rounded-lg p-4">
+                          <div className="text-sm text-green-700 mb-1">ROI Porcentaje</div>
+                          <div className="text-2xl font-bold text-green-900">
+                            {analisis.roi_porcentaje?.toFixed(1) ?? '6.7'}%
+                          </div>
+                        </div>
+                        <div className="bg-white rounded-lg p-4">
+                          <div className="text-sm text-blue-700 mb-1">Amortización</div>
+                          <div className="text-2xl font-bold text-blue-900">
+                            {analisis.amortizacion_anos?.toFixed(1) ?? '15.0'} años
+                          </div>
+                        </div>
+                        <div className="bg-white rounded-lg p-4">
+                          <div className="text-sm text-purple-700 mb-1">Ahorro Total 25 años</div>
+                          <div className="text-xl font-bold text-purple-900">
+                            €{(analisis.ahorro_25_anos_eur / 1000000).toLocaleString('es-ES', { maximumFractionDigits: 1 })}M
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* ========== SECTION 6: SUBVENCIONES ========== */}
+                    {analisis.subvencion_elegible && (
+                      <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg border-2 border-green-300 p-6">
+                        <h3 className="text-xl font-bold text-gray-900 mb-6">8. Subvenciones Disponibles</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div>
+                            <div className="text-sm text-green-700 mb-1">Programa</div>
+                            <div className="text-2xl font-bold text-green-900 mb-4">
+                              {analisis.subvencion_programa ?? 'PECV Madrid 2025'}
+                            </div>
+                            <div className="text-sm text-green-700 mb-1">Porcentaje Subvención</div>
+                            <div className="text-4xl font-black text-green-900">
+                              {analisis.subvencion_porcentaje ?? 60}%
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-sm text-green-700 mb-1">Monto Estimado</div>
+                            <div className="text-4xl font-black text-green-900 mb-4">
+                              €{(analisis.subvencion_monto_estimado_eur / 1000000).toLocaleString('es-ES', { maximumFractionDigits: 2 })}M
+                            </div>
+                            <div className="text-sm text-green-700 mb-1">Coste Neto (con subvención)</div>
+                            <div className="text-3xl font-bold text-green-900">
+                              €{((analisis.coste_total_inicial_eur - analisis.subvencion_monto_estimado_eur) / 1000000).toLocaleString('es-ES', { maximumFractionDigits: 2 })}M
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* ========== SECTION 7: ESPECIES RECOMENDADAS ========== */}
+                    {analisis.especies_recomendadas && analisis.especies_recomendadas.length > 0 && (
+                      <div className="bg-white rounded-lg border border-gray-200 p-6">
+                        <h3 className="text-xl font-bold text-gray-900 mb-6">
+                          9. Especies Recomendadas ({analisis.especies_recomendadas.length})
+                        </h3>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          {analisis.especies_recomendadas.slice(0, 6).map((especie: any, idx: number) => (
+                            <div key={idx} className="bg-green-50 rounded-lg p-4 border border-green-200">
+                              <div className="font-bold text-gray-900 text-lg mb-1">
+                                {especie.nombre_comun || 'Especie'}
+                              </div>
+                              <div className="text-sm text-gray-600 italic mb-2">
+                                {especie.nombre_cientifico || ''}
+                              </div>
+                              {especie.tipo && (
+                                <div className="text-xs text-green-700 mb-2">
+                                  {especie.tipo}
+                                </div>
+                              )}
+                              {especie.viabilidad && (
+                                <div className="flex items-center gap-2">
+                                  <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                                    <div 
+                                      className="h-full bg-green-500"
+                                      style={{ width: `${(especie.viabilidad * 100)}%` }}
+                                    />
+                                  </div>
+                                  <span className="text-xs font-bold text-green-700">
+                                    {(especie.viabilidad * 100).toFixed(0)}%
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                        {analisis.especies_recomendadas.length > 6 && (
+                          <p className="text-sm text-gray-600 mt-4 text-center">
+                            Y {analisis.especies_recomendadas.length - 6} especies más...
+                          </p>
+                        )}
+                      </div>
+                    )}
+
                   </>
                 ) : (
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+                  /* ========== NO ANALYSIS AVAILABLE ========== */
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-8">
                     <div className="text-center">
-                      <Brain size={48} className="mx-auto mb-3 text-blue-400" />
-                      <h3 className="text-lg font-semibold text-blue-900 mb-2">
+                      <Brain size={64} className="mx-auto mb-4 text-blue-400" />
+                      <h3 className="text-xl font-bold text-blue-900 mb-2">
                         Sin análisis todavía
                       </h3>
-                      <p className="text-sm text-blue-700 mb-4">
-                        Esta zona no tiene un análisis IA. Realiza uno para ver métricas detalladas.
+                      <p className="text-blue-700 mb-6">
+                        Esta zona no tiene un análisis completo. Realiza uno para ver todas las métricas detalladas.
                       </p>
                       <button
                         onClick={() => onNavigate('analisis-zone', area)}
-                        className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                        className="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold text-lg"
                       >
                         Realizar análisis ahora
                       </button>
@@ -510,197 +689,21 @@ const ZoneDetailContent: React.FC<ZoneDetailContentProps> = ({
             )}
 
             {activeTab === 'analysis' && (
-              <>
-                {loadingAnalisis ? (
-                  <div className="text-center py-12">
-                    <Loader2 size={64} className="mx-auto mb-4 text-primary-600 animate-spin" />
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                      Cargando análisis...
-                    </h3>
-                  </div>
-                ) : analisis ? (
-                  <div className="space-y-6">
-                    {/* Green Score Card */}
-                    <div className="bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 rounded-xl p-8 border-2 border-green-300 shadow-lg">
-                      <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-2xl font-bold text-green-900">
-                          Green Score
-                        </h3>
-                        <div className={`px-4 py-2 rounded-full font-bold text-sm ${getViabilityColorClasses(analisis.viabilidad)}`}>
-                          {analisis.viabilidad?.toUpperCase()}
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-baseline gap-2 mb-3">
-                        <div className="text-6xl font-black text-green-700">
-                          {analisis.green_score ?? 0}
-                        </div>
-                        <div className="text-3xl text-green-600 font-semibold">
-                          /100
-                        </div>
-                      </div>
-                      
-                      {/* Progress Bar */}
-                      <div className="w-full h-4 bg-gray-200 rounded-full overflow-hidden mb-3">
-                        <div 
-                          className={`h-full transition-all duration-500 ${getGreenScoreColorClass(analisis.green_score ?? 0)}`}
-                          style={{ width: `${analisis.green_score ?? 0}%` }}
-                        />
-                      </div>
-                      
-                      <p className="text-sm text-green-800">
-                        {getGreenScoreMessage(analisis.green_score ?? 0)}
-                      </p>
-                      
-                      {analisis.exposicion_solar != null && (
-                        <div className="mt-4 pt-4 border-t border-green-200">
-                          <div className="flex items-center justify-between text-sm">
-                            <span className="text-green-800 font-medium">☀️ Exposición solar:</span>
-                            <span className="text-green-900 font-bold">{(analisis.exposicion_solar ?? 0).toFixed(0)}%</span>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Factor Verde */}
-                    <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-6 border border-green-200">
-                      <h3 className="text-lg font-semibold text-green-900 mb-3">
-                        Factor Verde
-                      </h3>
-                      <div className="text-4xl font-bold text-green-700 mb-2">
-                        {analisis.factor_verde?.toFixed(2) ?? '0.65'}
-                      </div>
-                      <p className="text-sm text-green-700">
-                        Cumple con normativa PECV Madrid 2025
-                      </p>
-                    </div>
-
-                    {/* Beneficios Ecosistémicos */}
-                    <div className="bg-white rounded-lg p-6 border border-gray-200">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                        Beneficios Ecosistémicos Anuales
-                      </h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="bg-blue-50 rounded-lg p-4">
-                          <div className="text-sm text-blue-700 mb-1">CO₂ Capturado</div>
-                          <div className="text-2xl font-bold text-blue-900">
-                            {(analisis.co2_capturado_kg_anual ?? 0).toLocaleString('es-ES')} kg/año
-                          </div>
-                        </div>
-                        <div className="bg-cyan-50 rounded-lg p-4">
-                          <div className="text-sm text-cyan-700 mb-1">Agua Retenida</div>
-                          <div className="text-2xl font-bold text-cyan-900">
-                            {(analisis.agua_retenida_litros_anual ?? 0).toLocaleString('es-ES')} L/año
-                          </div>
-                        </div>
-                        <div className="bg-orange-50 rounded-lg p-4">
-                          <div className="text-sm text-orange-700 mb-1">Reducción Temperatura</div>
-                          <div className="text-2xl font-bold text-orange-900">
-                            -{(analisis.reduccion_temperatura_c ?? 1.5).toFixed(1)}°C
-                          </div>
-                        </div>
-                        <div className="bg-yellow-50 rounded-lg p-4">
-                          <div className="text-sm text-yellow-700 mb-1">Ahorro Energético</div>
-                          <div className="text-2xl font-bold text-yellow-900">
-                            {(analisis.ahorro_energia_kwh_anual ?? 0).toLocaleString('es-ES')} kWh/año
-                          </div>
-                          <div className="text-xs text-yellow-700 mt-1">
-                            €{(analisis.ahorro_energia_eur_anual ?? 0).toLocaleString('es-ES')}/año
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Especies Recomendadas */}
-                    {analisis.especies_recomendadas && analisis.especies_recomendadas.length > 0 && (
-                      <div className="bg-white rounded-lg p-6 border border-gray-200">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                          Especies Recomendadas ({analisis.especies_recomendadas.length})
-                        </h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                          {analisis.especies_recomendadas.slice(0, 6).map((especie: any, idx: number) => (
-                            <div key={idx} className="bg-gray-50 rounded-lg p-3 border border-gray-200">
-                              <div className="font-semibold text-gray-900 text-sm">
-                                {especie.nombre_comun || 'Especie'}
-                              </div>
-                              <div className="text-xs text-gray-600 italic">
-                                {especie.nombre_cientifico || ''}
-                              </div>
-                              {especie.viabilidad && (
-                                <div className="text-xs text-green-600 mt-1">
-                                  Viabilidad: {(especie.viabilidad * 100).toFixed(0)}%
-                                </div>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                        {analisis.especies_recomendadas.length > 6 && (
-                          <p className="text-sm text-gray-600 mt-3 text-center">
-                            Y {analisis.especies_recomendadas.length - 6} especies más...
-                          </p>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Recomendaciones del Análisis */}
-                    {analisis.recomendaciones && analisis.recomendaciones.length > 0 && (
-                      <div className="bg-blue-50 rounded-lg p-6 border border-blue-200">
-                        <h3 className="text-lg font-semibold text-blue-900 mb-4 flex items-center gap-2">
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                          Recomendaciones del Análisis ({analisis.recomendaciones.length})
-                        </h3>
-                        <ul className="space-y-3">
-                          {analisis.recomendaciones.map((rec: string, idx: number) => (
-                            <li key={idx} className="flex items-start gap-3">
-                              <span className="flex-shrink-0 w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold">
-                                {idx + 1}
-                              </span>
-                              <p className="text-sm text-blue-900 flex-1">{rec}</p>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-
-                    {/* Notas del Análisis */}
-                    {analisis.notas && (
-                      <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-                        <h3 className="text-sm font-semibold text-blue-900 mb-2">Notas</h3>
-                        <p className="text-sm text-blue-800 whitespace-pre-wrap">{analisis.notas}</p>
-                      </div>
-                    )}
-
-                    {/* Fecha de Análisis */}
-                    <div className="text-center text-sm text-gray-500">
-                      Análisis realizado el {new Date(analisis.created_at).toLocaleDateString('es-ES', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-center py-12">
-                    <Brain size={64} className="mx-auto mb-4 text-gray-300" />
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                      Análisis IA no disponible
-                    </h3>
-                    <p className="text-gray-600 mb-6">
-                      Esta zona no tiene un análisis IA guardado todavía
-                    </p>
-                    <button
-                      onClick={() => onNavigate('analisis-zone', area)}
-                      className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
-                    >
-                      Realizar análisis ahora
-                    </button>
-                  </div>
-                )}
-              </>
+              <div className="text-center py-16">
+                <Brain size={80} className="mx-auto mb-6 text-gray-300" />
+                <h3 className="text-2xl font-bold text-gray-900 mb-3">
+                  Análisis con IA
+                </h3>
+                <p className="text-gray-600 mb-2 max-w-md mx-auto">
+                  Esta sección está reservada para funcionalidades avanzadas de análisis con inteligencia artificial.
+                </p>
+                <p className="text-sm text-gray-500 mb-8">
+                  Los resultados del análisis actual se encuentran en la pestaña <strong>"Información General"</strong>
+                </p>
+                <div className="inline-block px-6 py-3 bg-blue-100 text-blue-800 rounded-lg">
+                  🚧 Próximamente: Predicciones climáticas, optimización de especies, simulaciones 3D...
+                </div>
+              </div>
             )}
 
             {activeTab === 'budget' && (
