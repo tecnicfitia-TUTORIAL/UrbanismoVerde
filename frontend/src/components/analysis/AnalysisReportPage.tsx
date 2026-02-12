@@ -5,12 +5,14 @@
  */
 
 import React, { useState } from 'react';
-import { X, Calendar, MapPin, CheckCircle } from 'lucide-react';
-import { AnalysisResponse, GeoJSONPolygon } from '../../types';
+import { X, Calendar, MapPin, CheckCircle, Layers } from 'lucide-react';
+import { AnalysisResponse, GeoJSONPolygon, TipoEspecializacion } from '../../types';
 import { SatelliteMap } from './SatelliteMap';
 import { ReportSummary } from './ReportSummary';
+import { SpecializationPanel } from './SpecializationPanel';
 import { useAnalysisReport } from '../../hooks/useAnalysisReport';
 import { Z_INDEX } from '../../constants/zIndex';
+import toast from 'react-hot-toast';
 
 interface AnalysisReportPageProps {
   analysisResult: AnalysisResponse;
@@ -36,6 +38,8 @@ export const AnalysisReportPage: React.FC<AnalysisReportPageProps> = ({
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [saveZoneName, setSaveZoneName] = useState(zoneName);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const [showSpecializationModal, setShowSpecializationModal] = useState(false);
+  const [savedAnalysisId, setSavedAnalysisId] = useState<string | null>(null);
 
   const {
     isSaving,
@@ -64,10 +68,31 @@ export const AnalysisReportPage: React.FC<AnalysisReportPageProps> = ({
   const handleConfirmSave = async () => {
     const saved = await saveToDatabase(saveZoneName);
     if (saved) {
+      // Store the analysis ID for specializations
+      setSavedAnalysisId(saved.analisisId);
       setShowSaveDialog(false);
       setShowSuccessMessage(true);
       setTimeout(() => setShowSuccessMessage(false), 3000);
     }
+  };
+
+  const handleShowSpecializations = () => {
+    // Check if analysis has been saved
+    if (!savedAnalysisId) {
+      toast.error('Por favor, guarda el análisis primero antes de generar especializaciones');
+      setShowSaveDialog(true);
+      return;
+    }
+    setShowSpecializationModal(true);
+  };
+
+  const handleSpecializationTypeSelect = (tipo: TipoEspecializacion) => {
+    // Placeholder for PR2 - will implement actual endpoint calls
+    toast.success(
+      `Especialización "${tipo}" seleccionada. Los endpoints de generación se implementarán en PR2 (tejado) y PR3 (otros tipos).`,
+      { duration: 5000 }
+    );
+    console.log('Selected specialization type:', tipo);
   };
 
   const handleDownloadPDF = async () => {
@@ -137,11 +162,57 @@ export const AnalysisReportPage: React.FC<AnalysisReportPageProps> = ({
             analysis={analysisResult}
             onSave={handleSave}
             onDownloadPDF={handleDownloadPDF}
+            onShowSpecializations={handleShowSpecializations}
             isSaving={isSaving}
             isGeneratingPDF={isGeneratingPDF}
           />
         </div>
       </div>
+
+      {/* Specialization Modal */}
+      {showSpecializationModal && savedAnalysisId && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
+          style={{ zIndex: Z_INDEX.SAVE_DIALOG_OVERLAY }}
+          onClick={() => setShowSpecializationModal(false)}
+        >
+          <div 
+            className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50">
+              <div className="flex items-center gap-2">
+                <Layers className="text-blue-600" size={24} />
+                <h2 className="text-xl font-semibold text-gray-900">
+                  Análisis Especializados
+                </h2>
+              </div>
+              <button
+                onClick={() => setShowSpecializationModal(false)}
+                className="p-2 hover:bg-gray-200 rounded-full transition-colors"
+                aria-label="Cerrar"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            
+            {/* Modal Content */}
+            <div className="overflow-y-auto max-h-[calc(90vh-80px)]">
+              <SpecializationPanel
+                analisisId={savedAnalysisId}
+                baseAnalysis={{
+                  area_m2: analysisResult.area_m2,
+                  green_score: analysisResult.green_score,
+                  especies_recomendadas: analysisResult.especies_recomendadas || [],
+                  presupuesto_eur: analysisResult.presupuesto?.coste_total_inicial_eur,
+                }}
+                onSelectType={handleSpecializationTypeSelect}
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Error Toast */}
       {error && (

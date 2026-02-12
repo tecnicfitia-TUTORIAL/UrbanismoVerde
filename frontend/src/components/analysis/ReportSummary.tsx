@@ -27,12 +27,14 @@ import {
   Users,
   TreeDeciduous,
   Target,
+  Layers,
 } from 'lucide-react';
 
 interface ReportSummaryProps {
   analysis: AnalysisResponse;
   onSave?: () => void;
   onDownloadPDF?: () => void;
+  onShowSpecializations?: () => void;
   isSaving?: boolean;
   isGeneratingPDF?: boolean;
 }
@@ -60,6 +62,7 @@ export const ReportSummary: React.FC<ReportSummaryProps> = ({
   analysis,
   onSave,
   onDownloadPDF,
+  onShowSpecializations,
   isSaving = false,
   isGeneratingPDF = false,
 }) => {
@@ -593,6 +596,16 @@ export const ReportSummary: React.FC<ReportSummaryProps> = ({
                 Guardar Análisis
               </>
             )}
+          </button>
+        )}
+
+        {onShowSpecializations && (
+          <button
+            onClick={onShowSpecializations}
+            className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium"
+          >
+            <Layers size={20} />
+            Ver Análisis Especializados
           </button>
         )}
 
