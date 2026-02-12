@@ -86,7 +86,7 @@ const Layout: React.FC = () => {
       setDbZonasCount(count || 0);
       console.log(`📊 Zonas en BD: ${count}`);
     } catch (error) {
-      console.error('Error loading zonas count:', error);
+      console.error('Error al cargar contador de zonas:', error);
     }
   }
 
