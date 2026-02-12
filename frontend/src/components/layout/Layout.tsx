@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import Sidebar from './Sidebar';
 import FullScreenMap from '../maps/FullScreenMap';
@@ -13,6 +13,7 @@ import { AnalysisReportPage } from '../analysis/AnalysisReportPage';
 import { Area, FormData, GeoJSONPolygon } from '../../types';
 import { useAnalysis } from '../../hooks/useAnalysis';
 import { coordinatesToGeoJSON } from '../../services/ai-analysis';
+import { supabase, TABLES } from '../../config/supabase';
 
 // Calcular área usando fórmula de Haversine (aproximación para polígonos pequeños)
 const calcularArea = (coords: [number, number][]): number => {
@@ -41,6 +42,7 @@ const Layout: React.FC = () => {
   const [showModal, setShowModal] = useState(false);
   const [selectedArea, setSelectedArea] = useState<Area | null>(null);
   const [currentView, setCurrentView] = useState('dashboard');
+  const [dbZonasCount, setDbZonasCount] = useState(0);
   const tempCoordsRef = useRef<[number, number][]>([]);
   
   // AI Analysis state
@@ -48,6 +50,45 @@ const Layout: React.FC = () => {
   const [showAnalysisResults, setShowAnalysisResults] = useState(false);
   const [showAnalysisReport, setShowAnalysisReport] = useState(false);
   const [currentPolygon, setCurrentPolygon] = useState<GeoJSONPolygon | null>(null);
+
+  // Load DB zones count and subscribe to real-time updates
+  useEffect(() => {
+    async function loadDbZonasCount() {
+      try {
+        const { count } = await supabase
+          .from(TABLES.ZONAS_VERDES)
+          .select('*', { count: 'exact', head: true });
+        
+        setDbZonasCount(count || 0);
+        console.log(`📊 Zonas en BD: ${count}`);
+      } catch (error) {
+        console.error('Error al cargar contador de zonas:', error);
+      }
+    }
+
+    loadDbZonasCount();
+    
+    // Subscribe to real-time changes in zonas_verdes table
+    const subscription = supabase
+      .channel('zonas-count')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: TABLES.ZONAS_VERDES,
+        },
+        () => {
+          console.log('🔄 Zonas actualizadas, recargando contador...');
+          loadDbZonasCount();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
 
   const handleStartDrawing = () => {
     setIsDrawing(true);
@@ -256,6 +297,7 @@ const Layout: React.FC = () => {
         isDrawing={isDrawing}
         onStartDrawing={handleStartDrawing}
         areas={areas}
+        dbZonasCount={dbZonasCount}
         onDeleteArea={handleDeleteArea}
         onCenterArea={handleCenterArea}
         selectedArea={selectedArea}
