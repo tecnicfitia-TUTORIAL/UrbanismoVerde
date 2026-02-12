@@ -13,7 +13,7 @@ import { AnalysisReportPage } from '../analysis/AnalysisReportPage';
 import { Area, FormData, GeoJSONPolygon } from '../../types';
 import { useAnalysis } from '../../hooks/useAnalysis';
 import { coordinatesToGeoJSON } from '../../services/ai-analysis';
-import { supabase, TABLES, ZonaVerde } from '../../config/supabase';
+import { supabase, TABLES } from '../../config/supabase';
 import { saveZonaVerde, loadZonasVerdes } from '../../services/zona-storage';
 
 // Calcular área usando fórmula de Haversine (aproximación para polígonos pequeños)
@@ -40,7 +40,6 @@ const calcularArea = (coords: [number, number][]): number => {
 const Layout: React.FC = () => {
   const [isDrawing, setIsDrawing] = useState(false);
   const [areas, setAreas] = useState<Area[]>([]);
-  const [dbZones, setDbZones] = useState<ZonaVerde[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [selectedArea, setSelectedArea] = useState<Area | null>(null);
   const [currentView, setCurrentView] = useState('dashboard');
@@ -59,7 +58,6 @@ const Layout: React.FC = () => {
     const loadZonasFromDB = async () => {
       try {
         const zones = await loadZonasVerdes();
-        setDbZones(zones);
         setDbZonasCount(zones.length);
         console.log(`📊 Zonas cargadas: ${zones.length}`);
       } catch (error) {
@@ -172,9 +170,8 @@ const Layout: React.FC = () => {
       tempCoordsRef.current = [];
       resetAnalysis();
       
-      // Reload zones from database (real-time subscription will handle this, but explicit reload for immediate feedback)
+      // Reload zones count (real-time subscription will also update)
       const zones = await loadZonasVerdes();
-      setDbZones(zones);
       setDbZonasCount(zones.length);
     } catch (error) {
       console.error('Error guardando zona:', error);
