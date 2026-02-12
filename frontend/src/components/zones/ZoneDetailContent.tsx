@@ -455,7 +455,7 @@ const ZoneDetailContent: React.FC<ZoneDetailContentProps> = ({
                         <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
                           <div className="text-sm text-blue-700 font-semibold mb-1">Agua Retenida Anual</div>
                           <div className="text-3xl font-bold text-blue-900">
-                            {((analisis.agua_retenida_litros_anual ?? 0) / 1000000).toLocaleString('es-ES', { maximumFractionDigits: 1 })} M
+                            {((analisis.agua_retenida_litros_anual ?? 0) / 1000000).toLocaleString('es-ES', { maximumFractionDigits: 1 })} ML
                           </div>
                           <div className="text-xs text-blue-600 mt-1">
                             {(analisis.agua_retenida_litros_anual ?? 0).toLocaleString('es-ES')} L/año
@@ -475,7 +475,7 @@ const ZoneDetailContent: React.FC<ZoneDetailContentProps> = ({
                         <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-200">
                           <div className="text-sm text-yellow-700 font-semibold mb-1">Ahorro Energía Anual</div>
                           <div className="text-2xl font-bold text-yellow-900">
-                            {((analisis.ahorro_energia_kwh_anual ?? 0) / 1000000).toLocaleString('es-ES', { maximumFractionDigits: 1 })} M kWh
+                            {((analisis.ahorro_energia_kwh_anual ?? 0) / 1000000).toLocaleString('es-ES', { maximumFractionDigits: 1 })} MWh
                           </div>
                           <div className="text-xs text-yellow-600 mt-1">
                             €{(analisis.ahorro_energia_eur_anual ?? 0).toLocaleString('es-ES')}
@@ -532,7 +532,7 @@ const ZoneDetailContent: React.FC<ZoneDetailContentProps> = ({
                             { label: 'Instalación', value: analisis.presupuesto_desglose.instalacion_eur, color: 'bg-purple-500' }
                           ].map((item, idx) => {
                             const percentage = analisis.coste_total_inicial_eur 
-                              ? ((item.value / analisis.coste_total_inicial_eur) * 100).toFixed(1)
+                              ? (((item.value ?? 0) / analisis.coste_total_inicial_eur) * 100).toFixed(1)
                               : '0';
                             return (
                               <div key={idx} className="flex items-center gap-3">
@@ -540,7 +540,7 @@ const ZoneDetailContent: React.FC<ZoneDetailContentProps> = ({
                                   <div className="flex items-center justify-between mb-1">
                                     <span className="text-sm font-medium text-gray-700">{item.label}</span>
                                     <span className="text-sm font-bold text-gray-900">
-                                      €{item.value.toLocaleString('es-ES')}
+                                      €{(item.value ?? 0).toLocaleString('es-ES')}
                                     </span>
                                   </div>
                                   <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
@@ -594,7 +594,7 @@ const ZoneDetailContent: React.FC<ZoneDetailContentProps> = ({
                     {/* ========== SECTION 6: SUBVENCIONES ========== */}
                     {analisis.subvencion_elegible && (
                       <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg border-2 border-green-300 p-6">
-                        <h3 className="text-xl font-bold text-gray-900 mb-6">5. Subvenciones Disponibles</h3>
+                        <h3 className="text-xl font-bold text-gray-900 mb-6">Subvenciones Disponibles</h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           <div>
                             <div className="text-sm text-green-700 mb-1">Programa</div>
@@ -613,7 +613,10 @@ const ZoneDetailContent: React.FC<ZoneDetailContentProps> = ({
                             </div>
                             <div className="text-sm text-green-700 mb-1">Coste Neto (con subvención)</div>
                             <div className="text-3xl font-bold text-green-900">
-                              €{(((analisis.coste_total_inicial_eur ?? 0) - (analisis.subvencion_monto_estimado_eur ?? 0)) / 1000000).toLocaleString('es-ES', { maximumFractionDigits: 2 })}M
+                              €{(() => {
+                                const costeNeto = ((analisis.coste_total_inicial_eur ?? 0) - (analisis.subvencion_monto_estimado_eur ?? 0)) / 1000000;
+                                return costeNeto.toLocaleString('es-ES', { maximumFractionDigits: 2 });
+                              })()}M
                             </div>
                           </div>
                         </div>
@@ -624,7 +627,7 @@ const ZoneDetailContent: React.FC<ZoneDetailContentProps> = ({
                     {analisis.especies_recomendadas && analisis.especies_recomendadas.length > 0 && (
                       <div className="bg-white rounded-lg border border-gray-200 p-6">
                         <h3 className="text-xl font-bold text-gray-900 mb-6">
-                          6. Especies Recomendadas ({analisis.especies_recomendadas.length})
+                          Especies Recomendadas ({analisis.especies_recomendadas.length})
                         </h3>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                           {analisis.especies_recomendadas.slice(0, 6).map((especie: any, idx: number) => (
