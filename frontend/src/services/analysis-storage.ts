@@ -184,6 +184,33 @@ async function saveToAnalisisTable(
     impacto_ambiental_oxigeno_anual: beneficios.agua_retenida_litros_anual || (adaptedData.area_m2 * DEFAULT_WATER_RETENTION_PER_M2), // Note: Field name suggests oxygen but stores water retention
     tiempo_implementacion_dias: tiempoImplementacion,
     notas: JSON.stringify(extendedData, null, 2), // Store all extended data as JSON
+    
+    // Beneficios ecosistémicos (migration 005)
+    factor_verde: normativa.factor_verde || 0.65,
+    co2_capturado_kg_anual: beneficios.co2_capturado_kg_anual || Math.round(adaptedData.area_m2 * DEFAULT_CO2_CAPTURE_PER_M2),
+    agua_retenida_litros_anual: beneficios.agua_retenida_litros_anual || Math.round(adaptedData.area_m2 * DEFAULT_WATER_RETENTION_PER_M2),
+    reduccion_temperatura_c: beneficios.reduccion_temperatura_c || 1.5,
+    ahorro_energia_kwh_anual: beneficios.ahorro_energia_kwh_anual,
+    ahorro_energia_eur_anual: beneficios.ahorro_energia_eur_anual,
+    
+    // Presupuesto detallado (migration 005)
+    coste_total_inicial_eur: presupuesto.coste_total_inicial_eur || Math.round(adaptedData.area_m2 * DEFAULT_COST_PER_M2),
+    presupuesto_desglose: presupuesto.desglose,
+    mantenimiento_anual_eur: presupuesto.mantenimiento_anual_eur,
+    coste_por_m2_eur: presupuesto.coste_por_m2_eur || DEFAULT_COST_PER_M2,
+    vida_util_anos: presupuesto.vida_util_anos || 25,
+    
+    // ROI ambiental (migration 007)
+    roi_porcentaje: roi.roi_porcentaje,
+    amortizacion_anos: roi.amortizacion_anos,
+    ahorro_anual_eur: roi.ahorro_anual_eur,
+    ahorro_25_anos_eur: roi.ahorro_25_anos_eur,
+    
+    // Subvenciones (migration 005)
+    subvencion_elegible: subvencion.elegible !== undefined ? subvencion.elegible : true,
+    subvencion_porcentaje: subvencion.porcentaje,
+    subvencion_programa: subvencion.programa,
+    subvencion_monto_estimado_eur: subvencion.monto_estimado_eur,
   };
 
   const { data, error } = await supabase
