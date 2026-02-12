@@ -53,6 +53,19 @@ const Layout: React.FC = () => {
 
   // Load DB zones count and subscribe to real-time updates
   useEffect(() => {
+    async function loadDbZonasCount() {
+      try {
+        const { count } = await supabase
+          .from(TABLES.ZONAS_VERDES)
+          .select('*', { count: 'exact', head: true });
+        
+        setDbZonasCount(count || 0);
+        console.log(`📊 Zonas en BD: ${count}`);
+      } catch (error) {
+        console.error('Error al cargar contador de zonas:', error);
+      }
+    }
+
     loadDbZonasCount();
     
     // Subscribe to real-time changes in zonas_verdes table
@@ -76,19 +89,6 @@ const Layout: React.FC = () => {
       subscription.unsubscribe();
     };
   }, []);
-
-  async function loadDbZonasCount() {
-    try {
-      const { count } = await supabase
-        .from(TABLES.ZONAS_VERDES)
-        .select('*', { count: 'exact', head: true });
-      
-      setDbZonasCount(count || 0);
-      console.log(`📊 Zonas en BD: ${count}`);
-    } catch (error) {
-      console.error('Error al cargar contador de zonas:', error);
-    }
-  }
 
   const handleStartDrawing = () => {
     setIsDrawing(true);
