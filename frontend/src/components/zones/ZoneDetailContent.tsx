@@ -141,38 +141,12 @@ const ZoneDetailContent: React.FC<ZoneDetailContentProps> = ({
 
       const dbZona = zonas[0];
 
-      // Now fetch the analysis for this zona
+      // Note: We use .select('*') instead of listing specific columns to avoid
+      // 406 errors if database schema doesn't match TypeScript interface exactly.
+      // The AnalisisData interface defines the expected structure for type safety.
       const { data: analisisData, error: analisisError } = await supabase
         .from(TABLES.ANALISIS)
-        .select(`
-          id,
-          zona_verde_id,
-          green_score,
-          viabilidad,
-          factor_verde,
-          exposicion_solar,
-          co2_capturado_kg_anual,
-          agua_retenida_litros_anual,
-          reduccion_temperatura_c,
-          ahorro_energia_kwh_anual,
-          ahorro_energia_eur_anual,
-          coste_total_inicial_eur,
-          presupuesto_desglose,
-          mantenimiento_anual_eur,
-          coste_por_m2_eur,
-          vida_util_anos,
-          roi_porcentaje,
-          amortizacion_anos,
-          ahorro_anual_eur,
-          ahorro_25_anos_eur,
-          subvencion_elegible,
-          subvencion_porcentaje,
-          subvencion_programa,
-          subvencion_monto_estimado_eur,
-          especies_recomendadas,
-          notas,
-          created_at
-        `)
+        .select('*')
         .eq('zona_verde_id', dbZona.id)
         .order('created_at', { ascending: false })
         .limit(1)
