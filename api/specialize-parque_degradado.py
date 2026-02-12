@@ -115,7 +115,7 @@ def assess_furniture_condition(area_m2: float, park_age_years: int = 20) -> Dict
     
     Args:
         area_m2: Park area
-        park_age_years: Years since last renovation
+        park_age_years: Years since last renovation (default: 20, typical Spanish park maintenance cycle)
         
     Returns:
         Dict with furniture condition assessment

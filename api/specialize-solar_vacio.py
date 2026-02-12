@@ -13,6 +13,7 @@ Architecture:
 from http.server import BaseHTTPRequestHandler
 import json
 import math
+import random
 from typing import Dict, Any, List
 
 
@@ -110,7 +111,6 @@ def analyze_topography(area_m2: float, coordinates: List = None) -> Dict[str, An
     """
     # Simulate slope (in reality would come from elevation data)
     # Larger lots tend to have more variation
-    import random
     random.seed(int(area_m2))  # Deterministic for same area
     
     pendiente_promedio_porcentaje = random.uniform(0.5, 12.0)
