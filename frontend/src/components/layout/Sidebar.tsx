@@ -7,6 +7,7 @@ interface SidebarProps {
   isDrawing: boolean;
   onStartDrawing: () => void;
   areas: Area[];
+  dbZonasCount: number;
   onDeleteArea: (id: string) => void;
   onCenterArea: (coords: [number, number][]) => void;
   selectedArea: Area | null;
@@ -19,6 +20,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   isDrawing,
   onStartDrawing,
   areas,
+  dbZonasCount,
   onDeleteArea,
   onCenterArea,
   selectedArea,
@@ -43,9 +45,9 @@ const Sidebar: React.FC<SidebarProps> = ({
       icon: <MapPin size={20} />,
       label: 'Zonas Verdes',
       view: 'zonas',
-      count: areas.length,
+      count: dbZonasCount + areas.length,
       subItems: [
-        { id: 'zonas-gallery', label: 'Ver todas', icon: <List size={16} />, view: 'zonas-gallery', count: areas.length },
+        { id: 'zonas-gallery', label: 'Ver todas', icon: <List size={16} />, view: 'zonas-gallery', count: dbZonasCount },
         { id: 'zonas-create', label: 'Crear nueva', icon: <PlusCircle size={16} />, view: 'zonas-create' },
         { id: 'zonas-search', label: 'Buscar', icon: <Search size={16} />, view: 'zonas-search' }
       ]
@@ -213,7 +215,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           <div className="flex flex-col items-center">
             <MapPin size={24} className="text-gray-400 mb-2" />
             <span className="px-2 py-1 bg-primary-100 text-primary-700 rounded-full text-xs font-semibold">
-              {areas.length}
+              {dbZonasCount + areas.length}
             </span>
           </div>
         </div>
