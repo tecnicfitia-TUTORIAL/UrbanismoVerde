@@ -42,6 +42,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 export const TABLES = {
   ZONAS_VERDES: 'zonas_verdes',
   ANALISIS: 'analisis',
+  ANALISIS_ESPECIALIZADOS: 'analisis_especializados',
   ESPECIES: 'especies',
   MUNICIPIOS: 'municipios',
   INFORMES: 'informes',

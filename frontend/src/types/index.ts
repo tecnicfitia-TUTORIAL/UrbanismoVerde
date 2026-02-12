@@ -213,3 +213,137 @@ export interface ReportData {
   generado_por?: string;
   created_at: Date;
 }
+
+// ============================================================================
+// SPECIALIZED ANALYSIS - Hierarchical Analysis System
+// ============================================================================
+
+// Specialization types
+export type TipoEspecializacion = 
+  | 'tejado'
+  | 'zona_abandonada'
+  | 'solar_vacio'
+  | 'parque_degradado'
+  | 'jardin_vertical'
+  | 'otro';
+
+// Specialized analysis interface
+export interface AnalisisEspecializado {
+  id: string;
+  analisis_id: string;
+  tipo_especializacion: TipoEspecializacion;
+  
+  // Inherited data (snapshot from base analysis)
+  area_base_m2: number;
+  green_score_base: number;
+  especies_base?: EspecieRecomendada[];
+  presupuesto_base_eur?: number;
+  
+  // Specific data (JSONB for flexibility)
+  caracteristicas_especificas: Record<string, any>;
+  analisis_adicional: Record<string, any>;
+  presupuesto_adicional: Record<string, any>;
+  
+  // Adjusted budget
+  presupuesto_total_eur?: number;
+  incremento_vs_base_eur?: number;
+  incremento_vs_base_porcentaje?: number;
+  
+  // Specific viabilities
+  viabilidad_tecnica?: 'alta' | 'media' | 'baja' | 'nula';
+  viabilidad_economica?: 'alta' | 'media' | 'baja' | 'nula';
+  viabilidad_normativa?: 'alta' | 'media' | 'baja' | 'nula';
+  viabilidad_final?: 'alta' | 'media' | 'baja' | 'nula';
+  
+  // Notes
+  notas?: string;
+  
+  // Timestamps
+  created_at: Date;
+  updated_at: Date;
+}
+
+// UI Metadata for each specialization type
+export interface TipoEspecializacionInfo {
+  id: TipoEspecializacion;
+  nombre: string;
+  descripcion: string;
+  icon: string; // Lucide icon name
+  tags: string[];
+  color: string;
+}
+
+// Constant with all 6 specialization types
+export const TIPOS_ESPECIALIZACION: TipoEspecializacionInfo[] = [
+  {
+    id: 'tejado',
+    nombre: 'Cubierta Verde',
+    descripcion: 'Análisis específico para tejados y azoteas',
+    icon: 'Home',
+    tags: ['Estructural', 'Impermeabilización', 'Carga'],
+    color: 'bg-blue-500',
+  },
+  {
+    id: 'zona_abandonada',
+    nombre: 'Zona Abandonada',
+    descripcion: 'Regeneración de espacios en desuso',
+    icon: 'Construction',
+    tags: ['Limpieza', 'Seguridad', 'Regeneración'],
+    color: 'bg-orange-500',
+  },
+  {
+    id: 'solar_vacio',
+    nombre: 'Solar Vacío',
+    descripcion: 'Transformación de solares sin edificar',
+    icon: 'Square',
+    tags: ['Temporal', 'Suelo', 'Accesibilidad'],
+    color: 'bg-yellow-500',
+  },
+  {
+    id: 'parque_degradado',
+    nombre: 'Parque Degradado',
+    descripcion: 'Mejora de parques existentes',
+    icon: 'Trees',
+    tags: ['Rehabilitación', 'Mobiliario', 'Vegetación'],
+    color: 'bg-green-500',
+  },
+  {
+    id: 'jardin_vertical',
+    nombre: 'Jardín Vertical',
+    descripcion: 'Sistemas verticales en fachadas',
+    icon: 'Building2',
+    tags: ['Vertical', 'Riego', 'Estructura'],
+    color: 'bg-emerald-500',
+  },
+  {
+    id: 'otro',
+    nombre: 'Otro Tipo',
+    descripcion: 'Análisis personalizado',
+    icon: 'MoreHorizontal',
+    tags: ['Personalizado', 'Flexible'],
+    color: 'bg-gray-500',
+  },
+];
+
+// Request/Response types for specialization generation
+export interface GenerateSpecializationRequest {
+  analisis_id: string;
+  tipo_especializacion: TipoEspecializacion;
+  area_base_m2: number;
+  green_score_base: number;
+  especies_base?: EspecieRecomendada[];
+  presupuesto_base_eur?: number;
+}
+
+export interface SpecializationResponse {
+  success: boolean;
+  especializacion_id?: string;
+  tipo_especializacion: TipoEspecializacion;
+  caracteristicas_especificas: Record<string, any>;
+  analisis_adicional: Record<string, any>;
+  presupuesto_total_eur: number;
+  incremento_vs_base_eur: number;
+  incremento_vs_base_porcentaje: number;
+  viabilidad_final: 'alta' | 'media' | 'baja' | 'nula';
+  error?: string;
+}
