@@ -60,7 +60,7 @@ interface AnalisisData {
   
   // Species & Recommendations
   especies_recomendadas: any[];
-  recomendaciones?: string[];  // Array of recommendation strings
+  recomendaciones?: any;  // JSONB field - can be array or object
   
   // Metadata
   notas: string;
@@ -170,7 +170,6 @@ const ZoneDetailContent: React.FC<ZoneDetailContentProps> = ({
           subvencion_programa,
           subvencion_monto_estimado_eur,
           especies_recomendadas,
-          recomendaciones,
           notas,
           created_at
         `)
@@ -185,6 +184,12 @@ const ZoneDetailContent: React.FC<ZoneDetailContentProps> = ({
           console.log('Zona found but no analysis available');
         } else {
           console.error('❌ Error fetching analysis:', analisisError);
+          console.error('Error details:', {
+            message: analisisError.message,
+            details: analisisError.details,
+            hint: analisisError.hint,
+            code: analisisError.code
+          });
         }
         setLoadingAnalisis(false);
         return;
@@ -195,7 +200,7 @@ const ZoneDetailContent: React.FC<ZoneDetailContentProps> = ({
           zona: area.nombre,
           green_score: analisisData.green_score,
           viabilidad: analisisData.viabilidad,
-          has_recommendations: analisisData.recomendaciones?.length > 0
+          coste: analisisData.coste_total_inicial_eur
         });
         setAnalisis(analisisData);
       }
