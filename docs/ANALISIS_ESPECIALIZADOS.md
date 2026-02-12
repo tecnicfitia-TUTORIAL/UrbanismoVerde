@@ -87,30 +87,144 @@ CREATE TABLE analisis_especializados (
 
 ## 🎯 Tipos de Especialización
 
-### 1. Tejado / Cubierta Verde (`tejado`)
+### 1. Tejado / Cubierta Verde (`tejado`) ✅ IMPLEMENTADO
+
+**Endpoint:** `POST /api/specialize-tejado`
+
+**Request Schema:**
+```json
+{
+  "analisis_id": "uuid",
+  "tipo_especializacion": "tejado",
+  "area_base_m2": 250.5,
+  "perimetro_m": 65.2,
+  "green_score_base": 75.5,
+  "especies_base": [...],
+  "presupuesto_base_eur": 37500,
+  "coordinates": [[lon, lat], ...],
+  "building_age": "edificio_moderno" // opcional: edificio_antiguo, edificio_moderno, edificio_reciente
+}
+```
+
+**Response Schema:**
+```json
+{
+  "success": true,
+  "analisis_id": "uuid",
+  "tipo_especializacion": "tejado",
+  "area_base_m2": 250.5,
+  "green_score_base": 75.5,
+  "especies_base": [...],
+  "presupuesto_base_eur": 37500,
+  
+  "caracteristicas_especificas": {
+    "deteccion_edificio": {
+      "es_edificio": true,
+      "compacidad": 0.744,
+      "confianza": "alta",
+      "tipo_probable": "edificio_rectangular"
+    },
+    "caracteristicas_tejado": {
+      "tipo_cubierta_actual": "plana",
+      "tipo_verde_recomendado": "extensiva",
+      "pendiente_grados": 2,
+      "material_cubierta": "hormigon",
+      "capacidad_estructural_kg_m2": 300,
+      "estado_impermeabilizacion": "aceptable",
+      "accesibilidad": "si"
+    },
+    "analisis_obstaculos": {
+      "obstaculos_detectados": [...],
+      "area_ocupada_obstaculos_m2": 18.5,
+      "area_util_cubierta_verde_m2": 232.0,
+      "porcentaje_area_util": 92.6
+    }
+  },
+  
+  "analisis_adicional": {
+    "calculo_estructural_cte": {
+      "peso_cubierta_verde_kg_m2": 180,
+      "peso_total_kg": 45090,
+      "capacidad_estructural_kg_m2": 300,
+      "factor_seguridad_cte": 1.5,
+      "carga_admisible_con_seguridad_kg_m2": 200,
+      "margen_seguridad_kg_m2": 20,
+      "margen_seguridad_porcentaje": 11.11,
+      "refuerzo_estructural_necesario": false,
+      "viabilidad_estructural": "media",
+      "cumple_cte": true
+    },
+    "recomendaciones": [
+      "Tipo de cubierta verde recomendado: EXTENSIVA. Peso saturado: 180 kg/m².",
+      "Instalar senderos de mantenimiento...",
+      "..."
+    ],
+    "advertencias": [
+      "El margen de seguridad estructural es ajustado (11.1%)...",
+      "..."
+    ]
+  },
+  
+  "presupuesto_adicional": {
+    "impermeabilizacion_eur": 9200.50,
+    "drenaje_adicional_eur": 3850.75,
+    "barrera_antiraices_premium_eur": 2784.00,
+    "riego_automatico_tejado_eur": 6754.00,
+    "transporte_grua_eur": 4800.00,
+    "refuerzo_estructural_eur": 1500.00,
+    "seguridad_eur": 5832.50
+  },
+  
+  "presupuesto_total_eur": 62221.75,
+  "incremento_vs_base_eur": 24721.75,
+  "incremento_vs_base_porcentaje": 65.9,
+  
+  "viabilidad_tecnica": "media",
+  "viabilidad_economica": "alta",
+  "viabilidad_normativa": "alta",
+  "viabilidad_final": "media",
+  
+  "notas": "Análisis especializado de tejado generado. Tipo recomendado: extensiva. Viabilidad final: media."
+}
+```
 
 **Características específicas:**
-- `carga_estructural_kg_m2`: Carga admisible del tejado
-- `tipo_cubierta`: plana, inclinada, intensiva, extensiva
-- `accesibilidad`: si, no, limitada
-- `estado_impermeabilizacion`: bueno, aceptable, necesita_reparacion
+- **Detección automática de edificios** mediante análisis de compacidad (Polsby-Popper index)
+- **Tipo de cubierta:** plana, inclinada (con clasificación por grados)
+- **Accesibilidad:** si, no, limitada
+- **Estado impermeabilización:** bueno, aceptable, necesita_reparacion
+- **Capacidad estructural:** calculada según edad del edificio
 
 **Análisis adicional:**
-- `estudio_estructural`: necesario, completado, no_requerido
-- `analisis_pendiente`: grados de inclinación
-- `sistemas_drenaje`: requerimientos específicos
+- **Cálculo estructural CTE DB-SE-AE:**
+  - Peso cubierta verde: 180 kg/m² (extensiva), 250 kg/m² (semi-intensiva), 350 kg/m² (intensiva)
+  - Factor de seguridad: 1.5 (permanente)
+  - Margen de seguridad: kg/m² y porcentaje
+  - Cumplimiento CTE: boolean
+- **Detección de obstáculos:** chimeneas, AC, antenas, accesos
+- **Análisis de pendiente:** grados de inclinación
+- **Sistemas de drenaje:** requerimientos específicos
 
 **Presupuesto adicional:**
-- `refuerzo_estructural_eur`: coste de refuerzo si necesario
-- `impermeabilizacion_eur`: reparación/mejora de impermeabilización
-- `sistema_retencion_eur`: sistema de retención de agua
+- `impermeabilizacion_eur`: reparación/mejora + test de estanqueidad
+- `drenaje_adicional_eur`: perímetro, sumideros, canalones
+- `barrera_antiraices_premium_eur`: calidad superior para tejados
+- `riego_automatico_tejado_eur`: sistema con bomba de presión + depósito
+- `transporte_grua_eur`: grúa, transporte vertical, andamios
+- `refuerzo_estructural_eur`: si necesario + estudio de ingeniería
+- `seguridad_eur`: línea de vida, barandillas, acceso mantenimiento
 
 **Viabilidades:**
-- Técnica: evaluación de capacidad estructural
-- Económica: ROI considerando costes adicionales
-- Normativa: cumplimiento CTE DB-HS, PECV Madrid
+- **Técnica:** evaluación de capacidad estructural según CTE
+- **Económica:** basada en coste por m² (< 120€: alta, 120-180€: media, 180-250€: baja, > 250€: nula)
+- **Normativa:** cumplimiento CTE DB-SE-AE y estado de impermeabilización
+- **Final:** la más restrictiva de las tres
 
-### 2. Zona Abandonada (`zona_abandonada`)
+**Normativas aplicadas:**
+- CTE DB-SE-AE (Seguridad Estructural - Acciones en la Edificación)
+- PECV Madrid 2025 (Plan Especial de Cubiertas Vegetales)
+
+### 2. Zona Abandonada (`zona_abandonada`) ⏳ PENDIENTE
 
 **Características específicas:**
 - `años_abandono`: años sin uso
@@ -284,7 +398,7 @@ WHERE ae.analisis_id = 'analisis-uuid-here';
 
 ## 🚀 Roadmap
 
-### ✅ PR1: Infraestructura (Actual)
+### ✅ PR1: Infraestructura (Completado)
 
 - [x] Migración de base de datos
 - [x] TypeScript types
@@ -293,27 +407,36 @@ WHERE ae.analisis_id = 'analisis-uuid-here';
 - [x] Integración en AnalysisReportPage
 - [x] Documentación
 
-### ⏳ PR2: Análisis de Tejados (Próximo)
+### ✅ PR2: Análisis de Tejados (Completado)
 
-- [ ] Endpoint `/api/analysis/specialize/roof`
-- [ ] Cálculo de carga estructural
-- [ ] Análisis de pendiente e impermeabilización
-- [ ] Ajuste de presupuesto para cubiertas
-- [ ] Validación normativa CTE DB-HS
-- [ ] Tests e2e
+- [x] Endpoint `/api/specialize-tejado`
+- [x] Detección automática de edificios (compactness analysis)
+- [x] Cálculo de carga estructural CTE DB-SE-AE
+- [x] Análisis de pendiente e impermeabilización
+- [x] Detección de obstáculos (chimeneas, AC, antenas)
+- [x] Ajuste de presupuesto para cubiertas (7 categorías adicionales)
+- [x] Generación de recomendaciones y advertencias
+- [x] Validación normativa CTE y PECV Madrid
+- [x] Evaluación de viabilidad (técnica, económica, normativa, final)
+- [x] Tests unitarios completos (100% pass rate)
+- [x] Integración frontend con API
+- [x] Vista comparativa (ComparisonView)
+- [x] Guardado en Supabase
+- [x] Documentación completa del endpoint
 
 ### ⏳ PR3: Otros Tipos de Especialización
 
-- [ ] Endpoint `/api/analysis/specialize/abandoned`
-- [ ] Endpoint `/api/analysis/specialize/empty-lot`
-- [ ] Endpoint `/api/analysis/specialize/degraded-park`
-- [ ] Endpoint `/api/analysis/specialize/vertical-garden`
-- [ ] Endpoint `/api/analysis/specialize/custom`
+- [ ] Endpoint `/api/specialize-zona-abandonada`
+- [ ] Endpoint `/api/specialize-solar-vacio`
+- [ ] Endpoint `/api/specialize-parque-degradado`
+- [ ] Endpoint `/api/specialize-jardin-vertical`
+- [ ] Endpoint `/api/specialize-otro`
 - [ ] Tests completos para todos los tipos
+- [ ] Integración frontend para todos los tipos
 
 ### ⏳ PR4: Funcionalidades Avanzadas
 
-- [ ] Comparador de especializaciones
+- [ ] Comparador de múltiples especializaciones
 - [ ] Recomendador automático del mejor tipo
 - [ ] Export PDF de especializaciones
 - [ ] Dashboard de especializaciones

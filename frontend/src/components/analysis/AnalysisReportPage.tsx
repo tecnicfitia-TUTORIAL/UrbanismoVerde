@@ -6,10 +6,11 @@
 
 import React, { useState, useMemo } from 'react';
 import { X, Calendar, MapPin, CheckCircle, Layers } from 'lucide-react';
-import { AnalysisResponse, GeoJSONPolygon, TipoEspecializacion } from '../../types';
+import { AnalysisResponse, GeoJSONPolygon, TipoEspecializacion, AnalisisEspecializado } from '../../types';
 import { SatelliteMap } from './SatelliteMap';
 import { ReportSummary } from './ReportSummary';
 import { SpecializationPanel } from './SpecializationPanel';
+import { ComparisonView } from './ComparisonView';
 import { useAnalysisReport } from '../../hooks/useAnalysisReport';
 import { adaptAnalysisData } from '../../services/analysis-adapter';
 import { Z_INDEX } from '../../constants/zIndex';
@@ -41,6 +42,8 @@ export const AnalysisReportPage: React.FC<AnalysisReportPageProps> = ({
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [showSpecializationModal, setShowSpecializationModal] = useState(false);
   const [savedAnalysisId, setSavedAnalysisId] = useState<string | null>(null);
+  const [currentSpecialization, setCurrentSpecialization] = useState<AnalisisEspecializado | null>(null);
+  const [showComparisonView, setShowComparisonView] = useState(false);
 
   // Adapt analysis data for presupuesto access
   const adaptedAnalysis = useMemo(() => adaptAnalysisData(analysisResult as any), [analysisResult]);
@@ -90,13 +93,115 @@ export const AnalysisReportPage: React.FC<AnalysisReportPageProps> = ({
     setShowSpecializationModal(true);
   };
 
-  const handleSpecializationTypeSelect = (tipo: TipoEspecializacion) => {
-    // Placeholder for PR2 - will implement actual endpoint calls
-    toast.success(
-      `Especialización "${tipo}" seleccionada. Los endpoints de generación se implementarán en PR2 (tejado) y PR3 (otros tipos).`,
-      { duration: 5000 }
-    );
-    console.log('Selected specialization type:', tipo);
+  const handleSpecializationTypeSelect = async (tipo: TipoEspecializacion) => {
+    // Check if analysis has been saved
+    if (!savedAnalysisId) {
+      toast.error('Por favor, guarda el análisis primero antes de generar especializaciones');
+      setShowSaveDialog(true);
+      return;
+    }
+
+    // Only tejado is implemented for now
+    if (tipo !== 'tejado') {
+      toast.success(
+        `Especialización "${tipo}" seleccionada. Los endpoints para otros tipos se implementarán en PR3.`,
+        { duration: 5000 }
+      );
+      return;
+    }
+
+    // Call tejado specialization endpoint
+    try {
+      toast.loading('Generando análisis especializado de tejado...', { id: 'tejado-analysis' });
+
+      const response = await fetch('/api/specialize-tejado', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          analisis_id: savedAnalysisId,
+          tipo_especializacion: 'tejado',
+          area_base_m2: analysisResult.area_m2,
+          perimetro_m: analysisResult.perimetro_m,
+          green_score_base: analysisResult.green_score,
+          especies_base: analysisResult.especies_recomendadas || [],
+          presupuesto_base_eur: adaptedAnalysis.presupuesto?.coste_total_inicial_eur || 0,
+          coordinates: polygon.coordinates[0],
+          building_age: 'edificio_moderno', // Default, could be made configurable
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      if (!data.success) {
+        throw new Error(data.error || 'Error en análisis especializado');
+      }
+
+      // Save to Supabase
+      const { saveSpecializedAnalysis } = await import('../../services/specialization-service');
+      const savedId = await saveSpecializedAnalysis({
+        analisis_id: savedAnalysisId,
+        tipo_especializacion: tipo,
+        area_base_m2: data.area_base_m2,
+        green_score_base: data.green_score_base,
+        especies_base: data.especies_base,
+        presupuesto_base_eur: data.presupuesto_base_eur,
+        caracteristicas_especificas: data.caracteristicas_especificas,
+        analisis_adicional: data.analisis_adicional,
+        presupuesto_adicional: data.presupuesto_adicional,
+        presupuesto_total_eur: data.presupuesto_total_eur,
+        incremento_vs_base_eur: data.incremento_vs_base_eur,
+        incremento_vs_base_porcentaje: data.incremento_vs_base_porcentaje,
+        viabilidad_tecnica: data.viabilidad_tecnica,
+        viabilidad_economica: data.viabilidad_economica,
+        viabilidad_normativa: data.viabilidad_normativa,
+        viabilidad_final: data.viabilidad_final,
+        notas: data.notas,
+      });
+
+      toast.success(
+        `✅ Análisis de tejado completado. Viabilidad: ${data.viabilidad_final}`,
+        { id: 'tejado-analysis', duration: 5000 }
+      );
+
+      // Show comparison view
+      setCurrentSpecialization({
+        id: savedId,
+        analisis_id: savedAnalysisId,
+        tipo_especializacion: tipo,
+        area_base_m2: data.area_base_m2,
+        green_score_base: data.green_score_base,
+        especies_base: data.especies_base,
+        presupuesto_base_eur: data.presupuesto_base_eur,
+        caracteristicas_especificas: data.caracteristicas_especificas,
+        analisis_adicional: data.analisis_adicional,
+        presupuesto_adicional: data.presupuesto_adicional,
+        presupuesto_total_eur: data.presupuesto_total_eur,
+        incremento_vs_base_eur: data.incremento_vs_base_eur,
+        incremento_vs_base_porcentaje: data.incremento_vs_base_porcentaje,
+        viabilidad_tecnica: data.viabilidad_tecnica,
+        viabilidad_economica: data.viabilidad_economica,
+        viabilidad_normativa: data.viabilidad_normativa,
+        viabilidad_final: data.viabilidad_final,
+        notas: data.notas,
+        created_at: new Date(),
+        updated_at: new Date(),
+      });
+      setShowComparisonView(true);
+      setShowSpecializationModal(false);
+
+    } catch (error) {
+      console.error('Error generating tejado specialization:', error);
+      toast.error(
+        `Error al generar análisis de tejado: ${error instanceof Error ? error.message : 'Error desconocido'}`,
+        { id: 'tejado-analysis', duration: 5000 }
+      );
+    }
   };
 
   const handleDownloadPDF = async () => {
@@ -282,6 +387,14 @@ export const AnalysisReportPage: React.FC<AnalysisReportPageProps> = ({
             </div>
           </div>
         </div>
+      )}
+
+      {/* Comparison View Modal */}
+      {showComparisonView && currentSpecialization && (
+        <ComparisonView
+          especializado={currentSpecialization}
+          onClose={() => setShowComparisonView(false)}
+        />
       )}
 
       {/* Mobile Responsive: Stack vertically on small screens */}

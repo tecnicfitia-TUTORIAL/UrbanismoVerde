@@ -127,9 +127,9 @@ export const SpecializationPanel: React.FC<SpecializationPanelProps> = ({
           <Info className="text-blue-600 flex-shrink-0 mt-0.5" size={20} />
           <div className="flex-1">
             <p className="text-sm text-blue-900">
-              <strong>Nota:</strong> Los endpoints de generación de análisis especializados 
-              se implementarán en PR2 (tejados) y PR3 (otros tipos). Por ahora, esta es 
-              la infraestructura base.
+              <strong>✅ Tejado/Azotea implementado:</strong> Análisis especializado con cálculos 
+              estructurales CTE, detección de obstáculos y presupuesto ajustado. 
+              Los demás tipos se implementarán en PR3.
             </p>
           </div>
           <button
