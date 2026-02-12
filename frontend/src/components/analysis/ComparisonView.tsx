@@ -74,7 +74,13 @@ export const ComparisonView: React.FC<ComparisonViewProps> = ({
         {/* Header */}
         <div className="sticky top-0 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-4 flex justify-between items-center">
           <div>
-            <h2 className="text-2xl font-bold">Análisis Especializado: Tejado/Azotea</h2>
+            <h2 className="text-2xl font-bold">
+              Análisis Especializado: {tipo_especializacion === 'tejado' ? 'Tejado/Azotea' : 
+                tipo_especializacion === 'zona_abandonada' ? 'Zona Abandonada' :
+                tipo_especializacion === 'solar_vacio' ? 'Solar Vacío' :
+                tipo_especializacion === 'parque_degradado' ? 'Parque Degradado' :
+                tipo_especializacion === 'jardin_vertical' ? 'Jardín Vertical' : 'Personalizado'}
+            </h2>
             <p className="text-blue-100 text-sm mt-1">
               Comparativa con análisis base y desglose de costes adicionales
             </p>
@@ -287,6 +293,7 @@ export const ComparisonView: React.FC<ComparisonViewProps> = ({
           <button
             onClick={() => window.print()}
             className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+            aria-label="Imprimir informe de análisis especializado"
           >
             Imprimir Informe
           </button>

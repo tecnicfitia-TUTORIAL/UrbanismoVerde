@@ -128,7 +128,7 @@ export const AnalysisReportPage: React.FC<AnalysisReportPageProps> = ({
           especies_base: analysisResult.especies_recomendadas || [],
           presupuesto_base_eur: adaptedAnalysis.presupuesto?.coste_total_inicial_eur || 0,
           coordinates: polygon.coordinates[0],
-          building_age: 'edificio_moderno', // Default, could be made configurable
+          building_age: 'edificio_moderno', // Fixed default (TODO: make configurable in future PR)
         }),
       });
 

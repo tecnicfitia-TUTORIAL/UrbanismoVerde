@@ -285,7 +285,13 @@ def detect_obstacles(area_m2: float, tipo_edificio: str = 'residencial') -> Dict
     Detect typical obstacles on rooftops (simulated).
     
     In a real implementation, this would use computer vision on satellite imagery.
-    For now, we estimate based on typical building characteristics.
+    For now, we estimate based on typical building characteristics and regulations.
+    
+    Heuristics used:
+    - Chimneys: 1 per 200 m² (typical building code requirement)
+    - AC units: 1 per 100 m² residential, 1.5x for offices (higher cooling needs)
+    - Antennas: 1-2 per building (TV, telecom)
+    - Access points: 1 for <200 m², 2 for larger (stairs/elevator + maintenance)
     
     Args:
         area_m2: Roof area
@@ -298,7 +304,7 @@ def detect_obstacles(area_m2: float, tipo_edificio: str = 'residencial') -> Dict
     obstaculos = []
     area_ocupada_m2 = 0
     
-    # Chimeneys (typical: 1 per 200 m²)
+    # Chimneys (typical: 1 per 200 m² per building code)
     num_chimeneas = max(1, int(area_m2 / 200))
     if num_chimeneas > 0:
         area_chimeneas = num_chimeneas * 1.0  # 1 m² per chimney
@@ -309,11 +315,11 @@ def detect_obstacles(area_m2: float, tipo_edificio: str = 'residencial') -> Dict
         })
         area_ocupada_m2 += area_chimeneas
     
-    # AC units (typical: 1 per 100 m² in residential, more in office buildings)
+    # AC units (typical: 1 per 100 m² in residential, more in office buildings due to higher cooling loads)
     factor_ac = 1.5 if tipo_edificio == 'oficinas' else 1.0
     num_ac = max(1, int(area_m2 / 100 * factor_ac))
     if num_ac > 0:
-        area_ac = num_ac * 2.0  # 2 m² per AC unit
+        area_ac = num_ac * 2.0  # 2 m² per AC unit (outdoor condenser)
         obstaculos.append({
             'tipo': 'aire_acondicionado',
             'cantidad': num_ac,
@@ -321,9 +327,9 @@ def detect_obstacles(area_m2: float, tipo_edificio: str = 'residencial') -> Dict
         })
         area_ocupada_m2 += area_ac
     
-    # Antennas (typical: 1-2 per building)
+    # Antennas (typical: 1-2 per building for TV/telecom)
     num_antenas = 2 if area_m2 > 200 else 1
-    area_antenas = num_antenas * 0.5  # 0.5 m² per antenna
+    area_antenas = num_antenas * 0.5  # 0.5 m² per antenna base
     obstaculos.append({
         'tipo': 'antena',
         'cantidad': num_antenas,
@@ -331,9 +337,9 @@ def detect_obstacles(area_m2: float, tipo_edificio: str = 'residencial') -> Dict
     })
     area_ocupada_m2 += area_antenas
     
-    # Access points (stairs, elevators)
-    num_accesos = 1 if area_m2 < 200 else 2
-    area_accesos = num_accesos * 4.0  # 4 m² per access point
+    # Access points (stairs, elevators - building code requirement)
+    num_accesos = 1 if area_m2 < 200 else 2  # Larger buildings need 2 access points
+    area_accesos = num_accesos * 4.0  # 4 m² per access point (stairwell)
     obstaculos.append({
         'tipo': 'acceso',
         'cantidad': num_accesos,
