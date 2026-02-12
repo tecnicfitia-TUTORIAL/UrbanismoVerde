@@ -20,7 +20,7 @@ export interface CreateZonaVerdeInput {
 
 /**
  * Save zona verde to database (unified function)
- * This is the ONLY function that should be used to create new zonas verdes
+ * This is the single source of truth for creating new zonas verdes
  */
 export async function saveZonaVerde(input: CreateZonaVerdeInput): Promise<string> {
   console.log('💾 Guardando zona verde en Supabase...');

@@ -43,7 +43,7 @@ export async function saveAnalysis(
       tipo: 'azotea',
       coordenadas: polygon,
       area_m2: analysisResult.area_m2,
-      nivel_viabilidad: getViabilidad(analysisResult.green_score) as any,
+      nivel_viabilidad: getViabilidad(analysisResult.green_score),
       estado: 'en_analisis',
     });
 
@@ -208,7 +208,7 @@ export async function getReportsByAnalisisId(analisisId: string) {
 
 // Helper functions
 
-function getViabilidad(greenScore: number): string {
+function getViabilidad(greenScore: number): 'alta' | 'media' | 'baja' | 'nula' {
   if (greenScore >= 70) return 'alta';
   if (greenScore >= 50) return 'media';
   if (greenScore >= 30) return 'baja';

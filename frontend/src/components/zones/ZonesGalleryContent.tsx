@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { MapIcon, MapPin, Search, SlidersHorizontal, Calendar, Trash2, Eye, Euro } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { Area } from '../../types';
+import { Area, TipoZona } from '../../types';
 import { ZonaVerde } from '../../config/supabase';
 import { loadZonasVerdes } from '../../services/zona-storage';
 import EmptyState from '../common/EmptyState';
@@ -48,7 +48,7 @@ const ZonesGalleryContent: React.FC<ZonesGalleryContentProps> = ({
   const convertZonaToArea = (zona: ZonaVerde): Area => ({
     id: zona.id,
     nombre: zona.nombre,
-    tipo: zona.tipo as any,
+    tipo: zona.tipo as TipoZona,
     coordenadas: zona.coordenadas?.coordinates?.[0] || [],
     areaM2: zona.area_m2,
     notas: zona.notas,
