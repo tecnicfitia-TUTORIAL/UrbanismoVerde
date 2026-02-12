@@ -1,6 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MapIcon, MapPin, Search, SlidersHorizontal, Calendar, Trash2, Eye, Euro } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { Area } from '../../types';
+import { ZonaVerde } from '../../config/supabase';
+import { loadZonasVerdes } from '../../services/zona-storage';
 import EmptyState from '../common/EmptyState';
 import { coloresPorTipo } from '../../types';
 
@@ -20,9 +23,57 @@ const ZonesGalleryContent: React.FC<ZonesGalleryContentProps> = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'recent' | 'area' | 'name'>('recent');
+  const [dbZones, setDbZones] = useState<ZonaVerde[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Load zones from database
+  useEffect(() => {
+    async function loadZones() {
+      try {
+        setIsLoading(true);
+        const zones = await loadZonasVerdes();
+        setDbZones(zones);
+      } catch (error) {
+        console.error('Error loading zones:', error);
+        toast.error('Error al cargar zonas guardadas');
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    loadZones();
+  }, []);
+
+  // Convert ZonaVerde to Area format for compatibility
+  const convertZonaToArea = (zona: ZonaVerde): Area => ({
+    id: zona.id,
+    nombre: zona.nombre,
+    tipo: zona.tipo as any,
+    coordenadas: zona.coordenadas?.coordinates?.[0] || [],
+    areaM2: zona.area_m2,
+    notas: zona.notas,
+    fechaCreacion: new Date(zona.created_at),
+  });
+
+  // Combine DB zones with local areas (for backward compatibility)
+  const allZones = [
+    ...dbZones.map(convertZonaToArea),
+    ...areas
+  ];
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin h-12 w-12 border-4 border-blue-600 border-t-transparent rounded-full mx-auto mb-4" />
+          <p className="text-gray-600">Cargando zonas...</p>
+        </div>
+      </div>
+    );
+  }
 
   // Filtrar zonas
-  const filteredAreas = areas.filter(area => {
+  const filteredAreas = allZones.filter(area => {
     const matchesSearch = area.nombre.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesType = filterType === 'all' || area.tipo === filterType;
     return matchesSearch && matchesType;
@@ -49,7 +100,7 @@ const ZonesGalleryContent: React.FC<ZonesGalleryContentProps> = ({
     }
   };
 
-  if (areas.length === 0) {
+  if (allZones.length === 0) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
         <EmptyState
@@ -133,7 +184,7 @@ const ZonesGalleryContent: React.FC<ZonesGalleryContentProps> = ({
 
         {/* Results Count */}
         <div className="mb-4 text-sm text-gray-600">
-          Mostrando {sortedAreas.length} de {areas.length} zonas
+          Mostrando {sortedAreas.length} de {allZones.length} zonas
         </div>
 
         {/* Zones Grid */}

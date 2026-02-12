@@ -69,11 +69,13 @@ export interface ZonaVerde {
   id: string;
   nombre: string;
   descripcion?: string;
+  tipo: 'azotea' | 'solar_vacio' | 'parque_degradado' | 'espacio_abandonado' | 'zona_industrial' | 'otro';
   coordenadas: any; // GeoJSON
   area_m2: number;
   nivel_viabilidad: 'alta' | 'media' | 'baja' | 'nula';
   estado: 'propuesta' | 'en_analisis' | 'aprobada' | 'en_ejecucion' | 'completada' | 'rechazada';
   municipio_id?: string;
+  notas?: string;
   created_at: string;
   updated_at: string;
   user_id?: string;
