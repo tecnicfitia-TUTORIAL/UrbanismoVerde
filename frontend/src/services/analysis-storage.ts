@@ -84,6 +84,7 @@ async function createZonaVerde(
 ): Promise<string> {
   const zonaData = {
     nombre,
+    tipo: 'azotea' as const,
     coordenadas: polygon,
     area_m2: area,
     nivel_viabilidad: viabilidad.toLowerCase() as 'alta' | 'media' | 'baja' | 'nula',
