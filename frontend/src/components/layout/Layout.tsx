@@ -151,13 +151,15 @@ const Layout: React.FC = () => {
       return;
     }
 
+    const toastId = toast.loading('Guardando zona verde...');
+
     try {
       // Convert coordinates to GeoJSON
       const polygon = coordinatesToGeoJSON(tempCoordsRef.current);
       const areaM2 = analysisResult?.area_m2 || calcularArea(tempCoordsRef.current);
 
       // Save to database using unified flow
-      await saveZonaVerde({
+      const zonaVerdeId = await saveZonaVerde({
         nombre: formData.nombre,
         tipo: formData.tipo,
         coordenadas: polygon,
@@ -167,8 +169,29 @@ const Layout: React.FC = () => {
         notas: formData.notas,
       });
 
-      toast.success('✅ Zona guardada correctamente');
+      console.log('✅ Zona guardada en BD:', zonaVerdeId);
+
+      toast.success('✅ Zona guardada. Iniciando análisis...', { id: toastId });
+
+      // Close modal first
       setShowModal(false);
+
+      // Create Area object for analysis workflow
+      const newArea: Area = {
+        id: zonaVerdeId,
+        nombre: formData.nombre,
+        tipo: formData.tipo,
+        coordenadas: tempCoordsRef.current,
+        areaM2: areaM2,
+        notas: formData.notas,
+        fechaCreacion: new Date(),
+      };
+
+      // Navigate to analysis workflow with zone data
+      setSelectedArea(newArea);
+      handleNavigate('analisis-zone', newArea);
+
+      // Clear temporary data after navigation
       tempCoordsRef.current = [];
       resetAnalysis();
       
@@ -177,7 +200,7 @@ const Layout: React.FC = () => {
       setDbZonasCount(zones.length);
     } catch (error) {
       console.error('Error guardando zona:', error);
-      toast.error('❌ Error al guardar la zona');
+      toast.error('❌ Error al guardar la zona', { id: toastId });
     }
   };
   
