@@ -2,7 +2,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import Sidebar from './Sidebar';
 import FullScreenMap from '../maps/FullScreenMap';
-import ZoneFormModal from '../modals/ZoneFormModal';
 import DashboardContent from '../dashboard/DashboardContent';
 import ZonesGalleryContent from '../zones/ZonesGalleryContent';
 import ZoneDetailContent from '../zones/ZoneDetailContent';
@@ -40,7 +39,6 @@ const calcularArea = (coords: [number, number][]): number => {
 const Layout: React.FC = () => {
   const [isDrawing, setIsDrawing] = useState(false);
   const [areas, setAreas] = useState<Area[]>([]);
-  const [showModal, setShowModal] = useState(false);
   const [selectedArea, setSelectedArea] = useState<Area | null>(null);
   const [currentView, setCurrentView] = useState('dashboard');
   const [dbZonasCount, setDbZonasCount] = useState(0);
@@ -135,100 +133,39 @@ const Layout: React.FC = () => {
         // Show new comprehensive report page instead of simple modal
         setShowAnalysisReport(true);
       } else {
-        // If analysis fails, still allow user to save the zone
-        setShowModal(true);
+        // Analysis failed - show error and allow retry
+        toast.error('No se pudo analizar la zona. Por favor, intenta de nuevo.');
+        // Clear drawing state
+        tempCoordsRef.current = [];
+        setIsDrawing(false);
       }
     } catch (error) {
       console.error('Error en análisis automático:', error);
-      // If analysis fails, still allow user to save the zone
-      setShowModal(true);
-    }
-  };
-
-  const handleSaveArea = async (formData: FormData) => {
-    if (!formData.nombre.trim()) {
-      toast.error('El nombre es obligatorio');
-      return;
-    }
-
-    const toastId = toast.loading('Guardando zona verde...');
-
-    try {
-      // Convert coordinates to GeoJSON
-      const polygon = coordinatesToGeoJSON(tempCoordsRef.current);
-      const areaM2 = analysisResult?.area_m2 || calcularArea(tempCoordsRef.current);
-
-      // Save to database using unified flow
-      const zonaVerdeId = await saveZonaVerde({
-        nombre: formData.nombre,
-        tipo: formData.tipo,
-        coordenadas: polygon,
-        area_m2: areaM2,
-        nivel_viabilidad: 'media',
-        estado: 'propuesta',
-        notas: formData.notas,
-      });
-
-      console.log('✅ Zona guardada en BD:', zonaVerdeId);
-
-      toast.success('✅ Zona guardada. Iniciando análisis...', { id: toastId });
-
-      // Close modal first
-      setShowModal(false);
-
-      // Create Area object for analysis workflow
-      const newArea: Area = {
-        id: zonaVerdeId,
-        nombre: formData.nombre,
-        tipo: formData.tipo,
-        coordenadas: tempCoordsRef.current,
-        areaM2: areaM2,
-        notas: formData.notas,
-        fechaCreacion: new Date(),
-      };
-
-      // Navigate to analysis workflow with zone data
-      setSelectedArea(newArea);
-      handleNavigate('analisis-zone', newArea);
-
-      // Clear temporary data after navigation
+      toast.error('Error al analizar la zona. Por favor, intenta de nuevo.');
       tempCoordsRef.current = [];
-      resetAnalysis();
-      
-      // Reload zones count (real-time subscription will also update)
-      const zones = await loadZonasVerdes();
-      setDbZonasCount(zones.length);
-    } catch (error) {
-      console.error('Error guardando zona:', error);
-      toast.error('❌ Error al guardar la zona', { id: toastId });
+      setIsDrawing(false);
     }
   };
-  
+
   const handleGenerateBudget = () => {
     console.log('💰 Generando presupuesto con datos del análisis...');
-    // Close analysis report and open zone form modal to save first
+    // Just close the report - budget generation will be implemented separately
     setShowAnalysisReport(false);
     setShowAnalysisResults(false);
-    setShowModal(true);
+    toast.info('función de presupuesto en desarrollo');
   };
   
   const handleCloseAnalysisResults = () => {
     setShowAnalysisResults(false);
-    // Give user option to save zone without analysis
-    setShowModal(true);
+    // Clear drawing state
+    tempCoordsRef.current = [];
   };
 
   const handleCloseAnalysisReport = () => {
     setShowAnalysisReport(false);
     setCurrentPolygon(null);
-    // Give user option to save zone
-    setShowModal(true);
-  };
-
-  const handleSaveFromReport = () => {
-    // Close report and open save modal
-    setShowAnalysisReport(false);
-    setShowModal(true);
+    // Clear drawing state
+    tempCoordsRef.current = [];
   };
 
   const handleDeleteArea = async (id: string) => {
@@ -251,15 +188,6 @@ const Layout: React.FC = () => {
     // Por ahora, simplemente mostramos un mensaje
     console.log('Centering map on area:', coords);
     // TODO: Implementar centrado del mapa usando ref del MapContainer
-  };
-
-  const handleCloseModal = () => {
-    setShowModal(false);
-    tempCoordsRef.current = [];
-    resetAnalysis();
-    setShowAnalysisResults(false);
-    setShowAnalysisReport(false);
-    setCurrentPolygon(null);
   };
 
   const handleNavigate = (view: string, data?: any) => {
@@ -400,12 +328,6 @@ const Layout: React.FC = () => {
           onClose={handleCloseAnalysisReport}
         />
       )}
-
-      <ZoneFormModal
-        isOpen={showModal}
-        onClose={handleCloseModal}
-        onSubmit={handleSaveArea}
-      />
     </div>
   );
 };
