@@ -7,6 +7,7 @@
 import { supabase, TABLES, getCurrentUser } from '../config/supabase';
 import { AnalysisResponse, GeoJSONPolygon, SavedAnalysis } from '../types';
 import { adaptAnalysisData } from './analysis-adapter';
+import { saveZonaVerde } from './zona-storage';
 
 // Constants for cost and impact calculations
 const DEFAULT_COST_PER_M2 = 150; // €/m² - Base installation cost
@@ -36,25 +37,15 @@ export async function saveAnalysis(
   console.log('💾 Guardando análisis en Supabase...');
 
   try {
-    // Get current user if not provided
-    let effectiveUserId = userId;
-    if (!effectiveUserId) {
-      try {
-        const user = await getCurrentUser();
-        effectiveUserId = user?.id;
-      } catch (err) {
-        console.warn('⚠️ Usuario no autenticado, guardando sin user_id');
-      }
-    }
-
-    // Step 1: Create zona verde
-    const zonaVerdeId = await createZonaVerde(
-      nombre || `Zona ${new Date().toLocaleDateString()}`,
-      polygon,
-      analysisResult.area_m2,
-      getViabilidad(analysisResult.green_score),
-      effectiveUserId
-    );
+    // Step 1: Create zona verde using unified function
+    const zonaVerdeId = await saveZonaVerde({
+      nombre: nombre || `Zona ${new Date().toLocaleDateString()}`,
+      tipo: 'azotea',
+      coordenadas: polygon,
+      area_m2: analysisResult.area_m2,
+      nivel_viabilidad: getViabilidad(analysisResult.green_score),
+      estado: 'en_analisis',
+    });
 
     // Step 2: Save analysis data
     const analisisId = await saveToAnalisisTable(zonaVerdeId, analysisResult);
@@ -72,43 +63,7 @@ export async function saveAnalysis(
   }
 }
 
-/**
- * Create zona verde record
- */
-async function createZonaVerde(
-  nombre: string,
-  polygon: GeoJSONPolygon,
-  area: number,
-  viabilidad: string,
-  userId?: string
-): Promise<string> {
-  const zonaData = {
-    nombre,
-    tipo: 'azotea' as const,
-    coordenadas: polygon,
-    area_m2: area,
-    nivel_viabilidad: viabilidad.toLowerCase() as 'alta' | 'media' | 'baja' | 'nula',
-    estado: 'en_analisis' as const,
-    user_id: userId,
-  };
-
-  const { data, error } = await supabase
-    .from(TABLES.ZONAS_VERDES)
-    .insert([zonaData])
-    .select('id')
-    .single();
-
-  if (error) {
-    console.error('Error creando zona verde:', error);
-    throw new Error(`Failed to create zona verde: ${error.message}`);
-  }
-
-  if (!data) {
-    throw new Error('No data returned from zona verde creation');
-  }
-
-  return data.id;
-}
+// Removed createZonaVerde function - now using unified saveZonaVerde from zona-storage.ts
 
 /**
  * Save to analisis table with ALL data fields
@@ -140,7 +95,7 @@ async function saveToAnalisisTable(
     coste_total_inicial_eur: Math.round(presupuesto.coste_total_inicial_eur || (adaptedData.area_m2 || 0) * DEFAULT_COST_PER_M2),
     presupuesto_desglose: presupuesto.desglose || {},
     mantenimiento_anual_eur: Math.round(presupuesto.mantenimiento_anual_eur || (adaptedData.area_m2 || 0) * DEFAULT_MAINTENANCE_PER_M2),
-    coste_por_m2_eur: DEFAULT_COST_PER_M2,
+    coste_por_m2_eur: Math.round(DEFAULT_COST_PER_M2),
     vida_util_anos: DEFAULT_VIDA_UTIL_ANOS,
     
     roi_porcentaje: roi.roi_porcentaje || DEFAULT_ROI_PERCENTAGE,
@@ -253,7 +208,7 @@ export async function getReportsByAnalisisId(analisisId: string) {
 
 // Helper functions
 
-function getViabilidad(greenScore: number): string {
+function getViabilidad(greenScore: number): 'alta' | 'media' | 'baja' | 'nula' {
   if (greenScore >= 70) return 'alta';
   if (greenScore >= 50) return 'media';
   if (greenScore >= 30) return 'baja';

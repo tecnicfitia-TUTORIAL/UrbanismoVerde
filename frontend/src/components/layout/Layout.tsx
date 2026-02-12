@@ -14,6 +14,7 @@ import { Area, FormData, GeoJSONPolygon } from '../../types';
 import { useAnalysis } from '../../hooks/useAnalysis';
 import { coordinatesToGeoJSON } from '../../services/ai-analysis';
 import { supabase, TABLES } from '../../config/supabase';
+import { saveZonaVerde, loadZonasVerdes } from '../../services/zona-storage';
 
 // Calcular área usando fórmula de Haversine (aproximación para polígonos pequeños)
 const calcularArea = (coords: [number, number][]): number => {
@@ -51,22 +52,20 @@ const Layout: React.FC = () => {
   const [showAnalysisReport, setShowAnalysisReport] = useState(false);
   const [currentPolygon, setCurrentPolygon] = useState<GeoJSONPolygon | null>(null);
 
-  // Load DB zones count and subscribe to real-time updates
+  // Load DB zones and subscribe to real-time updates
   useEffect(() => {
-    async function loadDbZonasCount() {
+    // Load zones from database
+    const loadZonasFromDB = async () => {
       try {
-        const { count } = await supabase
-          .from(TABLES.ZONAS_VERDES)
-          .select('*', { count: 'exact', head: true });
-        
-        setDbZonasCount(count || 0);
-        console.log(`📊 Zonas en BD: ${count}`);
+        const zones = await loadZonasVerdes();
+        setDbZonasCount(zones.length);
+        console.log(`📊 Zonas cargadas: ${zones.length}`);
       } catch (error) {
-        console.error('Error al cargar contador de zonas:', error);
+        console.error('Error al cargar zonas:', error);
       }
-    }
+    };
 
-    loadDbZonasCount();
+    loadZonasFromDB();
     
     // Subscribe to real-time changes in zonas_verdes table
     const subscription = supabase
@@ -79,8 +78,8 @@ const Layout: React.FC = () => {
           table: TABLES.ZONAS_VERDES,
         },
         () => {
-          console.log('🔄 Zonas actualizadas, recargando contador...');
-          loadDbZonasCount();
+          console.log('🔄 Zonas actualizadas, recargando...');
+          loadZonasFromDB();
         }
       )
       .subscribe();
@@ -144,35 +143,40 @@ const Layout: React.FC = () => {
     }
   };
 
-  const handleSaveArea = (formData: FormData) => {
+  const handleSaveArea = async (formData: FormData) => {
     if (!formData.nombre.trim()) {
-      alert('El nombre es obligatorio');
+      toast.error('El nombre es obligatorio');
       return;
     }
 
-    // Use area from analysis if available (more accurate Haversine calculation)
-    // Otherwise fallback to local calculation
-    // Note: Backend uses Haversine formula which is more accurate than the local
-    // calcularArea function, especially for larger areas or higher latitudes
-    const areaM2 = analysisResult?.area_m2 || calcularArea(tempCoordsRef.current);
+    try {
+      // Convert coordinates to GeoJSON
+      const polygon = coordinatesToGeoJSON(tempCoordsRef.current);
+      const areaM2 = analysisResult?.area_m2 || calcularArea(tempCoordsRef.current);
 
-    const newArea: Area = {
-      id: `area-${Date.now()}`,
-      nombre: formData.nombre,
-      tipo: formData.tipo,
-      coordenadas: tempCoordsRef.current,
-      areaM2: areaM2,
-      notas: formData.notas || undefined,
-      fechaCreacion: new Date()
-    };
+      // Save to database using unified flow
+      await saveZonaVerde({
+        nombre: formData.nombre,
+        tipo: formData.tipo,
+        coordenadas: polygon,
+        area_m2: areaM2,
+        nivel_viabilidad: 'media',
+        estado: 'propuesta',
+        notas: formData.notas,
+      });
 
-    setAreas([...areas, newArea]);
-    setShowModal(false);
-    tempCoordsRef.current = [];
-    
-    // Reset analysis
-    resetAnalysis();
-    setShowAnalysisResults(false);
+      toast.success('✅ Zona guardada correctamente');
+      setShowModal(false);
+      tempCoordsRef.current = [];
+      resetAnalysis();
+      
+      // Reload zones count (real-time subscription will also update)
+      const zones = await loadZonasVerdes();
+      setDbZonasCount(zones.length);
+    } catch (error) {
+      console.error('Error guardando zona:', error);
+      toast.error('❌ Error al guardar la zona');
+    }
   };
   
   const handleGenerateBudget = () => {
