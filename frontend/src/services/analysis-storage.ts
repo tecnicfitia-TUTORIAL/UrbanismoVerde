@@ -20,6 +20,7 @@ const DEFAULT_ROI_PERCENTAGE = 6.67; // % - Default return on investment
 const DEFAULT_AMORTIZATION_YEARS = 15.0; // years - Default payback period
 const DEFAULT_SUBSIDY_PERCENTAGE = 50; // % - Default subsidy eligibility
 const DEFAULT_VIDA_UTIL_ANOS = 25; // years - Expected project lifespan
+const DEFAULT_GREEN_SCORE = 75; // Default green score when not provided
 const IMPLEMENTATION_DAYS_PER_100M2 = 30; // Days needed per 100m² installation
 
 /**
@@ -124,8 +125,8 @@ async function saveToAnalisisTable(
 
   const analisisData = {
     zona_verde_id: zonaVerdeId,
-    green_score: adaptedData.green_score || 75,
-    viabilidad: getViabilidad(adaptedData.green_score || 75),
+    green_score: adaptedData.green_score || DEFAULT_GREEN_SCORE,
+    viabilidad: getViabilidad(adaptedData.green_score || DEFAULT_GREEN_SCORE),
     factor_verde: normativa.factor_verde || 0.65,
     
     co2_capturado_kg_anual: beneficios.co2_capturado_kg_anual || Math.round((adaptedData.area_m2 || 0) * DEFAULT_CO2_CAPTURE_PER_M2),
@@ -145,6 +146,7 @@ async function saveToAnalisisTable(
     ahorro_anual_eur: roi.ahorro_anual_eur || Math.round((adaptedData.area_m2 || 0) * DEFAULT_ENERGY_SAVINGS_EUR_PER_M2),
     ahorro_25_anos_eur: roi.ahorro_25_anos_eur || Math.round((adaptedData.area_m2 || 0) * DEFAULT_SAVINGS_25_YEARS_PER_M2),
     
+    // Default to true if elegible is not explicitly set to false
     subvencion_elegible: subvencion.elegible !== false,
     subvencion_porcentaje: subvencion.porcentaje || DEFAULT_SUBSIDY_PERCENTAGE,
     subvencion_programa: subvencion.programa || 'PECV Madrid 2025',
