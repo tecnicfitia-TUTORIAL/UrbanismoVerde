@@ -2,10 +2,6 @@
  * Utilidades para validar y convertir valores antes de guardar en Supabase
  */
 
-// Límites de PostgreSQL BIGINT
-const BIGINT_MAX = 9223372036854775807n;
-const BIGINT_MIN = -9223372036854775807n;
-
 // Límites prácticos para la aplicación
 const PRACTICAL_LIMITS = {
   area_m2: { min: 1, max: 10_000_000 }, // 1 m² a 10 km²
