@@ -95,6 +95,11 @@ const getGreenScoreMessage = (score: number): string => {
   return '❌ Viabilidad baja, considerar alternativas';
 };
 
+// Unit conversion constants
+const KG_TO_TONNES = 1000;
+const LITERS_TO_M3 = 1000;
+const EUR_TO_K = 1000;
+
 const ZoneDetailContent: React.FC<ZoneDetailContentProps> = ({
   area,
   onBack,
@@ -139,7 +144,36 @@ const ZoneDetailContent: React.FC<ZoneDetailContentProps> = ({
       // Now fetch the analysis for this zona
       const { data: analisisData, error: analisisError } = await supabase
         .from(TABLES.ANALISIS)
-        .select('*')
+        .select(`
+          id,
+          zona_verde_id,
+          green_score,
+          viabilidad,
+          factor_verde,
+          exposicion_solar,
+          co2_capturado_kg_anual,
+          agua_retenida_litros_anual,
+          reduccion_temperatura_c,
+          ahorro_energia_kwh_anual,
+          ahorro_energia_eur_anual,
+          coste_total_inicial_eur,
+          presupuesto_desglose,
+          mantenimiento_anual_eur,
+          coste_por_m2_eur,
+          vida_util_anos,
+          roi_porcentaje,
+          amortizacion_anos,
+          ahorro_anual_eur,
+          ahorro_25_anos_eur,
+          subvencion_elegible,
+          subvencion_porcentaje,
+          subvencion_programa,
+          subvencion_monto_estimado_eur,
+          especies_recomendadas,
+          recomendaciones,
+          notas,
+          created_at
+        `)
         .eq('zona_verde_id', dbZona.id)
         .order('created_at', { ascending: false })
         .limit(1)
@@ -150,14 +184,19 @@ const ZoneDetailContent: React.FC<ZoneDetailContentProps> = ({
           // No rows returned - zona exists but no analysis
           console.log('Zona found but no analysis available');
         } else {
-          console.error('Error fetching analysis:', analisisError);
+          console.error('❌ Error fetching analysis:', analisisError);
         }
         setLoadingAnalisis(false);
         return;
       }
 
       if (analisisData) {
-        console.log('✅ Analysis data loaded:', analisisData);
+        console.log('✅ Analysis data loaded successfully:', {
+          zona: area.nombre,
+          green_score: analisisData.green_score,
+          viabilidad: analisisData.viabilidad,
+          has_recommendations: analisisData.recomendaciones?.length > 0
+        });
         setAnalisis(analisisData);
       }
     } catch (error) {
@@ -364,6 +403,107 @@ const ZoneDetailContent: React.FC<ZoneDetailContentProps> = ({
                   <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
                     <h3 className="text-sm font-semibold text-blue-900 mb-2">Notas</h3>
                     <p className="text-sm text-blue-800">{area.notas}</p>
+                  </div>
+                )}
+
+                {/* Analysis Summary Preview */}
+                {analisis ? (
+                  <>
+                    <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg border-2 border-green-200 p-6">
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-lg font-semibold text-green-900">
+                          📊 Resumen del Análisis
+                        </h3>
+                        <button
+                          onClick={() => setActiveTab('analysis')}
+                          className="text-sm text-green-700 hover:text-green-900 font-medium flex items-center gap-1"
+                        >
+                          Ver detalles completos →
+                        </button>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {/* Green Score */}
+                        <div className="text-center">
+                          <div className="text-3xl font-bold text-green-700 mb-1">
+                            {analisis.green_score ?? 0}
+                          </div>
+                          <div className="text-xs text-green-600">Green Score</div>
+                          <div className={`mt-2 px-2 py-1 rounded-full text-xs font-semibold ${getViabilityColorClasses(analisis.viabilidad)}`}>
+                            {analisis.viabilidad?.toUpperCase()}
+                          </div>
+                        </div>
+                        
+                        {/* CO2 */}
+                        <div className="text-center">
+                          <div className="text-3xl font-bold text-blue-700 mb-1">
+                            {((analisis.co2_capturado_kg_anual ?? 0) / KG_TO_TONNES).toFixed(1)}
+                          </div>
+                          <div className="text-xs text-blue-600">Toneladas CO₂/año</div>
+                        </div>
+                        
+                        {/* Water */}
+                        <div className="text-center">
+                          <div className="text-3xl font-bold text-cyan-700 mb-1">
+                            {((analisis.agua_retenida_litros_anual ?? 0) / LITERS_TO_M3).toFixed(0)}
+                          </div>
+                          <div className="text-xs text-cyan-600">m³ Agua/año</div>
+                        </div>
+                        
+                        {/* Cost */}
+                        <div className="text-center">
+                          <div className="text-3xl font-bold text-purple-700 mb-1">
+                            €{((analisis.coste_total_inicial_eur ?? 0) / EUR_TO_K).toFixed(0)}k
+                          </div>
+                          <div className="text-xs text-purple-600">Inversión inicial</div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Quick Actions */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <button
+                        onClick={() => setActiveTab('analysis')}
+                        className="p-4 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg transition-colors text-left"
+                      >
+                        <div className="text-sm font-semibold text-blue-900 mb-1">Análisis IA</div>
+                        <div className="text-xs text-blue-700">Ver métricas detalladas</div>
+                      </button>
+                      
+                      <button
+                        onClick={() => setActiveTab('budget')}
+                        className="p-4 bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded-lg transition-colors text-left"
+                      >
+                        <div className="text-sm font-semibold text-purple-900 mb-1">Presupuesto</div>
+                        <div className="text-xs text-purple-700">Ver desglose de costes</div>
+                      </button>
+                      
+                      <button
+                        onClick={() => onNavigate('analisis-zone', area)}
+                        className="p-4 bg-green-50 hover:bg-green-100 border border-green-200 rounded-lg transition-colors text-left"
+                      >
+                        <div className="text-sm font-semibold text-green-900 mb-1">Re-analizar</div>
+                        <div className="text-xs text-green-700">Actualizar análisis</div>
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+                    <div className="text-center">
+                      <Brain size={48} className="mx-auto mb-3 text-blue-400" />
+                      <h3 className="text-lg font-semibold text-blue-900 mb-2">
+                        Sin análisis todavía
+                      </h3>
+                      <p className="text-sm text-blue-700 mb-4">
+                        Esta zona no tiene un análisis IA. Realiza uno para ver métricas detalladas.
+                      </p>
+                      <button
+                        onClick={() => onNavigate('analisis-zone', area)}
+                        className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                      >
+                        Realizar análisis ahora
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
