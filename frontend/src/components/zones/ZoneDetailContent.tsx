@@ -359,9 +359,9 @@ const ZoneDetailContent: React.FC<ZoneDetailContentProps> = ({
                           Green Score
                         </h3>
                         <div className={`px-4 py-2 rounded-full font-bold text-sm ${
-                          analisis.green_score >= 70 ? 'bg-green-500 text-white' :
-                          analisis.green_score >= 50 ? 'bg-yellow-500 text-white' :
-                          analisis.green_score >= 30 ? 'bg-orange-500 text-white' :
+                          analisis.viabilidad === 'alta' ? 'bg-green-500 text-white' :
+                          analisis.viabilidad === 'media' ? 'bg-yellow-500 text-white' :
+                          analisis.viabilidad === 'baja' ? 'bg-orange-500 text-white' :
                           'bg-red-500 text-white'
                         }`}>
                           {analisis.viabilidad?.toUpperCase()}
@@ -397,11 +397,11 @@ const ZoneDetailContent: React.FC<ZoneDetailContentProps> = ({
                          '❌ Viabilidad baja, considerar alternativas'}
                       </p>
                       
-                      {analisis.exposicion_solar && (
+                      {analisis.exposicion_solar != null && (
                         <div className="mt-4 pt-4 border-t border-green-200">
                           <div className="flex items-center justify-between text-sm">
                             <span className="text-green-800 font-medium">☀️ Exposición solar:</span>
-                            <span className="text-green-900 font-bold">{analisis.exposicion_solar.toFixed(0)}%</span>
+                            <span className="text-green-900 font-bold">{(analisis.exposicion_solar ?? 0).toFixed(0)}%</span>
                           </div>
                         </div>
                       )}
