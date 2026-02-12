@@ -95,6 +95,11 @@ const getGreenScoreMessage = (score: number): string => {
   return '❌ Viabilidad baja, considerar alternativas';
 };
 
+// Unit conversion constants
+const KG_TO_TONNES = 1000;
+const LITERS_TO_M3 = 1000;
+const EUR_TO_K = 1000;
+
 const ZoneDetailContent: React.FC<ZoneDetailContentProps> = ({
   area,
   onBack,
@@ -424,12 +429,7 @@ const ZoneDetailContent: React.FC<ZoneDetailContentProps> = ({
                             {analisis.green_score ?? 0}
                           </div>
                           <div className="text-xs text-green-600">Green Score</div>
-                          <div className={`mt-2 px-2 py-1 rounded-full text-xs font-semibold ${
-                            analisis.viabilidad === 'alta' ? 'bg-green-500 text-white' :
-                            analisis.viabilidad === 'media' ? 'bg-yellow-500 text-white' :
-                            analisis.viabilidad === 'baja' ? 'bg-orange-500 text-white' :
-                            'bg-red-500 text-white'
-                          }`}>
+                          <div className={`mt-2 px-2 py-1 rounded-full text-xs font-semibold ${getViabilityColorClasses(analisis.viabilidad)}`}>
                             {analisis.viabilidad?.toUpperCase()}
                           </div>
                         </div>
@@ -437,7 +437,7 @@ const ZoneDetailContent: React.FC<ZoneDetailContentProps> = ({
                         {/* CO2 */}
                         <div className="text-center">
                           <div className="text-3xl font-bold text-blue-700 mb-1">
-                            {((analisis.co2_capturado_kg_anual ?? 0) / 1000).toFixed(1)}
+                            {((analisis.co2_capturado_kg_anual ?? 0) / KG_TO_TONNES).toFixed(1)}
                           </div>
                           <div className="text-xs text-blue-600">Toneladas CO₂/año</div>
                         </div>
@@ -445,7 +445,7 @@ const ZoneDetailContent: React.FC<ZoneDetailContentProps> = ({
                         {/* Water */}
                         <div className="text-center">
                           <div className="text-3xl font-bold text-cyan-700 mb-1">
-                            {((analisis.agua_retenida_litros_anual ?? 0) / 1000).toFixed(0)}
+                            {((analisis.agua_retenida_litros_anual ?? 0) / LITERS_TO_M3).toFixed(0)}
                           </div>
                           <div className="text-xs text-cyan-600">m³ Agua/año</div>
                         </div>
@@ -453,7 +453,7 @@ const ZoneDetailContent: React.FC<ZoneDetailContentProps> = ({
                         {/* Cost */}
                         <div className="text-center">
                           <div className="text-3xl font-bold text-purple-700 mb-1">
-                            €{((analisis.coste_total_inicial_eur ?? 0) / 1000).toFixed(0)}k
+                            €{((analisis.coste_total_inicial_eur ?? 0) / EUR_TO_K).toFixed(0)}k
                           </div>
                           <div className="text-xs text-purple-600">Inversión inicial</div>
                         </div>
