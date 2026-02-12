@@ -18,53 +18,54 @@ interface AnalisisData {
   id: string;
   zona_verde_id: string;
   
+  // All fields should be optional since analysis might not exist
   // Core Analysis Fields
-  green_score: number;  // Range: 0-100
-  viabilidad: 'alta' | 'media' | 'baja' | 'nula';
+  green_score?: number;  // Range: 0-100
+  viabilidad?: 'alta' | 'media' | 'baja' | 'nula';
   
   // Environmental Impact
-  factor_verde: number;
-  co2_capturado_kg_anual: number;
-  agua_retenida_litros_anual: number;
-  reduccion_temperatura_c: number;
-  ahorro_energia_kwh_anual: number;
-  ahorro_energia_eur_anual: number;
+  factor_verde?: number;
+  co2_capturado_kg_anual?: number;
+  agua_retenida_litros_anual?: number;
+  reduccion_temperatura_c?: number;
+  ahorro_energia_kwh_anual?: number;
+  ahorro_energia_eur_anual?: number;
   
   // Analysis Metadata
   exposicion_solar?: number;  // Optional: percentage 0-100
   
   // Budget
-  coste_total_inicial_eur: number;
-  presupuesto_desglose: {
+  coste_total_inicial_eur?: number;
+  presupuesto_desglose?: {
     sustrato_eur: number;
     drenaje_eur: number;
     membrana_impermeable_eur: number;
     plantas_eur: number;
     instalacion_eur: number;
   };
-  mantenimiento_anual_eur: number;
-  coste_por_m2_eur: number;
-  vida_util_anos: number;
+  mantenimiento_anual_eur?: number;
+  coste_por_m2_eur?: number;
+  vida_util_anos?: number;
   
   // ROI
-  roi_porcentaje: number;
-  amortizacion_anos: number;
-  ahorro_anual_eur: number;
-  ahorro_25_anos_eur: number;
+  roi_porcentaje?: number;
+  amortizacion_anos?: number;
+  ahorro_anual_eur?: number;
+  ahorro_25_anos_eur?: number;
   
   // Grants
-  subvencion_elegible: boolean;
-  subvencion_porcentaje: number;
-  subvencion_programa: string;
-  subvencion_monto_estimado_eur: number;
+  subvencion_elegible?: boolean;
+  subvencion_porcentaje?: number;
+  subvencion_programa?: string;
+  subvencion_monto_estimado_eur?: number;
   
   // Species & Recommendations
-  especies_recomendadas: any[];
+  especies_recomendadas?: any[];
   recomendaciones?: any;  // JSONB field - can be array or object
   
   // Metadata
-  notas: string;
-  created_at: string;
+  notas?: string;
+  created_at?: string;
 }
 
 // Helper functions for Green Score display
@@ -109,6 +110,7 @@ const ZoneDetailContent: React.FC<ZoneDetailContentProps> = ({
   const [activeTab, setActiveTab] = useState<'info' | 'analysis' | 'budget' | 'history'>('info');
   const [analisis, setAnalisis] = useState<AnalisisData | null>(null);
   const [loadingAnalisis, setLoadingAnalisis] = useState(true);
+  const [hasAnalysis, setHasAnalysis] = useState(false);
 
   // Load analysis data from database on component mount
   useEffect(() => {
@@ -117,6 +119,8 @@ const ZoneDetailContent: React.FC<ZoneDetailContentProps> = ({
 
   async function loadAnalisisData() {
     setLoadingAnalisis(true);
+    setHasAnalysis(false);  // Reset state
+    
     try {
       // First, try to find the zona_verde in database by matching name and area
       // (since local IDs don't match database UUIDs)
@@ -141,11 +145,7 @@ const ZoneDetailContent: React.FC<ZoneDetailContentProps> = ({
 
       const dbZona = zonas[0];
 
-      // Note: We use .select('*') instead of listing specific columns to avoid
-      // 406 errors if database schema doesn't match TypeScript interface exactly.
-      // This is safer for production where migrations may not be synchronized with code deploys.
-      // The AnalisisData interface provides type safety and defines expected structure.
-      // RLS policies on the analisis table ensure only authorized data is returned.
+      // Now fetch the analysis for this zona - use SELECT * to avoid field mismatch
       const { data: analisisData, error: analisisError } = await supabase
         .from(TABLES.ANALISIS)
         .select('*')
@@ -157,28 +157,21 @@ const ZoneDetailContent: React.FC<ZoneDetailContentProps> = ({
       if (analisisError) {
         if (analisisError.code === 'PGRST116') {
           // No rows returned - zona exists but no analysis
-          console.log('Zona found but no analysis available');
+          // This is NORMAL and not an error
+          console.log('✅ Zona found but no analysis yet - this is OK');
+          setHasAnalysis(false);
         } else {
+          // Real error
           console.error('❌ Error fetching analysis:', analisisError);
-          console.error('Error details:', {
-            message: analisisError.message,
-            details: analisisError.details,
-            hint: analisisError.hint,
-            code: analisisError.code
-          });
         }
         setLoadingAnalisis(false);
         return;
       }
 
       if (analisisData) {
-        console.log('✅ Analysis data loaded successfully:', {
-          zona: area.nombre,
-          green_score: analisisData.green_score,
-          viabilidad: analisisData.viabilidad,
-          coste: analisisData.coste_total_inicial_eur
-        });
-        setAnalisis(analisisData);
+        console.log('✅ Analysis data loaded successfully');
+        setAnalisis(analisisData as AnalisisData);
+        setHasAnalysis(true);
       }
     } catch (error) {
       console.error('Error loading analysis:', error);
@@ -195,7 +188,11 @@ const ZoneDetailContent: React.FC<ZoneDetailContentProps> = ({
 
   const tabs = [
     { id: 'info' as const, label: 'Información General', icon: <MapIcon size={16} /> },
-    { id: 'analysis' as const, label: 'Análisis IA', icon: <Brain size={16} /> },
+    { 
+      id: 'analysis' as const, 
+      label: hasAnalysis ? 'Análisis IA' : 'Análisis IA (Pendiente)',
+      icon: <Brain size={16} /> 
+    },
     { id: 'budget' as const, label: 'Presupuesto', icon: <Euro size={16} /> },
     { id: 'history' as const, label: 'Historial', icon: <History size={16} /> }
   ];
@@ -673,20 +670,50 @@ const ZoneDetailContent: React.FC<ZoneDetailContentProps> = ({
             )}
 
             {activeTab === 'analysis' && (
-              <div className="text-center py-16">
-                <Brain size={80} className="mx-auto mb-6 text-gray-300" />
-                <h3 className="text-2xl font-bold text-gray-900 mb-3">
-                  Análisis con IA
-                </h3>
-                <p className="text-gray-600 mb-2 max-w-md mx-auto">
-                  Esta sección está reservada para funcionalidades avanzadas de análisis con inteligencia artificial.
-                </p>
-                <p className="text-sm text-gray-500 mb-8">
-                  Los resultados del análisis actual se encuentran en la pestaña <strong>"Información General"</strong>
-                </p>
-                <div className="inline-block px-6 py-3 bg-blue-100 text-blue-800 rounded-lg">
-                  🚧 Próximamente: Predicciones climáticas, optimización de especies, simulaciones 3D...
-                </div>
+              <div className="space-y-6">
+                {loadingAnalisis ? (
+                  // Loading state
+                  <div className="flex items-center justify-center py-12">
+                    <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
+                    <span className="ml-3 text-gray-600">Cargando análisis...</span>
+                  </div>
+                ) : !hasAnalysis ? (
+                  // No analysis state
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-8 text-center">
+                    <Brain className="w-16 h-16 text-blue-500 mx-auto mb-4" />
+                    <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                      Aún no hay análisis para esta zona
+                    </h3>
+                    <p className="text-gray-600 mb-6">
+                      Genera un análisis completo para obtener recomendaciones de especies,
+                      cálculos de viabilidad, presupuestos y beneficios ambientales.
+                    </p>
+                    <button
+                      onClick={() => onNavigate('analisis-zone', area)}
+                      className="px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-semibold inline-flex items-center gap-2"
+                    >
+                      <Brain size={20} />
+                      Analizar Zona
+                    </button>
+                  </div>
+                ) : (
+                  // Show analysis data
+                  <div className="text-center py-16">
+                    <Brain size={80} className="mx-auto mb-6 text-gray-300" />
+                    <h3 className="text-2xl font-bold text-gray-900 mb-3">
+                      Análisis con IA
+                    </h3>
+                    <p className="text-gray-600 mb-2 max-w-md mx-auto">
+                      Esta sección está reservada para funcionalidades avanzadas de análisis con inteligencia artificial.
+                    </p>
+                    <p className="text-sm text-gray-500 mb-8">
+                      Los resultados del análisis actual se encuentran en la pestaña <strong>"Información General"</strong>
+                    </p>
+                    <div className="inline-block px-6 py-3 bg-blue-100 text-blue-800 rounded-lg">
+                      🚧 Próximamente: Predicciones climáticas, optimización de especies, simulaciones 3D...
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
