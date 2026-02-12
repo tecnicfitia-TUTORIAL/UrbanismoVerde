@@ -3,7 +3,7 @@ import { MapIcon, MapPin, Search, SlidersHorizontal, Calendar, Trash2, Eye, Euro
 import toast from 'react-hot-toast';
 import { Area, TipoZona } from '../../types';
 import { ZonaVerde } from '../../config/supabase';
-import { loadZonasVerdes } from '../../services/zona-storage';
+import { loadZonasVerdes, deleteZonaVerde } from '../../services/zona-storage';
 import EmptyState from '../common/EmptyState';
 import { coloresPorTipo } from '../../types';
 
@@ -31,10 +31,12 @@ const ZonesGalleryContent: React.FC<ZonesGalleryContentProps> = ({
     async function loadZones() {
       try {
         setIsLoading(true);
+        console.log('🔍 ZonesGallery: Loading zones from database...');
         const zones = await loadZonasVerdes();
+        console.log(`✅ ZonesGallery: Loaded ${zones.length} zones from DB:`, zones);
         setDbZones(zones);
       } catch (error) {
-        console.error('Error loading zones:', error);
+        console.error('❌ ZonesGallery: Error loading zones:', error);
         toast.error('Error al cargar zonas guardadas');
       } finally {
         setIsLoading(false);
@@ -45,21 +47,34 @@ const ZonesGalleryContent: React.FC<ZonesGalleryContentProps> = ({
   }, []);
 
   // Convert ZonaVerde to Area format for compatibility
-  const convertZonaToArea = (zona: ZonaVerde): Area => ({
-    id: zona.id,
-    nombre: zona.nombre,
-    tipo: zona.tipo as TipoZona,
-    coordenadas: zona.coordenadas?.coordinates?.[0] || [],
-    areaM2: zona.area_m2,
-    notas: zona.notas,
-    fechaCreacion: new Date(zona.created_at),
-  });
+  const convertZonaToArea = (zona: ZonaVerde): Area => {
+    console.log('🔄 Converting zona to area format:', zona);
+    
+    const converted = {
+      id: zona.id,
+      nombre: zona.nombre,
+      tipo: zona.tipo as TipoZona,
+      coordenadas: zona.coordenadas?.coordinates?.[0] || [],
+      areaM2: zona.area_m2,
+      notas: zona.notas,
+      fechaCreacion: new Date(zona.created_at),
+    };
+    
+    console.log('✅ Converted result:', converted);
+    return converted;
+  };
 
   // Combine DB zones with local areas (for backward compatibility)
+  const convertedDbZones = dbZones.map(convertZonaToArea);
+  console.log(`📊 ZonesGallery: DB zones (${dbZones.length}) → converted (${convertedDbZones.length})`);
+  console.log(`📊 ZonesGallery: Local areas: ${areas.length}`);
+
   const allZones = [
-    ...dbZones.map(convertZonaToArea),
+    ...convertedDbZones,
     ...areas
   ];
+
+  console.log(`📊 ZonesGallery: Total zones to display: ${allZones.length}`, allZones);
 
   if (isLoading) {
     return (
@@ -93,10 +108,35 @@ const ZonesGalleryContent: React.FC<ZonesGalleryContentProps> = ({
     }
   });
 
-  const handleDelete = (id: string, e: React.MouseEvent) => {
+  const handleDelete = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (window.confirm('¿Estás seguro de eliminar esta zona?')) {
-      onDeleteArea(id);
+    
+    if (!window.confirm('¿Estás seguro de eliminar esta zona? Esta acción no se puede deshacer.')) {
+      return;
+    }
+
+    const toastId = toast.loading('Eliminando zona...');
+
+    try {
+      // Check if this is a database zone (UUID format) or local zone
+      const isDbZone = dbZones.some(z => z.id === id);
+
+      if (isDbZone) {
+        // Delete from database
+        await deleteZonaVerde(id);
+        
+        // Update local state
+        setDbZones(dbZones.filter(z => z.id !== id));
+        
+        toast.success('✅ Zona eliminada de la base de datos', { id: toastId });
+      } else {
+        // Delete local zone only (fallback for backward compatibility)
+        onDeleteArea(id);
+        toast.success('✅ Zona eliminada', { id: toastId });
+      }
+    } catch (error) {
+      console.error('Error deleting zone:', error);
+      toast.error('❌ Error al eliminar la zona', { id: toastId });
     }
   };
 
