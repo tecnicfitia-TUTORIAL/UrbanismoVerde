@@ -130,28 +130,29 @@ async function saveToAnalisisTable(
     viabilidad: getViabilidad(adaptedData.green_score || DEFAULT_GREEN_SCORE),
     factor_verde: normativa.factor_verde || 0.65,
     
-    co2_capturado_kg_anual: beneficios.co2_capturado_kg_anual || Math.round((adaptedData.area_m2 || 0) * DEFAULT_CO2_CAPTURE_PER_M2),
-    agua_retenida_litros_anual: beneficios.agua_retenida_litros_anual || Math.round((adaptedData.area_m2 || 0) * DEFAULT_WATER_RETENTION_PER_M2),
+    // ✅ Redondear TODOS los valores enteros (columnas BIGINT)
+    co2_capturado_kg_anual: Math.round(beneficios.co2_capturado_kg_anual || (adaptedData.area_m2 || 0) * DEFAULT_CO2_CAPTURE_PER_M2),
+    agua_retenida_litros_anual: Math.round(beneficios.agua_retenida_litros_anual || (adaptedData.area_m2 || 0) * DEFAULT_WATER_RETENTION_PER_M2),
     reduccion_temperatura_c: beneficios.reduccion_temperatura_c || 1.5,
-    ahorro_energia_kwh_anual: beneficios.ahorro_energia_kwh_anual || Math.round((adaptedData.area_m2 || 0) * DEFAULT_ENERGY_SAVINGS_KWH_PER_M2),
-    ahorro_energia_eur_anual: beneficios.ahorro_energia_eur_anual || Math.round((adaptedData.area_m2 || 0) * DEFAULT_ENERGY_SAVINGS_EUR_PER_M2),
+    ahorro_energia_kwh_anual: Math.round(beneficios.ahorro_energia_kwh_anual || (adaptedData.area_m2 || 0) * DEFAULT_ENERGY_SAVINGS_KWH_PER_M2),
+    ahorro_energia_eur_anual: Math.round(beneficios.ahorro_energia_eur_anual || (adaptedData.area_m2 || 0) * DEFAULT_ENERGY_SAVINGS_EUR_PER_M2),
     
-    coste_total_inicial_eur: presupuesto.coste_total_inicial_eur || Math.round((adaptedData.area_m2 || 0) * DEFAULT_COST_PER_M2),
+    coste_total_inicial_eur: Math.round(presupuesto.coste_total_inicial_eur || (adaptedData.area_m2 || 0) * DEFAULT_COST_PER_M2),
     presupuesto_desglose: presupuesto.desglose || {},
-    mantenimiento_anual_eur: presupuesto.mantenimiento_anual_eur || Math.round((adaptedData.area_m2 || 0) * DEFAULT_MAINTENANCE_PER_M2),
+    mantenimiento_anual_eur: Math.round(presupuesto.mantenimiento_anual_eur || (adaptedData.area_m2 || 0) * DEFAULT_MAINTENANCE_PER_M2),
     coste_por_m2_eur: DEFAULT_COST_PER_M2,
     vida_util_anos: DEFAULT_VIDA_UTIL_ANOS,
     
     roi_porcentaje: roi.roi_porcentaje || DEFAULT_ROI_PERCENTAGE,
     amortizacion_anos: roi.amortizacion_anos || DEFAULT_AMORTIZATION_YEARS,
-    ahorro_anual_eur: roi.ahorro_anual_eur || Math.round((adaptedData.area_m2 || 0) * DEFAULT_ENERGY_SAVINGS_EUR_PER_M2),
-    ahorro_25_anos_eur: roi.ahorro_25_anos_eur || Math.round((adaptedData.area_m2 || 0) * DEFAULT_SAVINGS_25_YEARS_PER_M2),
+    ahorro_anual_eur: Math.round(roi.ahorro_anual_eur || (adaptedData.area_m2 || 0) * DEFAULT_ENERGY_SAVINGS_EUR_PER_M2),
+    ahorro_25_anos_eur: Math.round(roi.ahorro_25_anos_eur || (adaptedData.area_m2 || 0) * DEFAULT_SAVINGS_25_YEARS_PER_M2),
     
     // Default to true if elegible is not explicitly set to false
     subvencion_elegible: subvencion.elegible !== false,
-    subvencion_porcentaje: subvencion.porcentaje || DEFAULT_SUBSIDY_PERCENTAGE,
+    subvencion_porcentaje: Math.round(subvencion.porcentaje || DEFAULT_SUBSIDY_PERCENTAGE),
     subvencion_programa: subvencion.programa || 'PECV Madrid 2025',
-    subvencion_monto_estimado_eur: subvencion.monto_estimado_eur || Math.round((presupuesto.coste_total_inicial_eur || 0) * (DEFAULT_SUBSIDY_PERCENTAGE / 100)),
+    subvencion_monto_estimado_eur: Math.round(subvencion.monto_estimado_eur || (presupuesto.coste_total_inicial_eur || 0) * (DEFAULT_SUBSIDY_PERCENTAGE / 100)),
     
     especies_recomendadas: adaptedData.especies_recomendadas || [],
     recomendaciones: adaptedData.recomendaciones || [],
