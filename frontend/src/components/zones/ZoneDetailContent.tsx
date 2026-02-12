@@ -17,12 +17,23 @@ interface ZoneDetailContentProps {
 interface AnalisisData {
   id: string;
   zona_verde_id: string;
+  
+  // Core Analysis Fields
+  green_score: number;  // Range: 0-100
+  viabilidad: 'alta' | 'media' | 'baja' | 'nula';
+  
+  // Environmental Impact
   factor_verde: number;
   co2_capturado_kg_anual: number;
   agua_retenida_litros_anual: number;
   reduccion_temperatura_c: number;
   ahorro_energia_kwh_anual: number;
   ahorro_energia_eur_anual: number;
+  
+  // Analysis Metadata
+  exposicion_solar?: number;  // Optional: percentage 0-100
+  
+  // Budget
   coste_total_inicial_eur: number;
   presupuesto_desglose: {
     sustrato_eur: number;
@@ -34,15 +45,24 @@ interface AnalisisData {
   mantenimiento_anual_eur: number;
   coste_por_m2_eur: number;
   vida_util_anos: number;
+  
+  // ROI
   roi_porcentaje: number;
   amortizacion_anos: number;
   ahorro_anual_eur: number;
   ahorro_25_anos_eur: number;
+  
+  // Grants
   subvencion_elegible: boolean;
   subvencion_porcentaje: number;
   subvencion_programa: string;
   subvencion_monto_estimado_eur: number;
+  
+  // Species & Recommendations
   especies_recomendadas: any[];
+  recomendaciones?: string[];  // Array of recommendation strings
+  
+  // Metadata
   notas: string;
   created_at: string;
 }
@@ -332,6 +352,61 @@ const ZoneDetailContent: React.FC<ZoneDetailContentProps> = ({
                   </div>
                 ) : analisis ? (
                   <div className="space-y-6">
+                    {/* Green Score Card */}
+                    <div className="bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 rounded-xl p-8 border-2 border-green-300 shadow-lg">
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-2xl font-bold text-green-900">
+                          Green Score
+                        </h3>
+                        <div className={`px-4 py-2 rounded-full font-bold text-sm ${
+                          analisis.green_score >= 70 ? 'bg-green-500 text-white' :
+                          analisis.green_score >= 50 ? 'bg-yellow-500 text-white' :
+                          analisis.green_score >= 30 ? 'bg-orange-500 text-white' :
+                          'bg-red-500 text-white'
+                        }`}>
+                          {analisis.viabilidad?.toUpperCase()}
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-baseline gap-2 mb-3">
+                        <div className="text-6xl font-black text-green-700">
+                          {analisis.green_score ?? 0}
+                        </div>
+                        <div className="text-3xl text-green-600 font-semibold">
+                          /100
+                        </div>
+                      </div>
+                      
+                      {/* Progress Bar */}
+                      <div className="w-full h-4 bg-gray-200 rounded-full overflow-hidden mb-3">
+                        <div 
+                          className={`h-full transition-all duration-500 ${
+                            analisis.green_score >= 70 ? 'bg-green-500' :
+                            analisis.green_score >= 50 ? 'bg-yellow-500' :
+                            analisis.green_score >= 30 ? 'bg-orange-500' :
+                            'bg-red-500'
+                          }`}
+                          style={{ width: `${analisis.green_score ?? 0}%` }}
+                        />
+                      </div>
+                      
+                      <p className="text-sm text-green-800">
+                        {analisis.green_score >= 70 ? '🌟 Excelente viabilidad para la instalación de zona verde' :
+                         analisis.green_score >= 50 ? '✅ Buena viabilidad, se recomienda proceder' :
+                         analisis.green_score >= 30 ? '⚠️ Viabilidad moderada, revisar recomendaciones' :
+                         '❌ Viabilidad baja, considerar alternativas'}
+                      </p>
+                      
+                      {analisis.exposicion_solar && (
+                        <div className="mt-4 pt-4 border-t border-green-200">
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-green-800 font-medium">☀️ Exposición solar:</span>
+                            <span className="text-green-900 font-bold">{analisis.exposicion_solar.toFixed(0)}%</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
                     {/* Factor Verde */}
                     <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-6 border border-green-200">
                       <h3 className="text-lg font-semibold text-green-900 mb-3">
@@ -409,6 +484,28 @@ const ZoneDetailContent: React.FC<ZoneDetailContentProps> = ({
                             Y {analisis.especies_recomendadas.length - 6} especies más...
                           </p>
                         )}
+                      </div>
+                    )}
+
+                    {/* Recomendaciones del Análisis */}
+                    {analisis.recomendaciones && analisis.recomendaciones.length > 0 && (
+                      <div className="bg-blue-50 rounded-lg p-6 border border-blue-200">
+                        <h3 className="text-lg font-semibold text-blue-900 mb-4 flex items-center gap-2">
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          Recomendaciones del Análisis ({analisis.recomendaciones.length})
+                        </h3>
+                        <ul className="space-y-3">
+                          {analisis.recomendaciones.map((rec: string, idx: number) => (
+                            <li key={idx} className="flex items-start gap-3">
+                              <span className="flex-shrink-0 w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold">
+                                {idx + 1}
+                              </span>
+                              <p className="text-sm text-blue-900 flex-1">{rec}</p>
+                            </li>
+                          ))}
+                        </ul>
                       </div>
                     )}
 
