@@ -161,6 +161,13 @@ const Layout: React.FC = () => {
     tempCoordsRef.current = [];
   };
 
+  const handleCloseAnalysisReport = () => {
+    setShowAnalysisReport(false);
+    setCurrentPolygon(null);
+    // Clear drawing state
+    tempCoordsRef.current = [];
+  };
+
   const handleDeleteArea = async (id: string) => {
     try {
       // Try to delete from database first
