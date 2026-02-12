@@ -71,7 +71,7 @@ export interface ZonaVerde {
   descripcion?: string;
   coordenadas: any; // GeoJSON
   area_m2: number;
-  viabilidad: 'alta' | 'media' | 'baja' | 'nula';
+  nivel_viabilidad: 'alta' | 'media' | 'baja' | 'nula';
   estado: 'propuesta' | 'en_analisis' | 'aprobada' | 'en_ejecucion' | 'completada' | 'rechazada';
   municipio_id?: string;
   created_at: string;

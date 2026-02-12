@@ -53,7 +53,7 @@ CREATE TABLE IF NOT EXISTS zonas_verdes (
   descripcion TEXT,
   coordenadas JSONB NOT NULL,
   area_m2 DECIMAL(12,2) NOT NULL,
-  viabilidad VARCHAR(20) CHECK (viabilidad IN ('alta', 'media', 'baja', 'nula')),
+  nivel_viabilidad VARCHAR(20) CHECK (nivel_viabilidad IN ('alta', 'media', 'baja', 'nula')),
   estado VARCHAR(30) CHECK (estado IN ('propuesta', 'en_analisis', 'aprobada', 'en_ejecucion', 'completada', 'rechazada')) DEFAULT 'propuesta',
   municipio_id UUID REFERENCES municipios(id) ON DELETE SET NULL,
   user_id UUID,
@@ -65,7 +65,7 @@ CREATE TABLE IF NOT EXISTS zonas_verdes (
 
 -- Indexes
 CREATE INDEX idx_zonas_verdes_estado ON zonas_verdes(estado);
-CREATE INDEX idx_zonas_verdes_viabilidad ON zonas_verdes(viabilidad);
+CREATE INDEX idx_zonas_verdes_nivel_viabilidad ON zonas_verdes(nivel_viabilidad);
 CREATE INDEX idx_zonas_verdes_municipio ON zonas_verdes(municipio_id);
 CREATE INDEX idx_zonas_verdes_user ON zonas_verdes(user_id);
 CREATE INDEX idx_zonas_verdes_created ON zonas_verdes(created_at DESC);

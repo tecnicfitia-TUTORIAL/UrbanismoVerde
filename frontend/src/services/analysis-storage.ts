@@ -86,7 +86,7 @@ async function createZonaVerde(
     nombre,
     coordenadas: polygon,
     area_m2: area,
-    viabilidad: viabilidad.toLowerCase() as 'alta' | 'media' | 'baja' | 'nula',
+    nivel_viabilidad: viabilidad.toLowerCase() as 'alta' | 'media' | 'baja' | 'nula',
     estado: 'en_analisis' as const,
     user_id: userId,
   };
