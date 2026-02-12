@@ -152,7 +152,7 @@ const Layout: React.FC = () => {
     // Just close the report - budget generation will be implemented separately
     setShowAnalysisReport(false);
     setShowAnalysisResults(false);
-    toast.info('Función de presupuesto en desarrollo');
+    toast.info('función de presupuesto en desarrollo');
   };
   
   const handleCloseAnalysisResults = () => {

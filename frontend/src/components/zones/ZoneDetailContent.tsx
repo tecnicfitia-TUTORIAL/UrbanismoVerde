@@ -14,11 +14,11 @@ interface ZoneDetailContentProps {
   onDelete: (id: string) => void;
 }
 
+// All fields should be optional since analysis might not exist
 interface AnalisisData {
   id: string;
   zona_verde_id: string;
   
-  // All fields should be optional since analysis might not exist
   // Core Analysis Fields
   green_score?: number;  // Range: 0-100
   viabilidad?: 'alta' | 'media' | 'baja' | 'nula';
@@ -156,8 +156,7 @@ const ZoneDetailContent: React.FC<ZoneDetailContentProps> = ({
 
       if (analisisError) {
         if (analisisError.code === 'PGRST116') {
-          // No rows returned - zona exists but no analysis
-          // This is NORMAL and not an error
+          // No rows returned - zona exists but no analysis (this is normal)
           console.log('✅ Zona found but no analysis yet - this is OK');
           setHasAnalysis(false);
         } else {
