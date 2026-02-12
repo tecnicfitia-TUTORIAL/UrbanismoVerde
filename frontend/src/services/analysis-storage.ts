@@ -107,7 +107,7 @@ async function saveToAnalisisTable(
     subvencion_elegible: subvencion.elegible !== false,
     subvencion_porcentaje: Math.round(subvencion.porcentaje || DEFAULT_SUBSIDY_PERCENTAGE),
     subvencion_programa: subvencion.programa || 'PECV Madrid 2025',
-    subvencion_monto_estimado_eur: Math.round(subvencion.monto_estimado_eur || (presupuesto.coste_total_inicial_eur || 0) * (DEFAULT_SUBSIDY_PERCENTAGE / 100)),
+    subvencion_monto_estimado_eur: Math.round(subvencion.monto_estimado_eur || Math.round(presupuesto.coste_total_inicial_eur || 0) * (DEFAULT_SUBSIDY_PERCENTAGE / 100)),
     
     especies_recomendadas: adaptedData.especies_recomendadas || [],
     recomendaciones: adaptedData.recomendaciones || [],
