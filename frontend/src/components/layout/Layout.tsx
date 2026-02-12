@@ -14,7 +14,7 @@ import { Area, FormData, GeoJSONPolygon } from '../../types';
 import { useAnalysis } from '../../hooks/useAnalysis';
 import { coordinatesToGeoJSON } from '../../services/ai-analysis';
 import { supabase, TABLES } from '../../config/supabase';
-import { saveZonaVerde, loadZonasVerdes } from '../../services/zona-storage';
+import { saveZonaVerde, loadZonasVerdes, deleteZonaVerde } from '../../services/zona-storage';
 
 // Calcular área usando fórmula de Haversine (aproximación para polígonos pequeños)
 const calcularArea = (coords: [number, number][]): number => {
@@ -52,20 +52,22 @@ const Layout: React.FC = () => {
   const [showAnalysisReport, setShowAnalysisReport] = useState(false);
   const [currentPolygon, setCurrentPolygon] = useState<GeoJSONPolygon | null>(null);
 
-  // Load DB zones and subscribe to real-time updates
-  useEffect(() => {
-    // Load zones from database
-    const loadZonasFromDB = async () => {
-      try {
-        const zones = await loadZonasVerdes();
-        setDbZonasCount(zones.length);
-        console.log(`📊 Zonas cargadas: ${zones.length}`);
-      } catch (error) {
-        console.error('Error al cargar zonas:', error);
-      }
-    };
+  const loadZonasCount = async () => {
+    try {
+      const { count } = await supabase
+        .from(TABLES.ZONAS_VERDES)
+        .select('*', { count: 'exact', head: true });
+      
+      setDbZonasCount(count || 0);
+      console.log(`📊 Zonas en BD: ${count}`);
+    } catch (error) {
+      console.error('Error al cargar contador de zonas:', error);
+    }
+  };
 
-    loadZonasFromDB();
+  // Load DB zones count and subscribe to real-time updates
+  useEffect(() => {
+    loadZonasCount();
     
     // Subscribe to real-time changes in zonas_verdes table
     const subscription = supabase
@@ -78,8 +80,8 @@ const Layout: React.FC = () => {
           table: TABLES.ZONAS_VERDES,
         },
         () => {
-          console.log('🔄 Zonas actualizadas, recargando...');
-          loadZonasFromDB();
+          console.log('🔄 Zonas actualizadas, recargando contador...');
+          loadZonasCount();
         }
       )
       .subscribe();
@@ -206,8 +208,19 @@ const Layout: React.FC = () => {
     setShowModal(true);
   };
 
-  const handleDeleteArea = (id: string) => {
-    setAreas(areas.filter(area => area.id !== id));
+  const handleDeleteArea = async (id: string) => {
+    try {
+      // Try to delete from database first
+      await deleteZonaVerde(id);
+      console.log('✅ Zona eliminada de la base de datos:', id);
+      
+      // Reload zones count
+      await loadZonasCount();
+    } catch (error) {
+      console.error('Error deleting zone from database:', error);
+      // Fallback: remove from local state only (for backward compatibility)
+      setAreas(areas.filter(area => area.id !== id));
+    }
   };
 
   const handleCenterArea = (coords: [number, number][]) => {

@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, MapIcon, Edit2, Trash2, Brain, Euro, History, Loader2 } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { Area } from '../../types';
 import Breadcrumbs from '../common/Breadcrumbs';
 import { coloresPorTipo } from '../../types';
 import { supabase, TABLES } from '../../config/supabase';
+import { deleteZonaVerde } from '../../services/zona-storage';
 
 interface ZoneDetailContentProps {
   area: Area;
@@ -130,10 +132,21 @@ const ZoneDetailContent: React.FC<ZoneDetailContentProps> = ({
     { id: 'history' as const, label: 'Historial', icon: <History size={16} /> }
   ];
 
-  const handleDelete = () => {
-    if (window.confirm(`¿Estás seguro de eliminar la zona "${area.nombre}"?`)) {
+  const handleDelete = async () => {
+    if (!window.confirm(`¿Estás seguro de eliminar la zona "${area.nombre}"? Esta acción no se puede deshacer.`)) {
+      return;
+    }
+
+    const toastId = toast.loading('Eliminando zona...');
+
+    try {
+      await deleteZonaVerde(area.id);
+      toast.success('✅ Zona eliminada correctamente', { id: toastId });
       onDelete(area.id);
       onBack();
+    } catch (error) {
+      console.error('Error deleting zone:', error);
+      toast.error('❌ Error al eliminar la zona', { id: toastId });
     }
   };
 
