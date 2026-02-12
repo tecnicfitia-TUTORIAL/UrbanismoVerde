@@ -8,6 +8,7 @@ import { supabase, TABLES, getCurrentUser } from '../config/supabase';
 import { AnalysisResponse, GeoJSONPolygon, SavedAnalysis } from '../types';
 import { adaptAnalysisData } from './analysis-adapter';
 import { saveZonaVerde } from './zona-storage';
+import { validateAnalisisData } from '../utils/validation';
 
 // Constants for cost and impact calculations
 const DEFAULT_COST_PER_M2 = 150; // €/m² - Base installation cost
@@ -114,9 +115,21 @@ async function saveToAnalisisTable(
     notas: `Análisis guardado el ${new Date().toLocaleDateString('es-ES')}`
   };
 
+  // Validar datos antes de enviar
+  console.log('🔍 Validando datos de análisis...');
+  const validation = validateAnalisisData(analisisData);
+
+  if (!validation.valid) {
+    console.error('❌ Errores de validación:', validation.errors);
+    throw new Error(`Validation failed: ${validation.errors.join(', ')}`);
+  }
+
+  console.log('✅ Datos validados correctamente');
+  console.log('📤 Enviando datos sanitizados a Supabase');
+
   const { data, error } = await supabase
     .from(TABLES.ANALISIS)
-    .insert([analisisData])
+    .insert([validation.sanitized])
     .select('id')
     .single();
 

@@ -7,6 +7,7 @@
 
 import { supabase, TABLES, ZonaVerde, getCurrentUser } from '../config/supabase';
 import { GeoJSONPolygon } from '../types';
+import { validateArea } from '../utils/validation';
 
 export interface CreateZonaVerdeInput {
   nombre: string;
@@ -26,6 +27,12 @@ export async function saveZonaVerde(input: CreateZonaVerdeInput): Promise<string
   console.log('💾 Guardando zona verde en Supabase...');
 
   try {
+    // Validar área
+    const validatedArea = validateArea(input.area_m2);
+    if (!validatedArea) {
+      throw new Error('Área inválida o demasiado pequeña');
+    }
+
     // Get current user
     let userId: string | undefined;
     try {
@@ -39,7 +46,7 @@ export async function saveZonaVerde(input: CreateZonaVerdeInput): Promise<string
       nombre: input.nombre,
       tipo: input.tipo,
       coordenadas: input.coordenadas,
-      area_m2: input.area_m2,
+      area_m2: validatedArea,
       nivel_viabilidad: input.nivel_viabilidad || 'media',
       estado: input.estado || 'propuesta',
       user_id: userId,
