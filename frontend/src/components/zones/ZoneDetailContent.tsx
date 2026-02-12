@@ -416,7 +416,7 @@ const ZoneDetailContent: React.FC<ZoneDetailContentProps> = ({
                         {/* Factor Verde */}
                         <div className="text-center">
                           <div className="text-3xl font-bold text-green-700 mb-2">
-                            {analisis.factor_verde?.toFixed(2) ?? '0.65'}
+                            {(analisis.factor_verde ?? 0.65).toFixed(2)}
                           </div>
                           <div className="text-sm text-green-600">Factor Verde</div>
                         </div>
@@ -466,7 +466,7 @@ const ZoneDetailContent: React.FC<ZoneDetailContentProps> = ({
                         <div className="bg-orange-50 rounded-lg p-4 border border-orange-200">
                           <div className="text-sm text-orange-700 font-semibold mb-1">Reducción Temperatura</div>
                           <div className="text-3xl font-bold text-orange-900">
-                            {analisis.reduccion_temperatura_c?.toFixed(1) ?? '1.5'}°C
+                            {(analisis.reduccion_temperatura_c ?? 1.5).toFixed(1)}°C
                           </div>
                           <div className="text-xs text-orange-600 mt-1">Isla de calor urbano</div>
                         </div>
@@ -500,7 +500,7 @@ const ZoneDetailContent: React.FC<ZoneDetailContentProps> = ({
                           <div className="text-right">
                             <div className="text-sm text-purple-700">Coste por m²</div>
                             <div className="text-2xl font-bold text-purple-900">
-                              €{analisis.coste_por_m2_eur?.toLocaleString('es-ES') ?? '235'}/m²
+                              €{(analisis.coste_por_m2_eur ?? 235).toLocaleString('es-ES')}/m²
                             </div>
                           </div>
                         </div>
@@ -573,13 +573,13 @@ const ZoneDetailContent: React.FC<ZoneDetailContentProps> = ({
                         <div className="bg-white rounded-lg p-4">
                           <div className="text-sm text-green-700 mb-1">ROI Porcentaje</div>
                           <div className="text-2xl font-bold text-green-900">
-                            {analisis.roi_porcentaje?.toFixed(1) ?? '6.7'}%
+                            {(analisis.roi_porcentaje ?? 6.7).toFixed(1)}%
                           </div>
                         </div>
                         <div className="bg-white rounded-lg p-4">
                           <div className="text-sm text-blue-700 mb-1">Amortización</div>
                           <div className="text-2xl font-bold text-blue-900">
-                            {analisis.amortizacion_anos?.toFixed(1) ?? '15.0'} años
+                            {(analisis.amortizacion_anos ?? 15.0).toFixed(1)} años
                           </div>
                         </div>
                         <div className="bg-white rounded-lg p-4">
