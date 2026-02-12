@@ -67,6 +67,34 @@ interface AnalisisData {
   created_at: string;
 }
 
+// Helper functions for Green Score display
+const getViabilityColorClasses = (viabilidad?: string): string => {
+  switch (viabilidad) {
+    case 'alta':
+      return 'bg-green-500 text-white';
+    case 'media':
+      return 'bg-yellow-500 text-white';
+    case 'baja':
+      return 'bg-orange-500 text-white';
+    default:
+      return 'bg-red-500 text-white';
+  }
+};
+
+const getGreenScoreColorClass = (score: number): string => {
+  if (score >= 70) return 'bg-green-500';
+  if (score >= 50) return 'bg-yellow-500';
+  if (score >= 30) return 'bg-orange-500';
+  return 'bg-red-500';
+};
+
+const getGreenScoreMessage = (score: number): string => {
+  if (score >= 70) return '🌟 Excelente viabilidad para la instalación de zona verde';
+  if (score >= 50) return '✅ Buena viabilidad, se recomienda proceder';
+  if (score >= 30) return '⚠️ Viabilidad moderada, revisar recomendaciones';
+  return '❌ Viabilidad baja, considerar alternativas';
+};
+
 const ZoneDetailContent: React.FC<ZoneDetailContentProps> = ({
   area,
   onBack,
@@ -358,12 +386,7 @@ const ZoneDetailContent: React.FC<ZoneDetailContentProps> = ({
                         <h3 className="text-2xl font-bold text-green-900">
                           Green Score
                         </h3>
-                        <div className={`px-4 py-2 rounded-full font-bold text-sm ${
-                          analisis.viabilidad === 'alta' ? 'bg-green-500 text-white' :
-                          analisis.viabilidad === 'media' ? 'bg-yellow-500 text-white' :
-                          analisis.viabilidad === 'baja' ? 'bg-orange-500 text-white' :
-                          'bg-red-500 text-white'
-                        }`}>
+                        <div className={`px-4 py-2 rounded-full font-bold text-sm ${getViabilityColorClasses(analisis.viabilidad)}`}>
                           {analisis.viabilidad?.toUpperCase()}
                         </div>
                       </div>
@@ -380,21 +403,13 @@ const ZoneDetailContent: React.FC<ZoneDetailContentProps> = ({
                       {/* Progress Bar */}
                       <div className="w-full h-4 bg-gray-200 rounded-full overflow-hidden mb-3">
                         <div 
-                          className={`h-full transition-all duration-500 ${
-                            analisis.green_score >= 70 ? 'bg-green-500' :
-                            analisis.green_score >= 50 ? 'bg-yellow-500' :
-                            analisis.green_score >= 30 ? 'bg-orange-500' :
-                            'bg-red-500'
-                          }`}
+                          className={`h-full transition-all duration-500 ${getGreenScoreColorClass(analisis.green_score ?? 0)}`}
                           style={{ width: `${analisis.green_score ?? 0}%` }}
                         />
                       </div>
                       
                       <p className="text-sm text-green-800">
-                        {analisis.green_score >= 70 ? '🌟 Excelente viabilidad para la instalación de zona verde' :
-                         analisis.green_score >= 50 ? '✅ Buena viabilidad, se recomienda proceder' :
-                         analisis.green_score >= 30 ? '⚠️ Viabilidad moderada, revisar recomendaciones' :
-                         '❌ Viabilidad baja, considerar alternativas'}
+                        {getGreenScoreMessage(analisis.green_score ?? 0)}
                       </p>
                       
                       {analisis.exposicion_solar != null && (
