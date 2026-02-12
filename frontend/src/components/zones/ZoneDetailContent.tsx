@@ -437,7 +437,7 @@ const ZoneDetailContent: React.FC<ZoneDetailContentProps> = ({
                         {/* CO2 */}
                         <div className="text-center">
                           <div className="text-3xl font-bold text-blue-700 mb-1">
-                            {(analisis.co2_capturado_kg_anual / 1000).toFixed(1)}
+                            {((analisis.co2_capturado_kg_anual ?? 0) / 1000).toFixed(1)}
                           </div>
                           <div className="text-xs text-blue-600">Toneladas CO₂/año</div>
                         </div>
@@ -445,7 +445,7 @@ const ZoneDetailContent: React.FC<ZoneDetailContentProps> = ({
                         {/* Water */}
                         <div className="text-center">
                           <div className="text-3xl font-bold text-cyan-700 mb-1">
-                            {(analisis.agua_retenida_litros_anual / 1000).toFixed(0)}
+                            {((analisis.agua_retenida_litros_anual ?? 0) / 1000).toFixed(0)}
                           </div>
                           <div className="text-xs text-cyan-600">m³ Agua/año</div>
                         </div>
@@ -453,7 +453,7 @@ const ZoneDetailContent: React.FC<ZoneDetailContentProps> = ({
                         {/* Cost */}
                         <div className="text-center">
                           <div className="text-3xl font-bold text-purple-700 mb-1">
-                            €{(analisis.coste_total_inicial_eur / 1000).toFixed(0)}k
+                            €{((analisis.coste_total_inicial_eur ?? 0) / 1000).toFixed(0)}k
                           </div>
                           <div className="text-xs text-purple-600">Inversión inicial</div>
                         </div>
