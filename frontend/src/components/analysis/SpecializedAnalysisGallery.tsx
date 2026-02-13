@@ -217,8 +217,10 @@ export const SpecializedAnalysisGallery: React.FC<SpecializedAnalysisGalleryProp
                       key={analysis.id}
                       className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-lg transition-shadow cursor-pointer"
                       onClick={() => {
-                        // TODO: Navigate to detail view
-                        toast.success('Vista detallada próximamente');
+                        // Navigate to specialized analysis detail view
+                        // This will be implemented when detail view component is created
+                        console.log('Opening specialized analysis:', analysis.id);
+                        toast.info('Vista detallada en desarrollo');
                       }}
                     >
                       {/* Zone name */}

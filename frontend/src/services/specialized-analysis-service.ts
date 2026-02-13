@@ -40,14 +40,14 @@ export async function loadSpecializedAnalyses(): Promise<SpecializedAnalysisWith
 
     // Transform the data to flatten zona_verde info
     const transformed = (data || []).map((item: any) => {
-      const zonaVerde = item.analisis?.zonas_verdes;
+      const { analisis, ...rest } = item;
+      const zonaVerde = analisis?.zonas_verdes;
       return {
-        ...item,
+        ...rest,
         zona_verde: zonaVerde ? {
           nombre: zonaVerde.nombre,
           tipo: zonaVerde.tipo
         } : undefined,
-        analisis: undefined // Remove nested analisis object
       };
     });
 
@@ -88,14 +88,14 @@ export async function loadSpecializedAnalysesByType(
 
     // Transform the data to flatten zona_verde info
     const transformed = (data || []).map((item: any) => {
-      const zonaVerde = item.analisis?.zonas_verdes;
+      const { analisis, ...rest } = item;
+      const zonaVerde = analisis?.zonas_verdes;
       return {
-        ...item,
+        ...rest,
         zona_verde: zonaVerde ? {
           nombre: zonaVerde.nombre,
           tipo: zonaVerde.tipo
         } : undefined,
-        analisis: undefined
       };
     });
 
