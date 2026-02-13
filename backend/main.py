@@ -26,7 +26,6 @@ app = FastAPI(
 allowed_origins = [
     "https://urbanismo-verde.vercel.app",      # ✅ Production domain (with hyphen)
     "https://urbanismoverde.vercel.app",       # ✅ Alternative (without hyphen)
-    "https://*.vercel.app",                     # ✅ Preview deployments
     "http://localhost:5173",                    # ✅ Local development (Vite)
     "http://localhost:3000",                    # ✅ Local development (alternative)
     "http://localhost:8080"                     # ✅ Local development (alternative)
@@ -35,6 +34,7 @@ allowed_origins = [
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
+    allow_origin_regex=r"https://.*\.vercel\.app",  # ✅ Preview deployments
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
