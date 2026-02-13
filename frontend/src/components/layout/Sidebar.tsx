@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { Home, MapPin, PlusCircle, Brain, BarChart3, Euro, Menu, X, List, Search, Sparkles, Map, History, ChevronDown, ChevronRight } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Home, MapPin, PlusCircle, Brain, BarChart3, Euro, Menu, X, List, Search, Sparkles, Map, History, ChevronDown, ChevronRight, Layers } from 'lucide-react';
 import { Area, MenuItem as MenuItemType } from '../../types';
 import SubMenu from './SubMenu';
+import { countSpecializedAnalyses } from '../../services/specialized-analysis-service';
 
 interface SidebarProps {
   isDrawing: boolean;
@@ -30,6 +31,21 @@ const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [expandedSections, setExpandedSections] = useState<string[]>(['dashboard']);
+  const [especialesCount, setEspecialesCount] = useState(0);
+
+  // Load specialized analysis count
+  useEffect(() => {
+    loadEspecialesCount();
+  }, []);
+
+  const loadEspecialesCount = async () => {
+    try {
+      const count = await countSpecializedAnalyses();
+      setEspecialesCount(count);
+    } catch (error) {
+      console.error('Error loading specialized analyses count:', error);
+    }
+  };
 
   // Menu structure with submenus
   const menuStructure: MenuItemType[] = [
@@ -63,6 +79,14 @@ const Sidebar: React.FC<SidebarProps> = ({
         { id: 'analisis-zone', label: 'Analizar zona', icon: <Map size={16} />, view: 'analisis-zone' },
         { id: 'analisis-history', label: 'Historial', icon: <History size={16} />, view: 'analisis-history' }
       ]
+    },
+    {
+      id: 'analisis-especializados',
+      icon: <Layers size={20} />,
+      label: 'Análisis Especializados',
+      view: 'analisis-especializados',
+      count: especialesCount,
+      subItems: []
     },
     {
       id: 'presupuestos',

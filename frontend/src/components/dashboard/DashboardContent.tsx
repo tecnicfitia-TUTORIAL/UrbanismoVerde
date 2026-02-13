@@ -16,6 +16,7 @@ const DashboardContent: React.FC<DashboardContentProps> = ({ areas, onNavigate }
     zonasVerdesCount: 0,
     zonasVerdesArea: 0,
     analisisCount: 0,
+    analisesEspecializados: 0,
   });
 
   // Calcular estadísticas locales
@@ -63,6 +64,18 @@ const DashboardContent: React.FC<DashboardContentProps> = ({ areas, onNavigate }
           loadDatabaseStats();
         }
       )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: TABLES.ANALISIS_ESPECIALIZADOS,
+        },
+        () => {
+          console.log('🔄 Análisis especializados actualizados, recargando stats...');
+          loadDatabaseStats();
+        }
+      )
       .subscribe();
 
     return () => {
@@ -89,16 +102,23 @@ const DashboardContent: React.FC<DashboardContentProps> = ({ areas, onNavigate }
         .from(TABLES.ANALISIS)
         .select('*', { count: 'exact', head: true });
 
+      // Count specialized analyses
+      const { count: especializadosCount } = await supabase
+        .from(TABLES.ANALISIS_ESPECIALIZADOS)
+        .select('*', { count: 'exact', head: true });
+
       setDbStats({
         zonasVerdesCount: zonasCount || 0,
         zonasVerdesArea: zonasArea,
         analisisCount: analisisCount || 0,
+        analisesEspecializados: especializadosCount || 0,
       });
 
       console.log('📊 Dashboard stats loaded:', {
         zonasVerdes: zonasCount,
         zonasArea,
         analisis: analisisCount,
+        analisesEspecializados: especializadosCount,
       });
     } catch (error) {
       console.error('Error loading dashboard stats:', error);
