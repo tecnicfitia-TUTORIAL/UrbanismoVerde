@@ -12,6 +12,7 @@ import { AnalysisReportPage } from '../analysis/AnalysisReportPage';
 import SpecializedAnalysisGallery from '../analysis/SpecializedAnalysisGallery';
 import SpecializedAnalysisDetail from '../analysis/SpecializedAnalysisDetail';
 import ConjuntosGallery from '../conjuntos/ConjuntosGallery';
+import InspeccionTejadosView from '../inspecciones/InspeccionTejadosView';
 import { Area, GeoJSONPolygon } from '../../types';
 import { useAnalysis } from '../../hooks/useAnalysis';
 import { coordinatesToGeoJSON } from '../../services/ai-analysis';
@@ -275,6 +276,9 @@ const Layout: React.FC = () => {
             }}
           />
         );
+      
+      case 'inspecciones-tejados':
+        return <InspeccionTejadosView onNavigate={handleNavigate} />;
       
       case 'analisis-new':
       case 'analisis-point':
