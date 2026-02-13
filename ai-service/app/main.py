@@ -25,11 +25,15 @@ app = FastAPI(
 # Configurar CORS para permitir requests desde frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:4000"],
+    allow_origins=["http://localhost:3000", "http://localhost:4000", "http://localhost:5173"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"]
 )
+
+# Register routers
+from app.api.endpoints import inspeccion
+app.include_router(inspeccion.router)
 
 # ==========================================
 # MODELOS DE DATOS (Pydantic)

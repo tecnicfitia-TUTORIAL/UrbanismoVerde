@@ -459,6 +459,14 @@ export interface InspeccionTejado {
   viabilidad_preliminar: 'alta' | 'media' | 'baja' | 'nula';
   prioridad: number; // 0-5
   
+  // AI Analysis fields
+  analisis_ia_resultado?: any;
+  analisis_ia_confianza?: number;
+  imagen_analizada_url?: string;
+  requiere_revision?: boolean;
+  revisado_por_usuario?: boolean;
+  fecha_analisis_ia?: string;
+  
   // Relationships
   informe_id?: string;
   zona_verde_id?: string;

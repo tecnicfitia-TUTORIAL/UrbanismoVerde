@@ -284,3 +284,166 @@ export function calculateOrientation(coordinates: [number, number][]): string {
 
   return 'Desconocido';
 }
+
+// ============================================================================
+// AI ANALYSIS FUNCTIONS
+// ============================================================================
+
+/**
+ * AI Analysis Result interface
+ */
+export interface AIAnalysisResult {
+  tipo_cubierta: 'plana' | 'inclinada' | 'mixta' | 'desconocido';
+  estado_conservacion: 'excelente' | 'bueno' | 'regular' | 'malo' | 'muy_malo';
+  inclinacion_estimada: number;
+  obstrucciones: Array<{
+    tipo: string;
+    descripcion: string;
+  }>;
+  confianza: number;
+  notas_ia: string;
+  error?: string;
+}
+
+/**
+ * Capture satellite image of rooftop area
+ * Uses Google Static Maps API for satellite imagery
+ */
+export async function captureRooftopImage(
+  coordinates: { type: 'Polygon'; coordinates: [number, number][][] }
+): Promise<string> {
+  // Calculate bounds and center from polygon
+  const coords = coordinates.coordinates[0];
+  const lons = coords.map(c => c[0]);
+  const lats = coords.map(c => c[1]);
+  
+  const minLon = Math.min(...lons);
+  const maxLon = Math.max(...lons);
+  const minLat = Math.min(...lats);
+  const maxLat = Math.max(...lats);
+  
+  const centerLon = (minLon + maxLon) / 2;
+  const centerLat = (minLat + maxLat) / 2;
+  
+  // Use Google Static Maps API with satellite view
+  // Note: In production, this should use a proper API key
+  const width = 512;
+  const height = 512;
+  const zoom = 20; // High detail for rooftop analysis
+  
+  // Create polygon path for Google Maps
+  const pathCoords = coords.map(c => `${c[1]},${c[0]}`).join('|');
+  
+  const url = `https://maps.googleapis.com/maps/api/staticmap?` +
+    `center=${centerLat},${centerLon}&` +
+    `zoom=${zoom}&` +
+    `size=${width}x${height}&` +
+    `maptype=satellite&` +
+    `path=color:0x00ff00ff|weight:2|${pathCoords}&` +
+    `key=AIzaSyDummy_Replace_With_Real_Key`;
+  
+  // For demo purposes without API key, return a placeholder
+  // In production, this would return the actual satellite image URL
+  return url;
+}
+
+/**
+ * Analyze rooftop with AI
+ */
+export async function analyzeRooftopWithAI(data: {
+  coordinates: { type: 'Polygon'; coordinates: [number, number][][] };
+  imageUrl: string;
+  area_m2: number;
+  orientacion: string;
+}): Promise<AIAnalysisResult> {
+  const AI_SERVICE_URL = import.meta.env.VITE_AI_SERVICE_URL || 'http://localhost:8000';
+  
+  try {
+    const response = await fetch(`${AI_SERVICE_URL}/api/inspecciones/analyze`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    
+    if (!response.ok) {
+      throw new Error(`AI analysis failed: ${response.statusText}`);
+    }
+    
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    console.error('Error analyzing rooftop:', error);
+    // Return fallback result
+    return {
+      tipo_cubierta: 'desconocido',
+      estado_conservacion: 'bueno',
+      inclinacion_estimada: 0,
+      obstrucciones: [],
+      confianza: 0,
+      notas_ia: 'Error al conectar con el servicio de IA. Se requiere inspección manual.',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    };
+  }
+}
+
+/**
+ * Batch analyze multiple rooftops
+ */
+export async function batchAnalyzeRooftops(
+  rooftops: Array<{
+    coordinates: { type: 'Polygon'; coordinates: [number, number][][] };
+    imageUrl: string;
+    area_m2: number;
+    orientacion: string;
+  }>
+): Promise<AIAnalysisResult[]> {
+  const AI_SERVICE_URL = import.meta.env.VITE_AI_SERVICE_URL || 'http://localhost:8000';
+  
+  try {
+    const response = await fetch(`${AI_SERVICE_URL}/api/inspecciones/analyze-batch`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ rooftops })
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Batch analysis failed: ${response.statusText}`);
+    }
+    
+    const data = await response.json();
+    return data.results;
+  } catch (error) {
+    console.error('Error in batch analysis:', error);
+    // Return fallback results for all rooftops
+    return rooftops.map(() => ({
+      tipo_cubierta: 'desconocido',
+      estado_conservacion: 'bueno',
+      inclinacion_estimada: 0,
+      obstrucciones: [],
+      confianza: 0,
+      notas_ia: 'Error al conectar con el servicio de IA. Se requiere inspección manual.',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    }));
+  }
+}
+
+/**
+ * Save multiple inspections at once
+ */
+export async function batchSaveInspecciones(
+  inspecciones: InspeccionTejado[]
+): Promise<string[]> {
+  const ids: string[] = [];
+  
+  for (const inspeccion of inspecciones) {
+    try {
+      const saved = await saveInspeccion(inspeccion);
+      ids.push(saved.id!);
+    } catch (error) {
+      console.error('Error saving inspection:', error);
+      throw error;
+    }
+  }
+  
+  return ids;
+}
