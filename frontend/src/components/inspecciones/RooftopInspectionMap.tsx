@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import { MapContainer, TileLayer, Polygon, useMapEvents, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { InspeccionTejado } from '../../types';
-import * as turf from '@turf/turf';
 
 interface RooftopInspectionMapProps {
   onRooftopClick: (geometry: any, coordinates: [number, number]) => void;
