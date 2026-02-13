@@ -1,12 +1,15 @@
 """
 Rooftop Vision Analysis Service using Google Gemini
-Replaces OpenAI GPT-4 Vision with Google Gemini API
+Updated for google-generativeai 0.8.3+ with proper API v1 support
 """
 
 import google.generativeai as genai
+from google.generativeai.types import HarmCategory, HarmBlockThreshold
 import os
 import json
 import logging
+import base64
+import httpx
 from typing import Dict, List, Optional
 from urllib.parse import urlparse
 
@@ -148,39 +151,57 @@ async def analyze_rooftop_from_image(
         return _fallback_response("Invalid image URL or source not allowed")
     
     try:
-        logger.info(f"🔍 Analyzing rooftop image with Gemini Vision")
+        logger.info(f"🔍 Analyzing rooftop image with Gemini 1.5 Flash")
         
-        # Initialize Gemini model with specific version
-        model = genai.GenerativeModel('gemini-pro-vision')
+        # Initialize Gemini model with updated API
+        model = genai.GenerativeModel(
+            model_name='gemini-1.5-flash',  # Correct model name for v0.8.3+
+            generation_config={
+                "temperature": 0.4,
+                "top_p": 0.95,
+                "top_k": 40,
+                "max_output_tokens": 2048,
+            },
+            safety_settings={
+                HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_NONE,
+                HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_NONE,
+                HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_NONE,
+                HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_NONE,
+            }
+        )
         
-        # For Gemini API, we need to pass the image URL directly in a different format
-        # Using the proper format for image URLs
-        import requests
-        from PIL import Image
-        from io import BytesIO
-        
-        # Download image from URL with additional security checks
+        # Download image from URL with security checks
         # SECURITY NOTE: URL is validated before this point via validate_image_url()
         # which enforces HTTPS-only, domain allowlisting, and prevents redirects
-        response_img = requests.get(
-            image_url,
-            timeout=30,
-            allow_redirects=False  # Prevent redirect-based SSRF
-        )
-        response_img.raise_for_status()
+        logger.info(f"📥 Downloading image from: {image_url[:50]}...")
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.get(
+                image_url,
+                follow_redirects=False  # Prevent redirect-based SSRF
+            )
+            response.raise_for_status()
+            
+            # Verify content type
+            content_type = response.headers.get('content-type', '')
+            if not content_type.startswith('image/'):
+                logger.error(f"❌ Invalid content type: {content_type}")
+                return _fallback_response("URL does not point to an image")
+            
+            image_data = response.content
         
-        # Verify content type
-        content_type = response_img.headers.get('content-type', '')
-        if not content_type.startswith('image/'):
-            logger.error(f"❌ Invalid content type: {content_type}")
-            return _fallback_response("URL does not point to an image")
+        logger.info(f"✅ Image downloaded: {len(image_data)} bytes")
         
-        img = Image.open(BytesIO(response_img.content))
+        # Encode image to base64
+        image_base64 = base64.b64encode(image_data).decode('utf-8')
         
         # Generate content with image and prompt
+        logger.info("🤖 Sending request to Gemini API...")
         response = model.generate_content([
             ANALYSIS_PROMPT,
-            img
+            {
+                "mime_type": "image/jpeg",
+                "data": image_base64
+            }
         ])
         
         # Extract and clean response
@@ -210,14 +231,18 @@ async def analyze_rooftop_from_image(
             if field not in result:
                 raise ValueError(f"Missing required field: {field}")
         
-        # Validate field types and values
+        # Validate and clamp numeric values
         if result["confianza"] < 0 or result["confianza"] > 100:
             result["confianza"] = max(0, min(100, result["confianza"]))
         
         if result["inclinacion_estimada"] < 0 or result["inclinacion_estimada"] > 45:
             result["inclinacion_estimada"] = max(0, min(45, result["inclinacion_estimada"]))
         
-        logger.info(f"✅ Analysis completed successfully (confidence: {result['confianza']}%)")
+        logger.info(f"✅ Analysis completed successfully")
+        logger.info(f"   - Type: {result['tipo_cubierta']}")
+        logger.info(f"   - Condition: {result['estado_conservacion']}")
+        logger.info(f"   - Confidence: {result['confianza']}%")
+        
         return result
         
     except json.JSONDecodeError as e:
@@ -225,8 +250,13 @@ async def analyze_rooftop_from_image(
         logger.error(f"Response content: {content}")
         return _fallback_response(f"JSON parsing error: {str(e)}")
         
+    except httpx.HTTPError as e:
+        logger.error(f"❌ HTTP error downloading image: {e}")
+        return _fallback_response(f"Error downloading image: {str(e)}")
+        
     except Exception as e:
         logger.error(f"❌ Error analyzing rooftop: {e}")
+        logger.error(f"Error type: {type(e).__name__}")
         return _fallback_response(str(e))
 
 

@@ -2,11 +2,11 @@
 fastapi==0.109.1
 uvicorn[standard]==0.27.0
 
-# Google AI - Gemini Vision
-google-generativeai==0.3.2
+# Google AI - Gemini Vision (UPDATED to latest stable)
+google-generativeai==0.8.3
 
-# Database (updated to version compatible with httpx 0.26.x)
-supabase==2.13.0
+# Database
+supabase==2.13.1
 
 # HTTP client
 httpx==0.26.0
