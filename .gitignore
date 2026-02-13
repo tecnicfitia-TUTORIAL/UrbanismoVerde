@@ -38,9 +38,6 @@ tmp/
 temp/
 *.tmp
 
-# Docker
-.dockerignore
-
 # Python
 __pycache__/
 *.py[cod]

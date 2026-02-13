@@ -1,24 +1,31 @@
-# Backend Dockerfile
-# Node.js 18 + TypeScript + Express
+# Use official Python runtime as base image
+FROM python:3.11-slim
 
-FROM node:18-alpine
-
+# Set working directory
 WORKDIR /app
 
-# Copiar archivos de dependencias
-COPY package*.json ./
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    gcc \
+    g++ \
+    && rm -rf /var/lib/apt/lists/*
 
-# Instalar dependencias
-RUN npm install
+# Copy requirements first (for better caching)
+COPY requirements.txt .
 
-# Copiar código fuente
+# Install Python dependencies
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
+
+# Copy application code
 COPY . .
 
-# Compilar TypeScript
-RUN npm run build
+# Cloud Run sets PORT environment variable
+ENV PORT=8080
 
-# Exponer puerto
-EXPOSE 4000
+# Expose port
+EXPOSE 8080
 
-# Comando por defecto (desarrollo)
-CMD ["npm", "run", "dev"]
+# Run with uvicorn
+# Use exec form to handle signals properly
+CMD exec uvicorn main:app --host 0.0.0.0 --port ${PORT} --workers 1
