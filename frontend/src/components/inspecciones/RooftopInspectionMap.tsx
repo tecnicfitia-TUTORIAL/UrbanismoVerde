@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { MapContainer, TileLayer, Polygon, useMapEvents, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { InspeccionTejado } from '../../types';
+import SearchControl from '../maps/SearchControl';
 
 interface SelectedRooftop {
   tempId?: string;
@@ -202,6 +203,15 @@ const RooftopInspectionMap: React.FC<RooftopInspectionMapProps> = ({
           url="https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}"
           subdomains={['mt0', 'mt1', 'mt2', 'mt3']}
           attribution='&copy; Google'
+        />
+
+        {/* Address Search Control */}
+        {/* Note: SearchControl internally handles map panning to selected location */}
+        <SearchControl 
+          onLocationSelected={(lat, lng, label) => {
+            console.log('📍 Dirección encontrada:', label);
+            // Map is automatically centered by SearchControl at zoom level 16
+          }}
         />
 
         <ClickHandler onClick={handleMapClick} />
