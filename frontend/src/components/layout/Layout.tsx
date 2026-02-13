@@ -10,11 +10,13 @@ import BudgetGalleryContent from '../budget/BudgetGalleryContent';
 import { AnalysisResults } from '../analysis/AnalysisResults';
 import { AnalysisReportPage } from '../analysis/AnalysisReportPage';
 import SpecializedAnalysisGallery from '../analysis/SpecializedAnalysisGallery';
+import SpecializedAnalysisDetail from '../analysis/SpecializedAnalysisDetail';
 import { Area, FormData, GeoJSONPolygon } from '../../types';
 import { useAnalysis } from '../../hooks/useAnalysis';
 import { coordinatesToGeoJSON } from '../../services/ai-analysis';
 import { supabase, TABLES } from '../../config/supabase';
 import { saveZonaVerde, loadZonasVerdes, deleteZonaVerde } from '../../services/zona-storage';
+import { SpecializedAnalysisWithZone } from '../../services/specialized-analysis-service';
 
 // Calcular área usando fórmula de Haversine (aproximación para polígonos pequeños)
 const calcularArea = (coords: [number, number][]): number => {
@@ -41,6 +43,7 @@ const Layout: React.FC = () => {
   const [isDrawing, setIsDrawing] = useState(false);
   const [areas, setAreas] = useState<Area[]>([]);
   const [selectedArea, setSelectedArea] = useState<Area | null>(null);
+  const [selectedSpecializedAnalysis, setSelectedSpecializedAnalysis] = useState<SpecializedAnalysisWithZone | null>(null);
   const [currentView, setCurrentView] = useState('dashboard');
   const [dbZonasCount, setDbZonasCount] = useState(0);
   const tempCoordsRef = useRef<[number, number][]>([]);
@@ -192,10 +195,14 @@ const Layout: React.FC = () => {
   };
 
   const handleNavigate = (view: string, data?: any) => {
+    console.log('Navigating to:', view, data);
     setCurrentView(view);
-    if (data) {
-      setSelectedArea(data);
+    
+    if (data?.selectedArea) setSelectedArea(data.selectedArea);
+    if (data?.selectedSpecializedAnalysis) {
+      setSelectedSpecializedAnalysis(data.selectedSpecializedAnalysis);
     }
+    
     if (view === 'zonas-create') {
       setIsDrawing(true);
     }
@@ -238,6 +245,14 @@ const Layout: React.FC = () => {
       
       case 'analisis-especializados':
         return <SpecializedAnalysisGallery onNavigate={handleNavigate} />;
+      
+      case 'analisis-especializado-detalle':
+        return selectedSpecializedAnalysis ? (
+          <SpecializedAnalysisDetail
+            analysis={selectedSpecializedAnalysis}
+            onBack={() => setCurrentView('analisis-especializados')}
+          />
+        ) : null;
       
       case 'analisis-new':
       case 'analisis-point':
