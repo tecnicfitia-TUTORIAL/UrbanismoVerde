@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { MapPin, Ruler, Compass, Star } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { MapPin, Ruler, Compass, Star, Bot, Edit2 } from 'lucide-react';
 import { InspeccionTejado } from '../../types';
 
 interface InspectionDataPanelProps {
@@ -13,25 +13,70 @@ const InspectionDataPanel: React.FC<InspectionDataPanelProps> = ({
   onSave,
   onCancel
 }) => {
+  const hasAIAnalysis = rooftop.analisis_ia_resultado || rooftop.tipo_cubierta || rooftop.estado_conservacion;
+  
   const [formData, setFormData] = useState({
-    nombre: `Inspección ${rooftop.direccion || ''}`,
-    notas: '',
-    tipo_cubierta: 'plana' as 'plana' | 'inclinada' | 'mixta' | 'desconocido',
-    estado_conservacion: 'bueno' as 'excelente' | 'bueno' | 'regular' | 'malo' | 'muy_malo',
-    viabilidad_preliminar: 'alta' as 'alta' | 'media' | 'baja' | 'nula',
-    prioridad: 3
+    nombre: rooftop.nombre || `Inspección ${rooftop.direccion || ''}`,
+    notas: rooftop.notas || '',
+    tipo_cubierta: rooftop.tipo_cubierta || ('plana' as 'plana' | 'inclinada' | 'mixta' | 'desconocido'),
+    estado_conservacion: rooftop.estado_conservacion || ('bueno' as 'excelente' | 'bueno' | 'regular' | 'malo' | 'muy_malo'),
+    viabilidad_preliminar: rooftop.viabilidad_preliminar || ('alta' as 'alta' | 'media' | 'baja' | 'nula'),
+    prioridad: rooftop.prioridad || 3,
+    inclinacion_estimada: rooftop.inclinacion_estimada || 0,
   });
+
+  const [manualOverride, setManualOverride] = useState({
+    tipo_cubierta: false,
+    estado_conservacion: false
+  });
+
+  // Initialize form data from rooftop props when they change
+  useEffect(() => {
+    if (rooftop) {
+      setFormData({
+        nombre: rooftop.nombre || `Inspección ${rooftop.direccion || ''}`,
+        notas: rooftop.notas || '',
+        tipo_cubierta: rooftop.tipo_cubierta || 'plana',
+        estado_conservacion: rooftop.estado_conservacion || 'bueno',
+        viabilidad_preliminar: rooftop.viabilidad_preliminar || 'alta',
+        prioridad: rooftop.prioridad || 3,
+        inclinacion_estimada: rooftop.inclinacion_estimada || 0,
+      });
+    }
+  }, [rooftop]);
 
   const handleSave = () => {
     onSave({
       ...rooftop,
-      ...formData
+      ...formData,
+      revisado_por_usuario: hasAIAnalysis && (manualOverride.tipo_cubierta || manualOverride.estado_conservacion)
     } as InspeccionTejado);
   };
 
+  const getConfidenceBadge = () => {
+    const confidence = rooftop.analisis_ia_confianza || 0;
+    if (confidence >= 80) return { color: 'bg-green-100 text-green-800', icon: '✓' };
+    if (confidence >= 60) return { color: 'bg-yellow-100 text-yellow-800', icon: '⚠' };
+    return { color: 'bg-red-100 text-red-800', icon: '!' };
+  };
+
+  const badge = getConfidenceBadge();
+
   return (
-    <div className="p-6">
+    <div className="p-6 max-h-screen overflow-y-auto">
       <h2 className="text-2xl font-bold mb-6">Datos del Tejado</h2>
+
+      {/* AI Analysis Badge */}
+      {hasAIAnalysis && rooftop.analisis_ia_confianza !== undefined && (
+        <div className={`mb-4 p-3 rounded-lg border ${badge.color}`}>
+          <div className="flex items-center gap-2">
+            <Bot size={18} />
+            <span className="font-medium">
+              {badge.icon} Análisis IA - Confianza: {rooftop.analisis_ia_confianza}%
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* Auto-detected data */}
       <div className="space-y-4 mb-6">
@@ -79,34 +124,104 @@ const InspectionDataPanel: React.FC<InspectionDataPanelProps> = ({
           />
         </div>
 
+        {/* Tipo de Cubierta - AI-enhanced */}
         <div>
-          <label className="block text-sm font-medium mb-1">Tipo de Cubierta</label>
-          <select
-            value={formData.tipo_cubierta}
-            onChange={(e) => setFormData({...formData, tipo_cubierta: e.target.value as any})}
-            className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="plana">Plana</option>
-            <option value="inclinada">Inclinada</option>
-            <option value="mixta">Mixta</option>
-            <option value="desconocido">Desconocido</option>
-          </select>
+          <label className="block text-sm font-medium mb-2">Tipo de Cubierta</label>
+          {hasAIAnalysis && !manualOverride.tipo_cubierta ? (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+              <div className="flex items-center gap-2 mb-1">
+                <Bot size={16} className="text-green-600" />
+                <span className="text-sm font-medium text-green-800">
+                  Detectado por IA ({rooftop.analisis_ia_confianza}% confianza)
+                </span>
+              </div>
+              <div className="text-lg font-semibold capitalize text-green-900">
+                {formData.tipo_cubierta}
+              </div>
+              <button
+                onClick={() => setManualOverride({...manualOverride, tipo_cubierta: true})}
+                className="text-xs text-blue-600 mt-2 flex items-center gap-1 hover:underline"
+              >
+                <Edit2 size={12} />
+                Cambiar manualmente
+              </button>
+            </div>
+          ) : (
+            <select
+              value={formData.tipo_cubierta}
+              onChange={(e) => setFormData({...formData, tipo_cubierta: e.target.value as any})}
+              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="plana">Plana</option>
+              <option value="inclinada">Inclinada</option>
+              <option value="mixta">Mixta</option>
+              <option value="desconocido">Desconocido</option>
+            </select>
+          )}
         </div>
 
+        {/* Estado de Conservación - AI-enhanced */}
         <div>
-          <label className="block text-sm font-medium mb-1">Estado de Conservación</label>
-          <select
-            value={formData.estado_conservacion}
-            onChange={(e) => setFormData({...formData, estado_conservacion: e.target.value as any})}
-            className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="excelente">Excelente</option>
-            <option value="bueno">Bueno</option>
-            <option value="regular">Regular</option>
-            <option value="malo">Malo</option>
-            <option value="muy_malo">Muy Malo</option>
-          </select>
+          <label className="block text-sm font-medium mb-2">Estado de Conservación</label>
+          {hasAIAnalysis && !manualOverride.estado_conservacion ? (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+              <div className="flex items-center gap-2 mb-1">
+                <Bot size={16} className="text-green-600" />
+                <span className="text-sm font-medium text-green-800">
+                  Detectado por IA ({rooftop.analisis_ia_confianza}% confianza)
+                </span>
+              </div>
+              <div className="text-lg font-semibold capitalize text-green-900">
+                {formData.estado_conservacion.replace('_', ' ')}
+              </div>
+              <button
+                onClick={() => setManualOverride({...manualOverride, estado_conservacion: true})}
+                className="text-xs text-blue-600 mt-2 flex items-center gap-1 hover:underline"
+              >
+                <Edit2 size={12} />
+                Cambiar manualmente
+              </button>
+            </div>
+          ) : (
+            <select
+              value={formData.estado_conservacion}
+              onChange={(e) => setFormData({...formData, estado_conservacion: e.target.value as any})}
+              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="excelente">Excelente</option>
+              <option value="bueno">Bueno</option>
+              <option value="regular">Regular</option>
+              <option value="malo">Malo</option>
+              <option value="muy_malo">Muy Malo</option>
+            </select>
+          )}
         </div>
+
+        {/* Inclinación estimada - read-only if from AI */}
+        {hasAIAnalysis && formData.inclinacion_estimada > 0 && (
+          <div>
+            <label className="block text-sm font-medium mb-1">Inclinación Estimada</label>
+            <div className="bg-gray-50 rounded-lg p-3">
+              <div className="text-lg font-semibold">{formData.inclinacion_estimada}°</div>
+            </div>
+          </div>
+        )}
+
+        {/* Obstrucciones - show if detected by AI */}
+        {hasAIAnalysis && rooftop.obstrucciones && rooftop.obstrucciones.length > 0 && (
+          <div>
+            <label className="block text-sm font-medium mb-2">Obstrucciones Detectadas</label>
+            <div className="bg-gray-50 border rounded-lg p-3">
+              <ul className="space-y-1">
+                {rooftop.obstrucciones.map((obs, idx) => (
+                  <li key={idx} className="text-sm text-gray-700">
+                    • {obs.descripcion || obs.tipo}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        )}
 
         <div>
           <label className="block text-sm font-medium mb-1">Viabilidad Preliminar</label>

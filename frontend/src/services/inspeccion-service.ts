@@ -31,7 +31,14 @@ export async function saveInspeccion(data: InspeccionTejado): Promise<Inspeccion
       viabilidad_preliminar: data.viabilidad_preliminar,
       prioridad: data.prioridad,
       informe_id: data.informe_id,
-      zona_verde_id: data.zona_verde_id
+      zona_verde_id: data.zona_verde_id,
+      // AI analysis fields
+      analisis_ia_resultado: data.analisis_ia_resultado,
+      analisis_ia_confianza: data.analisis_ia_confianza,
+      imagen_analizada_url: data.imagen_analizada_url,
+      requiere_revision: data.requiere_revision,
+      revisado_por_usuario: data.revisado_por_usuario,
+      fecha_analisis_ia: data.fecha_analisis_ia
     })
     .select()
     .single();
