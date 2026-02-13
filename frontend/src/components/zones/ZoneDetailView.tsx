@@ -18,14 +18,12 @@ interface ZoneDetailViewProps {
   };
   onBack: () => void;
   onViewAnalysis?: (zoneId: string) => void;
-  onNavigate: (view: string, data?: any) => void;
 }
 
 const ZoneDetailView: React.FC<ZoneDetailViewProps> = ({
   zone,
   onBack,
-  onViewAnalysis,
-  onNavigate
+  onViewAnalysis
 }) => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);

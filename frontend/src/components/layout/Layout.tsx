@@ -4,7 +4,6 @@ import Sidebar from './Sidebar';
 import FullScreenMap from '../maps/FullScreenMap';
 import DashboardContent from '../dashboard/DashboardContent';
 import ZonesGalleryContent from '../zones/ZonesGalleryContent';
-import ZoneDetailContent from '../zones/ZoneDetailContent';
 import ZoneDetailView from '../zones/ZoneDetailView';
 import AnalysisWorkflowContent from '../analysis/AnalysisWorkflowContent';
 import BudgetGalleryContent from '../budget/BudgetGalleryContent';
@@ -13,11 +12,11 @@ import { AnalysisReportPage } from '../analysis/AnalysisReportPage';
 import SpecializedAnalysisGallery from '../analysis/SpecializedAnalysisGallery';
 import SpecializedAnalysisDetail from '../analysis/SpecializedAnalysisDetail';
 import ConjuntosGallery from '../conjuntos/ConjuntosGallery';
-import { Area, FormData, GeoJSONPolygon } from '../../types';
+import { Area, GeoJSONPolygon } from '../../types';
 import { useAnalysis } from '../../hooks/useAnalysis';
 import { coordinatesToGeoJSON } from '../../services/ai-analysis';
 import { supabase, TABLES } from '../../config/supabase';
-import { saveZonaVerde, loadZonasVerdes, deleteZonaVerde } from '../../services/zona-storage';
+import { deleteZonaVerde } from '../../services/zona-storage';
 import { SpecializedAnalysisWithZone } from '../../services/specialized-analysis-service';
 import { Z_INDEX } from '../../constants/zIndex';
 
@@ -247,7 +246,6 @@ const Layout: React.FC = () => {
               // Navigate to analysis view for this zone
               console.log('View analysis for zone:', zoneId);
             }}
-            onNavigate={handleNavigate}
           />
         ) : (
           <div>No zone selected</div>

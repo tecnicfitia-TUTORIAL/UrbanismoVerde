@@ -1,11 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, Building2, Layers, CheckCircle, AlertCircle, Trash2, MapIcon } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ArrowLeft, Trash2, MapIcon } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { MapContainer, TileLayer, Polygon } from 'react-leaflet';
 import { LatLngBoundsExpression } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { SpecializedAnalysisWithZone, deleteSpecializedAnalysis } from '../../services/specialized-analysis-service';
-import { getZonaVerdeById } from '../../services/zona-storage';
 import { supabase, TABLES } from '../../config/supabase';
 import Breadcrumbs from '../common/Breadcrumbs';
 
