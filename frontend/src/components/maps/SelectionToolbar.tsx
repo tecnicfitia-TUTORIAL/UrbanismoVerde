@@ -40,6 +40,8 @@ export const SelectionToolbar: React.FC<SelectionToolbarProps> = ({
     zona_abandonada: 'Zonas abandonadas',
     espacio_abandonado: 'Espacios abandonados',
     zona_industrial: 'Zonas industriales',
+    fachada: 'Fachadas',
+    muro: 'Muros',
     otro: 'Otros',
   };
 

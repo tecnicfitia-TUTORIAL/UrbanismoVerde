@@ -382,7 +382,7 @@ export interface SpecializationResponse {
 // Selected zone for multi-selection mode
 export interface SelectedZone {
   id: string; // Unique ID for this selection
-  type: 'tejado' | 'azotea' | 'solar_vacio' | 'parque_degradado' | 'zona_abandonada' | 'espacio_abandonado' | 'zona_industrial' | 'otro';
+  type: 'tejado' | 'azotea' | 'solar_vacio' | 'parque_degradado' | 'zona_abandonada' | 'espacio_abandonado' | 'zona_industrial' | 'fachada' | 'muro' | 'otro';
   coordinates: [number, number][];
   area_m2: number;
   geometry: GeoJSONPolygon;

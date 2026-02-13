@@ -55,6 +55,8 @@ export const SaveSelectionModal: React.FC<SaveSelectionModalProps> = ({
     zona_abandonada: 'zonas abandonadas',
     espacio_abandonado: 'espacios abandonados',
     zona_industrial: 'zonas industriales',
+    fachada: 'fachadas',
+    muro: 'muros',
     otro: 'otros',
   };
 
@@ -80,7 +82,7 @@ export const SaveSelectionModal: React.FC<SaveSelectionModalProps> = ({
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && e.ctrlKey) {
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
       handleSave();
     } else if (e.key === 'Escape') {
       onClose();
@@ -194,7 +196,7 @@ export const SaveSelectionModal: React.FC<SaveSelectionModalProps> = ({
 
         {/* Keyboard Hint */}
         <div className="px-6 pb-3 text-xs text-gray-500 text-center">
-          Presiona <kbd className="px-2 py-1 bg-gray-100 rounded border border-gray-300">Ctrl+Enter</kbd> para guardar
+          Presiona <kbd className="px-2 py-1 bg-gray-100 rounded border border-gray-300">Ctrl/Cmd+Enter</kbd> para guardar
         </div>
       </div>
     </div>

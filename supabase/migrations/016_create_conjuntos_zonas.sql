@@ -81,17 +81,21 @@ ALTER TABLE conjuntos_zonas ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Allow public read access on conjuntos_zonas"
   ON conjuntos_zonas FOR SELECT USING (true);
 
--- Allow authenticated users to insert
+-- Allow authenticated users to insert their own conjuntos
 CREATE POLICY "Allow authenticated users to insert conjuntos_zonas"
-  ON conjuntos_zonas FOR INSERT WITH CHECK (true);
+  ON conjuntos_zonas FOR INSERT 
+  WITH CHECK (auth.uid() = user_id OR user_id IS NULL);
 
--- Allow users to update their own conjuntos
+-- Allow users to update only their own conjuntos
 CREATE POLICY "Allow users to update their own conjuntos_zonas"
-  ON conjuntos_zonas FOR UPDATE USING (true) WITH CHECK (true);
+  ON conjuntos_zonas FOR UPDATE 
+  USING (auth.uid() = user_id OR user_id IS NULL) 
+  WITH CHECK (auth.uid() = user_id OR user_id IS NULL);
 
--- Allow users to delete their own conjuntos
+-- Allow users to delete only their own conjuntos
 CREATE POLICY "Allow users to delete their own conjuntos_zonas"
-  ON conjuntos_zonas FOR DELETE USING (true);
+  ON conjuntos_zonas FOR DELETE 
+  USING (auth.uid() = user_id OR user_id IS NULL);
 
 -- ============================================
 -- RLS POLICIES: zonas_en_conjunto

@@ -69,6 +69,8 @@ export const ConjuntosGallery: React.FC<ConjuntosGalleryProps> = ({
     zona_abandonada: 'Zonas abandonadas',
     espacio_abandonado: 'Espacios abandonados',
     zona_industrial: 'Zonas industriales',
+    fachada: 'Fachadas',
+    muro: 'Muros',
     otro: 'Otros',
   };
 

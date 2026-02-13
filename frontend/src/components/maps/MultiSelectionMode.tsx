@@ -124,17 +124,43 @@ export const MultiSelectionMode: React.FC<MultiSelectionModeProps> = ({
 
     // Find all polygon elements on the map and add click handlers
     const handleMapClick = (e: L.LeafletMouseEvent) => {
-      // Check if we clicked on an area
+      // Check if we clicked on an area using proper point-in-polygon check
       const clickedArea = areas.find(area => {
-        // Use Leaflet's point in polygon check
+        // Create a Leaflet polygon from coordinates
         const polygon = L.polygon(area.coordenadas);
-        return polygon.getBounds().contains(e.latlng);
+        // Use Leaflet's built-in contains method for accurate point-in-polygon check
+        const bounds = polygon.getBounds();
+        if (!bounds.contains(e.latlng)) {
+          return false; // Quick reject if outside bounds
+        }
+        // Check if point is actually inside the polygon
+        // Convert to geojson and use ray casting algorithm
+        const point = [e.latlng.lat, e.latlng.lng];
+        return isPointInPolygon(point, area.coordenadas);
       });
 
       if (clickedArea) {
         toggleZoneSelection(clickedArea);
         L.DomEvent.stopPropagation(e);
       }
+    };
+
+    // Ray casting algorithm for point-in-polygon test
+    const isPointInPolygon = (point: number[], polygon: [number, number][]): boolean => {
+      const [lat, lng] = point;
+      let inside = false;
+      
+      for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+        const [xi, yi] = polygon[i];
+        const [xj, yj] = polygon[j];
+        
+        const intersect = ((yi > lng) !== (yj > lng))
+          && (lat < (xj - xi) * (lng - yi) / (yj - yi) + xi);
+        
+        if (intersect) inside = !inside;
+      }
+      
+      return inside;
     };
 
     map.on('click', handleMapClick);

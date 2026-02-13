@@ -113,7 +113,12 @@ export async function saveConjuntoZonas(
     if (zonasError) {
       console.error('Error creando zonas en conjunto:', zonasError);
       // Try to rollback by deleting the conjunto
-      await supabase.from(TABLES.CONJUNTOS_ZONAS).delete().eq('id', conjuntoId);
+      try {
+        await supabase.from(TABLES.CONJUNTOS_ZONAS).delete().eq('id', conjuntoId);
+        console.log('✅ Rollback successful: conjunto deleted');
+      } catch (rollbackError) {
+        console.error('❌ Rollback failed:', rollbackError);
+      }
       throw new Error(`Failed to create zones: ${zonasError.message}`);
     }
 
