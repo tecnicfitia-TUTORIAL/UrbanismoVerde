@@ -374,3 +374,41 @@ export interface SpecializationResponse {
   viabilidad_final: 'alta' | 'media' | 'baja' | 'nula';
   error?: string;
 }
+
+// ============================================================================
+// CONJUNTOS DE ZONAS - Multi-Selection Collections
+// ============================================================================
+
+// Selected zone for multi-selection mode
+export interface SelectedZone {
+  id: string; // Unique ID for this selection
+  type: 'tejado' | 'azotea' | 'solar_vacio' | 'parque_degradado' | 'zona_abandonada' | 'espacio_abandonado' | 'zona_industrial' | 'fachada' | 'muro' | 'otro';
+  coordinates: [number, number][];
+  area_m2: number;
+  geometry: GeoJSONPolygon;
+}
+
+// Conjunto de zonas database record
+export interface ConjuntoZonasData {
+  id: string;
+  nombre: string;
+  descripcion?: string;
+  area_total_m2: number;
+  cantidad_zonas: number;
+  tipos_zonas: Record<string, number>; // {"tejado": 5, "solar_vacio": 2}
+  user_id?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+// Zona en conjunto database record
+export interface ZonaEnConjuntoData {
+  id: string;
+  conjunto_id: string;
+  tipo_zona: string;
+  coordenadas: GeoJSONPolygon;
+  area_m2: number;
+  orden: number;
+  metadata: Record<string, any>;
+  created_at: string;
+}

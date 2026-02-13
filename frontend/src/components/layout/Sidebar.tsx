@@ -3,6 +3,7 @@ import { Home, MapPin, PlusCircle, Brain, BarChart3, Euro, Menu, X, List, Search
 import { Area, MenuItem as MenuItemType } from '../../types';
 import SubMenu from './SubMenu';
 import { countSpecializedAnalyses } from '../../services/specialized-analysis-service';
+import { countConjuntosZonas } from '../../services/conjunto-zonas-service';
 
 interface SidebarProps {
   isDrawing: boolean;
@@ -32,10 +33,12 @@ const Sidebar: React.FC<SidebarProps> = ({
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [expandedSections, setExpandedSections] = useState<string[]>(['dashboard']);
   const [especialesCount, setEspecialesCount] = useState(0);
+  const [conjuntosCount, setConjuntosCount] = useState(0);
 
   // Load specialized analysis count
   useEffect(() => {
     loadEspecialesCount();
+    loadConjuntosCount();
   }, []);
 
   const loadEspecialesCount = async () => {
@@ -44,6 +47,15 @@ const Sidebar: React.FC<SidebarProps> = ({
       setEspecialesCount(count);
     } catch (error) {
       console.error('Error loading specialized analyses count:', error);
+    }
+  };
+
+  const loadConjuntosCount = async () => {
+    try {
+      const count = await countConjuntosZonas();
+      setConjuntosCount(count);
+    } catch (error) {
+      console.error('Error loading conjuntos count:', error);
     }
   };
 
@@ -86,6 +98,14 @@ const Sidebar: React.FC<SidebarProps> = ({
       label: 'Análisis Especializados',
       view: 'analisis-especializados',
       count: especialesCount,
+      subItems: []
+    },
+    {
+      id: 'conjuntos-zonas',
+      icon: <Layers size={20} />,
+      label: 'Conjuntos de Zonas',
+      view: 'conjuntos-zonas',
+      count: conjuntosCount,
       subItems: []
     },
     {

@@ -11,6 +11,7 @@ import { AnalysisResults } from '../analysis/AnalysisResults';
 import { AnalysisReportPage } from '../analysis/AnalysisReportPage';
 import SpecializedAnalysisGallery from '../analysis/SpecializedAnalysisGallery';
 import SpecializedAnalysisDetail from '../analysis/SpecializedAnalysisDetail';
+import ConjuntosGallery from '../conjuntos/ConjuntosGallery';
 import { Area, FormData, GeoJSONPolygon } from '../../types';
 import { useAnalysis } from '../../hooks/useAnalysis';
 import { coordinatesToGeoJSON } from '../../services/ai-analysis';
@@ -255,6 +256,20 @@ const Layout: React.FC = () => {
             onBack={() => setCurrentView('analisis-especializados')}
           />
         ) : null;
+      
+      case 'conjuntos-zonas':
+        return (
+          <ConjuntosGallery
+            onViewOnMap={(conjuntoId) => {
+              console.log('View conjunto on map:', conjuntoId);
+              toast.info('Visualización en mapa en desarrollo');
+            }}
+            onConjuntoDeleted={() => {
+              // Reload count in sidebar
+              loadZonasCount();
+            }}
+          />
+        );
       
       case 'analisis-new':
       case 'analisis-point':
