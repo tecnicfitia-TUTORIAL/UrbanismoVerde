@@ -1,31 +1,24 @@
-# Use official Python runtime as base image
-FROM python:3.11-slim
+# Updated Dockerfile
 
-# Set working directory
+FROM python:3.8
+
+# Argument to bust cache
+ARG CACHEBUST=\${CACHEBUST}
+
+# Set the working directory
 WORKDIR /app
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    gcc \
-    g++ \
-    && rm -rf /var/lib/apt/lists/*
-
-# Copy requirements first (for better caching)
+# Copy the requirements file
 COPY requirements.txt .
 
-# Install Python dependencies
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+# Install dependencies without cache
+RUN pip install --no-cache-dir --force-reinstall -r requirements.txt
 
-# Copy application code
+# Copy the rest of the application
 COPY . .
 
-# Cloud Run sets PORT environment variable
-ENV PORT=8080
+# Expose the port
+EXPOSE 5000
 
-# Expose port
-EXPOSE 8080
-
-# Run with uvicorn
-# Use exec form to handle signals properly
-CMD exec uvicorn main:app --host 0.0.0.0 --port ${PORT} --workers 1
+# Command to run the application
+CMD ["python", "app.py"]
