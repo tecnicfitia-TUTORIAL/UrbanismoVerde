@@ -1,5 +1,5 @@
 # FastAPI framework
-fastapi==0.109.0
+fastapi==0.109.1
 uvicorn[standard]==0.27.0
 
 # Google AI - Gemini Vision
@@ -20,10 +20,10 @@ pydantic-settings==2.1.0
 python-dotenv==1.0.0
 
 # File handling
-python-multipart==0.0.6
+python-multipart==0.0.22
 
 # Image processing (if needed for future features)
-Pillow==10.2.0
+Pillow==12.1.1
 
 # Utilities
 python-dateutil==2.8.2
