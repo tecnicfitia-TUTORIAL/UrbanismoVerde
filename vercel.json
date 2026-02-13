@@ -1,1 +1,35 @@
-{\n  "buildCommand": "cd frontend && npm install && npm run build",\n  "outputDirectory": "frontend/dist",\n  "installCommand": "echo 'Skip root install'",\n  "headers": [\n    {\n      "source": "/index.html",\n      "headers": [\n        {\n          "key": "Cache-Control",\n          "value": "public, max-age=0, must-revalidate"\n        }\n      ]\n    },\n    {\n      "source": "/assets/(.*)",\n      "headers": [\n        {\n          "key": "Cache-Control",\n          "value": "public, max-age=31536000, immutable"\n        }\n      ]\n    },\n    {\n      "source": "/(.*\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot|json))",\n      "headers": [\n        {\n          "key": "Cache-Control",\n          "value": "public, max-age=31536000, immutable"\n        }\n      ]\n    }\n  ],\n  "rewrites": [\n    {\n      "source": "/api/analyze",\n      "destination": "/api/analyze.py"\n    },\n    {\n      "source": "/(.*)",\n      "destination": "/index.html"\n    }\n  ]\n}
+{
+  "buildCommand": "cd frontend && npm install && npm run build",
+  "outputDirectory": "frontend/dist",
+  "installCommand": "echo 'Skip root install'",
+  "headers": [
+    {
+      "source": "/index.html",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/assets/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/api/analyze",
+      "destination": "/api/analyze.py"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
