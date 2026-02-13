@@ -206,11 +206,11 @@ const RooftopInspectionMap: React.FC<RooftopInspectionMapProps> = ({
         />
 
         {/* Address Search Control */}
-        {/* Note: SearchControl internally handles map panning to selected location */}
+        {/* Note: SearchControl internally handles map panning to selected location with smooth flyTo animation */}
         <SearchControl 
           onLocationSelected={(lat, lng, label) => {
             console.log('📍 Dirección encontrada:', label);
-            // Map is automatically centered by SearchControl at zoom level 16
+            // Map is automatically centered by SearchControl at zoom level 18 with smooth animation
           }}
         />
 
