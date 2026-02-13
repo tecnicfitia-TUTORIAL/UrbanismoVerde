@@ -2,11 +2,17 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { MapContainer, TileLayer, Polygon, Popup, useMapEvents, LayersControl, Marker } from 'react-leaflet';
 import { LatLng, Icon } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { Area, coloresPorTipo } from '../../types';
+import { Area, coloresPorTipo, SelectedZone } from '../../types';
 import { AnalysisPanel } from '../panels/AnalysisPanel';
 import { DrawingToolsPanel } from '../panels/DrawingToolsPanel';
 import { DrawingMarkers } from './DrawingMarker';
 import SearchControl from './SearchControl';
+import MultiSelectionMode from './MultiSelectionMode';
+import SelectionToolbar from './SelectionToolbar';
+import SaveSelectionModal from './SaveSelectionModal';
+import { saveConjuntoZonas } from '../../services/conjunto-zonas-service';
+import { Layers } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 // Custom icon for search marker
 const searchMarkerIcon = new Icon({
@@ -55,6 +61,11 @@ const FullScreenMap: React.FC<FullScreenMapProps> = ({
   const [selectedPoint, setSelectedPoint] = useState<{ lat: number; lon: number } | null>(null);
   const [showAnalysis, setShowAnalysis] = useState(false);
   const [searchMarker, setSearchMarker] = useState<{ lat: number; lng: number; label: string } | null>(null);
+
+  // Multi-selection mode state
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
+  const [selectedZones, setSelectedZones] = useState<SelectedZone[]>([]);
+  const [showSaveModal, setShowSaveModal] = useState(false);
 
   // Deshacer último punto
   const handleUndoPoint = useCallback(() => {
@@ -145,8 +156,88 @@ const FullScreenMap: React.FC<FullScreenMapProps> = ({
     handleMapClick(latlng);
   };
 
+  // Multi-selection handlers
+  const handleStartSelectionMode = () => {
+    setIsSelectionMode(true);
+    setSelectedZones([]);
+    // Disable drawing mode if active
+    if (isDrawing) {
+      setIsDrawing(false);
+      setCurrentPolygon([]);
+    }
+  };
+
+  const handleCancelSelectionMode = () => {
+    setIsSelectionMode(false);
+    setSelectedZones([]);
+  };
+
+  const handleOpenSaveModal = () => {
+    setShowSaveModal(true);
+  };
+
+  const handleSaveSelection = async (nombre: string, descripcion?: string) => {
+    try {
+      // Convert selected zones to ZonaEnConjunto format
+      const zonas = selectedZones.map((zone, index) => ({
+        tipo_zona: zone.type,
+        coordenadas: zone.geometry,
+        area_m2: zone.area_m2,
+        orden: index,
+        metadata: {},
+      }));
+
+      await saveConjuntoZonas(nombre, descripcion, zonas);
+      
+      toast.success(`Conjunto "${nombre}" guardado exitosamente`);
+      
+      // Reset selection state
+      setIsSelectionMode(false);
+      setSelectedZones([]);
+      setShowSaveModal(false);
+    } catch (error) {
+      console.error('Error saving conjunto:', error);
+      throw error; // Let the modal handle the error display
+    }
+  };
+
+  const calculateTotalArea = (zones: SelectedZone[]) => {
+    return zones.reduce((sum, zone) => sum + zone.area_m2, 0);
+  };
+
   return (
     <div className="relative w-full h-full">
+      {/* Multi-Selection Mode Button */}
+      {!isDrawing && !isSelectionMode && (
+        <button
+          onClick={handleStartSelectionMode}
+          className="absolute top-4 right-4 z-[1000] bg-white hover:bg-gray-50 text-gray-700 font-medium py-2 px-4 rounded-lg shadow-lg border border-gray-200 flex items-center space-x-2 transition-colors"
+          title="Activar selección múltiple"
+        >
+          <Layers size={20} />
+          <span>Selección Múltiple</span>
+        </button>
+      )}
+
+      {/* Multi-Selection Components */}
+      {isSelectionMode && (
+        <>
+          <SelectionToolbar
+            selectedZones={selectedZones}
+            totalArea={calculateTotalArea(selectedZones)}
+            onClear={() => setSelectedZones([])}
+            onSave={handleOpenSaveModal}
+            onCancel={handleCancelSelectionMode}
+          />
+          <SaveSelectionModal
+            isOpen={showSaveModal}
+            selectedZones={selectedZones}
+            onSave={handleSaveSelection}
+            onClose={() => setShowSaveModal(false)}
+          />
+        </>
+      )}
+
       {/* Mapa principal */}
       <MapContainer
         center={[40.4168, -3.7038]}
@@ -188,6 +279,17 @@ const FullScreenMap: React.FC<FullScreenMapProps> = ({
             setSearchMarker(null);
           }}
         />
+
+        {/* Multi-Selection Mode Handler */}
+        {isSelectionMode && (
+          <MultiSelectionMode
+            isActive={isSelectionMode}
+            areas={areas}
+            onSelectionChange={setSelectedZones}
+            onComplete={handleOpenSaveModal}
+            onCancel={handleCancelSelectionMode}
+          />
+        )}
 
         {/* Search Control */}
         <SearchControl onLocationSelected={handleLocationSelected} />
