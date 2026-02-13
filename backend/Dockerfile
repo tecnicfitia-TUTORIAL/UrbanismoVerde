@@ -1,7 +1,7 @@
 # Use official Python runtime as base image
 FROM python:3.11-slim
 
-# Argument to bust Docker cache when dependencies change
+# Argument to bust Docker cache
 ARG CACHEBUST=1
 
 # Set working directory
@@ -13,11 +13,17 @@ RUN apt-get update && apt-get install -y \
     g++ \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements first (for better caching)
+# Copy requirements first
 COPY requirements.txt .
 
-# Install Python dependencies with forced reinstall to break cache
-RUN pip cache purge && \n    pip install --no-cache-dir --upgrade pip && \n    pip install --no-cache-dir --force-reinstall \n        google-generativeai==0.8.3 \n        pydantic==2.11.7 \n        supabase==2.28.0 && \n    pip install --no-cache-dir --force-reinstall -r requirements.txt
+# Install Python dependencies with forced reinstall
+RUN pip cache purge && \
+    pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir --force-reinstall \
+        google-generativeai==0.8.3 \
+        pydantic==2.11.7 \
+        supabase==2.28.0 && \
+    pip install --no-cache-dir --force-reinstall -r requirements.txt
 
 # Copy application code
 COPY . .
@@ -29,5 +35,4 @@ ENV PORT=8080
 EXPOSE 8080
 
 # Run with uvicorn
-# Use exec form to handle signals properly
 CMD exec uvicorn main:app --host 0.0.0.0 --port ${PORT} --workers 1
