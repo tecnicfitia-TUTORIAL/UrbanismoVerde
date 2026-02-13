@@ -21,6 +21,17 @@ import { deleteZonaVerde } from '../../services/zona-storage';
 import { SpecializedAnalysisWithZone } from '../../services/specialized-analysis-service';
 import { Z_INDEX } from '../../constants/zIndex';
 
+// Type guard to check if an object is an Area
+const isArea = (obj: any): obj is Area => {
+  return obj && 
+    typeof obj === 'object' &&
+    typeof obj.id === 'string' &&
+    typeof obj.nombre === 'string' &&
+    typeof obj.tipo === 'string' &&
+    Array.isArray(obj.coordenadas) &&
+    typeof obj.areaM2 === 'number';
+};
+
 // Calcular área usando fórmula de Haversine (aproximación para polígonos pequeños)
 const calcularArea = (coords: [number, number][]): number => {
   if (coords.length < 3) return 0;
@@ -205,7 +216,7 @@ const Layout: React.FC = () => {
     if (data) {
       if (data.selectedArea) {
         setSelectedArea(data.selectedArea);
-      } else if (data.id && data.nombre && data.tipo) {
+      } else if (isArea(data)) {
         // Direct area object passed (from ZonesGalleryContent)
         setSelectedArea(data);
       }
