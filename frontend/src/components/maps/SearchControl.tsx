@@ -77,15 +77,18 @@ const SearchControl: React.FC<SearchControlProps> = ({ onLocationSelected }) => 
   const handleResultClick = (result: SearchResult<RawResult>) => {
     const { x: lng, y: lat } = result;
     
-    // Center map on the location
-    map.setView([lat, lng], 16);
+    // Fly to the location with smooth animation and appropriate zoom for rooftop inspection
+    map.flyTo([lat, lng], 18, {
+      duration: 1.5,  // Smooth 1.5 second animation
+      easeLinearity: 0.25
+    });
     
     // Notify parent component
     if (onLocationSelected) {
       onLocationSelected(lat, lng, result.label);
     }
 
-    // Clear search
+    // Clear search but keep input visible
     setQuery('');
     setResults([]);
     setShowResults(false);
