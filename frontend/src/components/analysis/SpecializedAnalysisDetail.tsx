@@ -4,6 +4,18 @@ import toast from 'react-hot-toast';
 import { SpecializedAnalysisWithZone, deleteSpecializedAnalysis } from '../../services/specialized-analysis-service';
 import Breadcrumbs from '../common/Breadcrumbs';
 
+// Helper function to convert snake_case to Title Case
+function toTitleCase(str: string): string {
+  return str.split('_').map(w => 
+    w.charAt(0).toUpperCase() + w.slice(1)
+  ).join(' ');
+}
+
+// Helper function to get zone name from analysis
+function getZoneName(analysis: SpecializedAnalysisWithZone): string {
+  return analysis.analisis?.zonas_verdes?.nombre || analysis.zona_verde?.nombre || 'Zona sin nombre';
+}
+
 interface SpecializedAnalysisDetailProps {
   analysis: SpecializedAnalysisWithZone;
   onBack: () => void;
@@ -57,7 +69,7 @@ const SpecializedAnalysisDetail: React.FC<SpecializedAnalysisDetailProps> = ({
                 </h1>
                 <div className="flex items-center gap-3">
                   <span className="text-lg text-gray-600">
-                    {analysis.analisis?.zonas_verdes?.nombre || analysis.zona_verde?.nombre || 'Zona sin nombre'}
+                    {getZoneName(analysis)}
                   </span>
                   <span className={`px-3 py-1 rounded-full text-sm font-semibold ${getViabilityColor(analysis.viabilidad_final)}`}>
                     {analysis.viabilidad_final?.toUpperCase() || 'N/A'}
@@ -93,7 +105,7 @@ const SpecializedAnalysisDetail: React.FC<SpecializedAnalysisDetailProps> = ({
                 Para ver la ubicación de esta zona en el mapa, visita la galería de zonas verdes.
               </p>
               <p className="text-sm text-gray-600">
-                Zona: <strong>{analysis.analisis?.zonas_verdes?.nombre || analysis.zona_verde?.nombre || 'Zona sin nombre'}</strong>
+                Zona: <strong>{getZoneName(analysis)}</strong>
               </p>
             </div>
           </div>
@@ -252,9 +264,7 @@ function formatFieldName(key: string): string {
     proximidad_agua: 'Proximidad al Agua',
     estado_superficie: 'Estado de la Superficie'
   };
-  return labels[key] || key.split('_').map(w => 
-    w.charAt(0).toUpperCase() + w.slice(1)
-  ).join(' ');
+  return labels[key] || toTitleCase(key);
 }
 
 function formatFieldValue(key: string, value: any): string {
@@ -275,9 +285,7 @@ function formatFieldValue(key: string, value: any): string {
   }
   // Handle snake_case values (convert to readable format)
   if (typeof value === 'string' && value.includes('_')) {
-    return value.split('_').map(w => 
-      w.charAt(0).toUpperCase() + w.slice(1)
-    ).join(' ');
+    return toTitleCase(value);
   }
   return String(value);
 }

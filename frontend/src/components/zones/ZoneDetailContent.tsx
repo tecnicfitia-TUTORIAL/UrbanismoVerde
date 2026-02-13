@@ -10,6 +10,14 @@ import { coloresPorTipo } from '../../types';
 import { supabase, TABLES } from '../../config/supabase';
 import { deleteZonaVerde } from '../../services/zona-storage';
 
+// Helper function to calculate center of coordinates
+function calculateCenter(coords: [number, number][]): [number, number] {
+  const sum = coords.reduce((acc, coord) => {
+    return [acc[0] + coord[0], acc[1] + coord[1]];
+  }, [0, 0]);
+  return [sum[0] / coords.length, sum[1] / coords.length];
+}
+
 interface ZoneDetailContentProps {
   area: Area;
   onBack: () => void;
@@ -240,14 +248,6 @@ const ZoneDetailContent: React.FC<ZoneDetailContentProps> = ({
   };
 
   const perimetro = calcularPerimetro(area.coordenadas);
-
-  // Calculate center of zone for map
-  const calculateCenter = (coords: [number, number][]): [number, number] => {
-    const sum = coords.reduce((acc, coord) => {
-      return [acc[0] + coord[0], acc[1] + coord[1]];
-    }, [0, 0]);
-    return [sum[0] / coords.length, sum[1] / coords.length];
-  };
 
   return (
     <div className="min-h-screen bg-gray-50">
