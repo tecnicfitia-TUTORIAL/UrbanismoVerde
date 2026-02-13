@@ -22,17 +22,19 @@ app = FastAPI(
     redoc_url="/redoc"
 )
 
-# CORS configuration
+# CORS configuration - Updated with correct frontend domain
 allowed_origins = [
-    "https://urbanismoverde.vercel.app",
-    "http://localhost:5173",
-    "http://localhost:3000",
-    "http://localhost:8080"
+    "https://urbanismo-verde.vercel.app",      # ✅ Production domain (with hyphen)
+    "https://urbanismoverde.vercel.app",       # ✅ Alternative (without hyphen)
+    "http://localhost:5173",                    # ✅ Local development (Vite)
+    "http://localhost:3000",                    # ✅ Local development (alternative)
+    "http://localhost:8080"                     # ✅ Local development (alternative)
 ]
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
+    allow_origin_regex=r"https://(urbanismo-verde|urbanismoverde)-.*\.vercel\.app",  # ✅ Preview deployments
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -100,6 +102,7 @@ async def startup_event():
     logger.info(f"📍 Environment: {'Production' if os.getenv('GOOGLE_API_KEY') else 'Development'}")
     logger.info(f"🤖 Vision Provider: {os.getenv('VISION_PROVIDER', 'gemini')}")
     logger.info(f"🔌 Port: {os.getenv('PORT', '8080')}")
+    logger.info(f"🌐 Allowed origins: {allowed_origins}")  # ✅ Log CORS origins
     
     # Verify critical environment variables
     if not os.getenv("GOOGLE_API_KEY"):
