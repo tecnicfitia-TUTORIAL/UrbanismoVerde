@@ -99,7 +99,7 @@ async def api_info():
     try:
         import fastapi
         fastapi_version = fastapi.__version__
-    except:
+    except (ImportError, AttributeError):
         fastapi_version = 'unknown'
     
     google_api_configured = bool(os.getenv("GOOGLE_API_KEY"))

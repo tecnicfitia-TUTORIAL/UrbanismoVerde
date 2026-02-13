@@ -33,7 +33,7 @@ interface RooftopInspectionMapProps {
  */
 function createPlaceholderGeometry(lat: number, lng: number): any {
   // Create a simple square polygon around the clicked point
-  // Size is approximately 15x15 meters (roughly 0.00015 degrees at mid-latitudes)
+  // Size is approximately 30x30 meters (0.00015 degrees creates 15m radius from center)
   const size = 0.00015;
   
   return {
