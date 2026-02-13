@@ -52,10 +52,8 @@ const InspeccionTejadosView: React.FC<InspeccionTejadosViewProps> = ({ onNavigat
       const address = await reverseGeocode(coordinates[0], coordinates[1]);
 
       // Calculate metrics
-      // Note: coords will be in [lon, lat] order (GeoJSON standard)
-      const coords = geometry.coordinates[0].map(
-        ([lon, lat]: [number, number]) => [lon, lat] as [number, number]
-      );
+      // Note: coords are in [lon, lat] order (GeoJSON standard)
+      const coords = geometry.coordinates[0];
       const area = calculatePolygonArea(coords);
       const perimeter = calculatePerimeter(coords);
       const orientation = calculateOrientation(coords);
