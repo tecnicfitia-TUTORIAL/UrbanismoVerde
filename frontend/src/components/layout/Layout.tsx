@@ -198,7 +198,9 @@ const Layout: React.FC = () => {
     console.log('Navigating to:', view, data);
     setCurrentView(view);
     
-    if (data?.selectedArea) setSelectedArea(data.selectedArea);
+    if (data?.selectedArea) {
+      setSelectedArea(data.selectedArea);
+    }
     if (data?.selectedSpecializedAnalysis) {
       setSelectedSpecializedAnalysis(data.selectedSpecializedAnalysis);
     }
