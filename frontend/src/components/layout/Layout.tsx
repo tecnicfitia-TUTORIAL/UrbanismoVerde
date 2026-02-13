@@ -322,7 +322,10 @@ const Layout: React.FC = () => {
           
           {/* Loading overlay while analyzing */}
           {isAnalyzing && (
-            <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div 
+              className="fixed inset-0 bg-black/50 flex items-center justify-center"
+              style={{ zIndex: 9999 }}
+            >
               <div className="bg-white rounded-lg p-6 text-center max-w-md">
                 <div className="animate-spin h-12 w-12 border-4 border-green-600 border-t-transparent rounded-full mx-auto mb-4" />
                 <div className="font-semibold text-lg mb-2">Analizando con IA...</div>
