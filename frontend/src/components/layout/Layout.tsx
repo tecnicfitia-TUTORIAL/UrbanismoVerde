@@ -201,11 +201,18 @@ const Layout: React.FC = () => {
     console.log('Navigating to:', view, data);
     setCurrentView(view);
     
-    if (data?.selectedArea) {
-      setSelectedArea(data.selectedArea);
-    }
-    if (data?.selectedSpecializedAnalysis) {
-      setSelectedSpecializedAnalysis(data.selectedSpecializedAnalysis);
+    // Handle direct area/zone object or wrapped in selectedArea
+    if (data) {
+      if (data.selectedArea) {
+        setSelectedArea(data.selectedArea);
+      } else if (data.id && data.nombre && data.tipo) {
+        // Direct area object passed (from ZonesGalleryContent)
+        setSelectedArea(data);
+      }
+      
+      if (data.selectedSpecializedAnalysis) {
+        setSelectedSpecializedAnalysis(data.selectedSpecializedAnalysis);
+      }
     }
     
     if (view === 'zonas-create') {
