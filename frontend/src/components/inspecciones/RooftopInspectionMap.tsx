@@ -3,10 +3,20 @@ import { MapContainer, TileLayer, Polygon, useMapEvents, useMap } from 'react-le
 import 'leaflet/dist/leaflet.css';
 import { InspeccionTejado } from '../../types';
 
+interface SelectedRooftop {
+  tempId?: string;
+  coordenadas?: {
+    type: 'Polygon';
+    coordinates: [number, number][][];
+  };
+}
+
 interface RooftopInspectionMapProps {
   onRooftopClick: (geometry: any, coordinates: [number, number]) => void;
-  selectedRooftop: Partial<InspeccionTejado> | null;
+  selectedRooftop: SelectedRooftop | null;
   existingInspections: InspeccionTejado[];
+  selectedRooftops?: SelectedRooftop[];
+  selectionMode?: 'single' | 'multi';
 }
 
 // Type definitions for OpenStreetMap Overpass API response
@@ -145,7 +155,9 @@ function AutoZoom({ geometry }: { geometry: any }) {
 const RooftopInspectionMap: React.FC<RooftopInspectionMapProps> = ({
   onRooftopClick,
   selectedRooftop,
-  existingInspections
+  existingInspections,
+  selectedRooftops = [],
+  selectionMode = 'single'
 }) => {
   const [clickedPoint, setClickedPoint] = useState<[number, number] | null>(null);
 
@@ -221,8 +233,30 @@ const RooftopInspectionMap: React.FC<RooftopInspectionMapProps> = ({
           );
         })}
 
-        {/* Show selected rooftop */}
-        {selectedRooftop?.coordenadas?.coordinates?.[0] && (
+        {/* Show multi-selected rooftops in green */}
+        {selectionMode === 'multi' && selectedRooftops.map((rooftop, idx) => {
+          if (!rooftop.coordenadas?.coordinates?.[0]) return null;
+          
+          const coords = rooftop.coordenadas.coordinates[0].map(
+            ([lng, lat]: [number, number]) => [lat, lng] as [number, number]
+          );
+
+          return (
+            <Polygon
+              key={rooftop.tempId || `selected-${idx}`}
+              positions={coords}
+              pathOptions={{
+                color: '#16a34a',
+                fillColor: '#22c55e',
+                fillOpacity: 0.5,
+                weight: 3
+              }}
+            />
+          );
+        })}
+
+        {/* Show currently selected rooftop (for single mode or preview) */}
+        {selectionMode === 'single' && selectedRooftop?.coordenadas?.coordinates?.[0] && (
           <Polygon
             positions={selectedRooftop.coordenadas.coordinates[0].map(
               ([lng, lat]: [number, number]) => [lat, lng] as [number, number]
@@ -239,9 +273,13 @@ const RooftopInspectionMap: React.FC<RooftopInspectionMapProps> = ({
 
       {/* Instructions overlay */}
       <div className="absolute top-4 left-4 bg-white rounded-lg shadow-lg p-4 max-w-xs z-10">
-        <h3 className="font-semibold mb-2">Herramienta de Inspección</h3>
+        <h3 className="font-semibold mb-2">
+          {selectionMode === 'multi' ? 'Multi-Selección Activa' : 'Herramienta de Inspección'}
+        </h3>
         <p className="text-sm text-gray-600">
-          Haz clic en cualquier ubicación del mapa para crear una inspección de tejado y obtener datos completos.
+          {selectionMode === 'multi' 
+            ? 'Haz clic en múltiples tejados para seleccionarlos. Usa el botón "Analizar con IA" cuando termines.'
+            : 'Haz clic en cualquier ubicación del mapa para crear una inspección de tejado y obtener datos completos.'}
         </p>
       </div>
     </div>
