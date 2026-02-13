@@ -9,6 +9,7 @@ import AnalysisWorkflowContent from '../analysis/AnalysisWorkflowContent';
 import BudgetGalleryContent from '../budget/BudgetGalleryContent';
 import { AnalysisResults } from '../analysis/AnalysisResults';
 import { AnalysisReportPage } from '../analysis/AnalysisReportPage';
+import SpecializedAnalysisGallery from '../analysis/SpecializedAnalysisGallery';
 import { Area, FormData, GeoJSONPolygon } from '../../types';
 import { useAnalysis } from '../../hooks/useAnalysis';
 import { coordinatesToGeoJSON } from '../../services/ai-analysis';
@@ -235,6 +236,9 @@ const Layout: React.FC = () => {
           />
         ) : null;
       
+      case 'analisis-especializados':
+        return <SpecializedAnalysisGallery onNavigate={handleNavigate} />;
+      
       case 'analisis-new':
       case 'analisis-point':
       case 'analisis-zone':
@@ -302,7 +306,7 @@ const Layout: React.FC = () => {
           
           {/* Analysis results overlay */}
           {showAnalysisResults && analysisResult && (
-            <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-auto">
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 overflow-auto" style={{ zIndex: 9999 }}>
               <AnalysisResults
                 analysis={analysisResult}
                 onGenerateBudget={handleGenerateBudget}
