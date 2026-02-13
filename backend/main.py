@@ -34,7 +34,7 @@ allowed_origins = [
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
-    allow_origin_regex=r"https://.*\.vercel\.app",  # ✅ Preview deployments
+    allow_origin_regex=r"https://(urbanismo-verde|urbanismoverde)-.*\.vercel\.app",  # ✅ Preview deployments
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
