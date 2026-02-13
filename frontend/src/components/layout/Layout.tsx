@@ -243,8 +243,8 @@ const Layout: React.FC = () => {
             zone={selectedArea}
             onBack={() => setCurrentView('zonas-gallery')}
             onViewAnalysis={(zoneId) => {
-              // Navigate to analysis view for this zone
-              console.log('View analysis for zone:', zoneId);
+              // TODO: Implement navigation to analysis view for this zone
+              toast.error('Vista de análisis no implementada aún');
             }}
           />
         ) : (

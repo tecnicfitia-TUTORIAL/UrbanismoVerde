@@ -2,11 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Trash2, MapIcon } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { MapContainer, TileLayer, Polygon } from 'react-leaflet';
-import { LatLngBoundsExpression } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { SpecializedAnalysisWithZone, deleteSpecializedAnalysis } from '../../services/specialized-analysis-service';
 import { supabase, TABLES } from '../../config/supabase';
 import Breadcrumbs from '../common/Breadcrumbs';
+import { calculateCenter, calculateBounds } from '../../utils/map-helpers';
+
+// Zone data structure for map display
+interface ZoneData {
+  id: string;
+  nombre: string;
+  coordenadas: [number, number][];
+  areaM2: number;
+}
 
 // Helper function to convert snake_case to Title Case
 function toTitleCase(str: string): string {
@@ -31,7 +39,7 @@ const SpecializedAnalysisDetail: React.FC<SpecializedAnalysisDetailProps> = ({
 }) => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [zone, setZone] = useState<any>(null);
+  const [zone, setZone] = useState<ZoneData | null>(null);
   const [isLoadingZone, setIsLoadingZone] = useState(true);
 
   // Fetch zone data
@@ -45,10 +53,10 @@ const SpecializedAnalysisDetail: React.FC<SpecializedAnalysisDetailProps> = ({
       try {
         setIsLoadingZone(true);
         
-        // Get zona_verde_id from analisis table
+        // Get zona_verde_id from analisis table with join to zonas_verdes
         const { data: analisisData, error: analisisError } = await supabase
           .from(TABLES.ANALISIS)
-          .select('zona_verde_id, zonas_verdes(*)')
+          .select('zona_verde_id, zonas_verdes(id, nombre, coordenadas, area_m2)')
           .eq('id', analysis.analisis_id)
           .single();
 
@@ -58,17 +66,17 @@ const SpecializedAnalysisDetail: React.FC<SpecializedAnalysisDetailProps> = ({
         }
 
         if (analisisData && analisisData.zonas_verdes) {
-          const zonaData = analisisData.zonas_verdes as any;
+          const zonaData = analisisData.zonas_verdes;
           
           // Convert geometry to coordinates array
           // The geometry is stored as GeoJSON in the database
-          const coords = zonaData.coordenadas?.coordinates?.[0] || [];
+          const coords = (zonaData as any).coordenadas?.coordinates?.[0] || [];
           
           setZone({
-            id: zonaData.id,
-            nombre: zonaData.nombre,
+            id: (zonaData as any).id,
+            nombre: (zonaData as any).nombre,
             coordenadas: coords,
-            areaM2: zonaData.area_m2
+            areaM2: (zonaData as any).area_m2
           });
         }
       } catch (error) {
@@ -413,32 +421,6 @@ function getViabilityTextColor(viability: string | undefined): string {
     case 'nula': return 'text-red-700';
     default: return 'text-gray-700';
   }
-}
-
-function calculateCenter(coords: [number, number][]): [number, number] {
-  if (!coords.length) return [0, 0];
-  const sum = coords.reduce((acc, coord) => {
-    return [acc[0] + coord[0], acc[1] + coord[1]];
-  }, [0, 0]);
-  return [sum[0] / coords.length, sum[1] / coords.length];
-}
-
-function calculateBounds(coords: [number, number][]): LatLngBoundsExpression {
-  if (!coords.length) return [[0, 0], [0, 0]];
-  
-  let minLat = coords[0][0];
-  let maxLat = coords[0][0];
-  let minLng = coords[0][1];
-  let maxLng = coords[0][1];
-  
-  coords.forEach(([lat, lng]) => {
-    minLat = Math.min(minLat, lat);
-    maxLat = Math.max(maxLat, lat);
-    minLng = Math.min(minLng, lng);
-    maxLng = Math.max(maxLng, lng);
-  });
-  
-  return [[minLat, minLng], [maxLat, maxLng]];
 }
 
 export default SpecializedAnalysisDetail;

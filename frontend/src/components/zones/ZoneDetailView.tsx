@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { ArrowLeft, MapPin, Calendar, Ruler, Trash2, FileText } from 'lucide-react';
 import { MapContainer, TileLayer, Polygon } from 'react-leaflet';
-import { LatLngBoundsExpression } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import Breadcrumbs from '../common/Breadcrumbs';
 import { toast } from 'react-hot-toast';
 import { deleteZonaVerde } from '../../services/zona-storage';
+import { calculateCenter, calculateBounds } from '../../utils/map-helpers';
 
 interface ZoneDetailViewProps {
   zone: {
@@ -211,32 +211,6 @@ const ZoneDetailView: React.FC<ZoneDetailViewProps> = ({
     </div>
   );
 };
-
-function calculateCenter(coords: [number, number][]): [number, number] {
-  if (!coords.length) return [0, 0];
-  const sum = coords.reduce((acc, coord) => {
-    return [acc[0] + coord[0], acc[1] + coord[1]];
-  }, [0, 0]);
-  return [sum[0] / coords.length, sum[1] / coords.length];
-}
-
-function calculateBounds(coords: [number, number][]): LatLngBoundsExpression {
-  if (!coords.length) return [[0, 0], [0, 0]];
-  
-  let minLat = coords[0][0];
-  let maxLat = coords[0][0];
-  let minLng = coords[0][1];
-  let maxLng = coords[0][1];
-  
-  coords.forEach(([lat, lng]) => {
-    minLat = Math.min(minLat, lat);
-    maxLat = Math.max(maxLat, lat);
-    minLng = Math.min(minLng, lng);
-    maxLng = Math.max(maxLng, lng);
-  });
-  
-  return [[minLat, minLng], [maxLat, maxLng]];
-}
 
 function getTipoLabel(tipo: string): string {
   const labels: Record<string, string> = {
