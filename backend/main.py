@@ -1,0 +1,114 @@
+"""
+UrbanismoVerde AI Backend API
+FastAPI application for rooftop inspection with Gemini Vision
+"""
+
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+import os
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Initialize FastAPI app
+app = FastAPI(
+    title="UrbanismoVerde AI API",
+    description="Backend API for intelligent rooftop inspection using Google Gemini Vision",
+    version="1.0.0",
+    docs_url="/docs",
+    redoc_url="/redoc"
+)
+
+# CORS configuration
+allowed_origins = [
+    "https://urbanismoverde.vercel.app",
+    "https://*.vercel.app",
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "http://localhost:8080"
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=allowed_origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Import routers (will be added in separate files)
+try:
+    from api.endpoints.inspeccion import router as inspeccion_router
+    app.include_router(inspeccion_router, prefix="/api", tags=["inspecciones"])
+    logger.info("✅ Inspection router loaded")
+except ImportError as e:
+    logger.warning(f"⚠️ Could not load inspection router: {e}")
+
+@app.get("/")
+async def root():
+    """Root endpoint with API information"""
+    return {
+        "message": "UrbanismoVerde AI API",
+        "status": "running",
+        "version": "1.0.0",
+        "environment": "production" if os.getenv("GOOGLE_API_KEY") else "development",
+        "docs": "/docs",
+        "health": "/health"
+    }
+
+@app.get("/health")
+async def health():
+    """
+    Health check endpoint for Cloud Run and monitoring
+    Returns service status and configuration
+    """
+    google_api_configured = bool(os.getenv("GOOGLE_API_KEY"))
+    supabase_configured = bool(os.getenv("SUPABASE_URL"))
+    
+    return {
+        "status": "healthy" if (google_api_configured and supabase_configured) else "degraded",
+        "service": "urbanismoverde-backend",
+        "cloud_run": True,
+        "configuration": {
+            "google_api_key": "configured" if google_api_configured else "missing",
+            "vision_provider": os.getenv("VISION_PROVIDER", "gemini"),
+            "supabase": "configured" if supabase_configured else "missing",
+            "port": os.getenv("PORT", "8080")
+        }
+    }
+
+@app.get("/test-env")
+async def test_env():
+    """
+    Test endpoint to verify environment variables (development only)
+    """
+    return {
+        "google_api_key_configured": bool(os.getenv("GOOGLE_API_KEY")),
+        "google_api_key_prefix": os.getenv("GOOGLE_API_KEY", "")[:15] + "..." if os.getenv("GOOGLE_API_KEY") else None,
+        "vision_provider": os.getenv("VISION_PROVIDER", "gemini"),
+        "supabase_url": os.getenv("SUPABASE_URL", "not_set")[:30] + "..." if os.getenv("SUPABASE_URL") else None,
+        "supabase_configured": bool(os.getenv("SUPABASE_ANON_KEY")),
+        "port": os.getenv("PORT", "8080")
+    }
+
+@app.on_event("startup")
+async def startup_event():
+    """Actions to perform on application startup"""
+    logger.info("🚀 Starting UrbanismoVerde AI Backend")
+    logger.info(f"📍 Environment: {'Production' if os.getenv('GOOGLE_API_KEY') else 'Development'}")
+    logger.info(f"🤖 Vision Provider: {os.getenv('VISION_PROVIDER', 'gemini')}")
+    logger.info(f"🔌 Port: {os.getenv('PORT', '8080')}")
+    
+    # Verify critical environment variables
+    if not os.getenv("GOOGLE_API_KEY"):
+        logger.warning("⚠️ GOOGLE_API_KEY not set - AI features will not work")
+    if not os.getenv("SUPABASE_URL"):
+        logger.warning("⚠️ SUPABASE_URL not set - Database features will not work")
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Actions to perform on application shutdown"""
+    logger.info("🛑 Shutting down UrbanismoVerde AI Backend")
