@@ -77,7 +77,7 @@ const InspeccionTejadosView: React.FC<InspeccionTejadosViewProps> = ({ onNavigat
       const centroid = calculateCentroid(coords);
 
       const rooftopData: SelectedRooftop = {
-        tempId: `temp-${Date.now()}-${Math.random()}`,
+        tempId: crypto.randomUUID(),
         coordenadas: {
           type: 'Polygon',
           coordinates: [coords]

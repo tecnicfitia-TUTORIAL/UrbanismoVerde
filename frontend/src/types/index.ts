@@ -460,7 +460,14 @@ export interface InspeccionTejado {
   prioridad: number; // 0-5
   
   // AI Analysis fields
-  analisis_ia_resultado?: any;
+  analisis_ia_resultado?: {
+    tipo_cubierta: string;
+    estado_conservacion: string;
+    inclinacion_estimada: number;
+    obstrucciones: Array<{tipo: string; descripcion: string}>;
+    confianza: number;
+    notas_ia: string;
+  };
   analisis_ia_confianza?: number;
   imagen_analizada_url?: string;
   requiere_revision?: boolean;

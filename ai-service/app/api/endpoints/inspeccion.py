@@ -72,7 +72,7 @@ async def analyze_batch_rooftops(request: BatchAnalysisRequest):
     Returns analysis results for all rooftops.
     """
     try:
-        rooftops_data = [r.dict() for r in request.rooftops]
+        rooftops_data = [r.model_dump() for r in request.rooftops]
         results = await batch_analyze_rooftops(rooftops_data)
         
         return {"results": results}

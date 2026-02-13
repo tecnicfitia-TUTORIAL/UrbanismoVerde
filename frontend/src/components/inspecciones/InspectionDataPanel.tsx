@@ -13,7 +13,8 @@ const InspectionDataPanel: React.FC<InspectionDataPanelProps> = ({
   onSave,
   onCancel
 }) => {
-  const hasAIAnalysis = rooftop.analisis_ia_resultado || rooftop.tipo_cubierta || rooftop.estado_conservacion;
+  // Check if this rooftop has AI analysis data
+  const hasAIAnalysis = !!(rooftop.analisis_ia_resultado || rooftop.analisis_ia_confianza);
   
   const [formData, setFormData] = useState({
     nombre: rooftop.nombre || `Inspección ${rooftop.direccion || ''}`,

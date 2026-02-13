@@ -333,10 +333,18 @@ export async function captureRooftopImage(
   const centerLat = (minLat + maxLat) / 2;
   
   // Use Google Static Maps API with satellite view
-  // Note: In production, this should use a proper API key
   const width = 512;
   const height = 512;
   const zoom = 20; // High detail for rooftop analysis
+  
+  // Get API key from environment variable
+  const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+  
+  if (!GOOGLE_MAPS_API_KEY) {
+    console.warn('Google Maps API key not configured. Using placeholder URL.');
+    // Return a placeholder URL for development
+    return `data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}"><rect fill="%23ddd" width="100%" height="100%"/><text x="50%" y="50%" text-anchor="middle" font-size="16">Satellite Image Placeholder</text></svg>`;
+  }
   
   // Create polygon path for Google Maps
   const pathCoords = coords.map(c => `${c[1]},${c[0]}`).join('|');
@@ -347,10 +355,8 @@ export async function captureRooftopImage(
     `size=${width}x${height}&` +
     `maptype=satellite&` +
     `path=color:0x00ff00ff|weight:2|${pathCoords}&` +
-    `key=AIzaSyDummy_Replace_With_Real_Key`;
+    `key=${GOOGLE_MAPS_API_KEY}`;
   
-  // For demo purposes without API key, return a placeholder
-  // In production, this would return the actual satellite image URL
   return url;
 }
 
