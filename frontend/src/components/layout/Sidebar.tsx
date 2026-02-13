@@ -3,6 +3,7 @@ import { Home, MapPin, PlusCircle, Brain, BarChart3, Euro, Menu, X, List, Search
 import { Area, MenuItem as MenuItemType } from '../../types';
 import SubMenu from './SubMenu';
 import { countSpecializedAnalyses } from '../../services/specialized-analysis-service';
+import { countConjuntosZonas } from '../../services/conjunto-zonas-service';
 
 interface SidebarProps {
   isDrawing: boolean;
@@ -51,7 +52,6 @@ const Sidebar: React.FC<SidebarProps> = ({
 
   const loadConjuntosCount = async () => {
     try {
-      const { countConjuntosZonas } = await import('../../services/conjunto-zonas-service');
       const count = await countConjuntosZonas();
       setConjuntosCount(count);
     } catch (error) {
