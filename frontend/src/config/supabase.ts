@@ -46,6 +46,8 @@ export const TABLES = {
   ESPECIES: 'especies',
   MUNICIPIOS: 'municipios',
   INFORMES: 'informes',
+  CONJUNTOS_ZONAS: 'conjuntos_zonas',
+  ZONAS_EN_CONJUNTO: 'zonas_en_conjunto',
 } as const;
 
 // Helper function to check connection
