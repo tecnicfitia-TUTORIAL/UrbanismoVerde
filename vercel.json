@@ -26,10 +26,8 @@
     {
       "source": "/api/analyze",
       "destination": "/api/analyze.py"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
     }
-  ]
+  ],
+  "cleanUrls": true,
+  "trailingSlash": false
 }
