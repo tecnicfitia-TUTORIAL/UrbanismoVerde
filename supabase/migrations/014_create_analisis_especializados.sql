@@ -14,6 +14,9 @@ CREATE TABLE analisis_especializados (
   tipo_especializacion VARCHAR(50) NOT NULL CHECK (
     tipo_especializacion IN (
       'tejado',
+      'fachada',
+      'muro',
+      'parque',
       'zona_abandonada', 
       'solar_vacio',
       'parque_degradado',
@@ -214,7 +217,7 @@ COMMENT ON TABLE analisis_especializados IS
   'Análisis especializados que heredan y extienden análisis base según tipo de zona';
 
 COMMENT ON COLUMN analisis_especializados.tipo_especializacion IS 
-  'Tipo de especialización: tejado, zona_abandonada, solar_vacio, parque_degradado, jardin_vertical, otro';
+  'Tipo de especialización: tejado, fachada, muro, parque, zona_abandonada, solar_vacio, parque_degradado, jardin_vertical, otro';
 
 COMMENT ON COLUMN analisis_especializados.area_base_m2 IS 
   'Snapshot del área del análisis base (m²)';

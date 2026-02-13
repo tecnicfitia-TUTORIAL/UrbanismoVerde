@@ -186,6 +186,9 @@ export async function countSpecializationsByType(): Promise<Record<TipoEspeciali
     // Initialize all types with 0
     const result: Record<TipoEspecializacion, number> = {
       tejado: counts.tejado || 0,
+      fachada: counts.fachada || 0,
+      muro: counts.muro || 0,
+      parque: counts.parque || 0,
       zona_abandonada: counts.zona_abandonada || 0,
       solar_vacio: counts.solar_vacio || 0,
       parque_degradado: counts.parque_degradado || 0,
@@ -200,6 +203,9 @@ export async function countSpecializationsByType(): Promise<Record<TipoEspeciali
     // Return zeros on error
     return {
       tejado: 0,
+      fachada: 0,
+      muro: 0,
+      parque: 0,
       zona_abandonada: 0,
       solar_vacio: 0,
       parque_degradado: 0,
