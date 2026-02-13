@@ -182,7 +182,7 @@ async def analyze_rooftop_from_image(
             response.raise_for_status()
             
             # Verify content type
-            content_type = response.headers.get('content-type', '')
+            content_type = response.headers.get('content-type', 'image/jpeg')
             if not content_type.startswith('image/'):
                 logger.error(f"❌ Invalid content type: {content_type}")
                 return _fallback_response("URL does not point to an image")
@@ -199,7 +199,7 @@ async def analyze_rooftop_from_image(
         response = model.generate_content([
             ANALYSIS_PROMPT,
             {
-                "mime_type": "image/jpeg",
+                "mime_type": content_type,  # Use actual content type from response
                 "data": image_base64
             }
         ])
