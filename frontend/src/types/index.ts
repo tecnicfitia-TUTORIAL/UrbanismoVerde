@@ -221,6 +221,9 @@ export interface ReportData {
 // Specialization types
 export type TipoEspecializacion = 
   | 'tejado'
+  | 'fachada'
+  | 'muro'
+  | 'parque'
   | 'zona_abandonada'
   | 'solar_vacio'
   | 'parque_degradado'
@@ -282,6 +285,30 @@ export const TIPOS_ESPECIALIZACION: TipoEspecializacionInfo[] = [
     icon: 'Home',
     tags: ['Estructural', 'Impermeabilización', 'Carga'],
     color: 'bg-blue-500',
+  },
+  {
+    id: 'fachada',
+    nombre: 'Fachada Verde',
+    descripcion: 'Sistema de vegetación en fachadas verticales',
+    icon: 'Building',
+    tags: ['Vertical', 'Anclaje', 'Orientación'],
+    color: 'bg-teal-500',
+  },
+  {
+    id: 'muro',
+    nombre: 'Muro Verde',
+    descripcion: 'Infraestructura verde en muros y paredes',
+    icon: 'Square',
+    tags: ['Muro', 'Altura', 'Exposición'],
+    color: 'bg-cyan-500',
+  },
+  {
+    id: 'parque',
+    nombre: 'Parque Urbano',
+    descripcion: 'Espacio verde a nivel de suelo',
+    icon: 'Trees',
+    tags: ['Suelo', 'Público', 'Accesibilidad'],
+    color: 'bg-lime-500',
   },
   {
     id: 'zona_abandonada',
