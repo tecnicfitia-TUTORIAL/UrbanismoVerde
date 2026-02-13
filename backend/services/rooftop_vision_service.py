@@ -160,6 +160,8 @@ async def analyze_rooftop_from_image(
         from io import BytesIO
         
         # Download image from URL with additional security checks
+        # SECURITY NOTE: URL is validated before this point via validate_image_url()
+        # which enforces HTTPS-only, domain allowlisting, and prevents redirects
         response_img = requests.get(
             image_url,
             timeout=30,
