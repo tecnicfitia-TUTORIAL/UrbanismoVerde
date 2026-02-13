@@ -1,11 +1,8 @@
 import React, { useState } from 'react';
 import { ArrowLeft, MapPin, Calendar, Ruler, Trash2, FileText } from 'lucide-react';
-import { MapContainer, TileLayer, Polygon } from 'react-leaflet';
-import 'leaflet/dist/leaflet.css';
 import Breadcrumbs from '../common/Breadcrumbs';
 import { toast } from 'react-hot-toast';
 import { deleteZonaVerde } from '../../services/zona-storage';
-import { calculateCenter, calculateBounds } from '../../utils/map-helpers';
 
 interface ZoneDetailViewProps {
   zone: {
@@ -49,10 +46,6 @@ const ZoneDetailView: React.FC<ZoneDetailViewProps> = ({
     }
   };
 
-  // Calculate center and bounds for the map
-  const center = calculateCenter(zone.coordenadas);
-  const bounds = calculateBounds(zone.coordenadas);
-
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-6 py-8">
@@ -94,35 +87,6 @@ const ZoneDetailView: React.FC<ZoneDetailViewProps> = ({
               <Trash2 size={20} />
               <span>Eliminar Zona</span>
             </button>
-          </div>
-        </div>
-
-        {/* Map Section */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
-          <h2 className="text-xl font-semibold mb-4">Ubicación</h2>
-          <div className="relative h-96 rounded-lg overflow-hidden border border-gray-200">
-            <MapContainer
-              center={center}
-              zoom={16}
-              style={{ height: '100%', width: '100%' }}
-              bounds={bounds}
-              boundsOptions={{ padding: [50, 50] }}
-            >
-              <TileLayer
-                url="https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}"
-                subdomains={['mt0', 'mt1', 'mt2', 'mt3']}
-                attribution='&copy; Google'
-              />
-              <Polygon
-                positions={zone.coordenadas}
-                pathOptions={{
-                  color: '#16a34a',
-                  fillColor: '#22c55e',
-                  fillOpacity: 0.3,
-                  weight: 3
-                }}
-              />
-            </MapContainer>
           </div>
         </div>
 

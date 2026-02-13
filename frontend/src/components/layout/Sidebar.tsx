@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Home, MapPin, PlusCircle, Brain, BarChart3, Euro, Menu, X, List, Search, Sparkles, Map, History, ChevronDown, ChevronRight, Layers } from 'lucide-react';
+import { Home, MapPin, PlusCircle, Brain, BarChart3, Euro, Menu, X, List, Search, Sparkles, Map, History, ChevronDown, ChevronRight, Layers, Clipboard } from 'lucide-react';
 import { Area, MenuItem as MenuItemType } from '../../types';
 import SubMenu from './SubMenu';
 import { countSpecializedAnalyses } from '../../services/specialized-analysis-service';
@@ -106,6 +106,13 @@ const Sidebar: React.FC<SidebarProps> = ({
       label: 'Conjuntos de Zonas',
       view: 'conjuntos-zonas',
       count: conjuntosCount,
+      subItems: []
+    },
+    {
+      id: 'inspecciones-tejados',
+      icon: <Clipboard size={20} />,
+      label: 'Inspección de Tejados',
+      view: 'inspecciones-tejados',
       subItems: []
     },
     {

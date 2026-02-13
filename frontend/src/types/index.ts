@@ -412,3 +412,59 @@ export interface ZonaEnConjuntoData {
   metadata: Record<string, any>;
   created_at: string;
 }
+
+// ============================================================================
+// INSPECCIONES DE TEJADOS - Rooftop Inspections
+// ============================================================================
+
+// Rooftop inspection database record
+export interface InspeccionTejado {
+  id?: string;
+  codigo?: string;
+  nombre: string;
+  
+  // Location
+  direccion: string;
+  numero?: string;
+  municipio: string;
+  provincia?: string;
+  codigo_postal: string;
+  pais?: string;
+  
+  // Geometry
+  coordenadas: GeoJSONPolygon;
+  centroide: [number, number];
+  
+  // Metrics
+  area_m2: number;
+  perimetro_m: number;
+  orientacion: string;
+  
+  // Images
+  imagen_satelital_url?: string;
+  imagen_calle_url?: string;
+  
+  // Characteristics
+  inclinacion_estimada?: number;
+  tipo_cubierta: 'plana' | 'inclinada' | 'mixta' | 'desconocido';
+  estado_conservacion: 'excelente' | 'bueno' | 'regular' | 'malo' | 'muy_malo';
+  obstrucciones?: Array<{
+    tipo: string;
+    descripcion?: string;
+    ubicacion?: string;
+  }>;
+  
+  // Assessment
+  notas?: string;
+  viabilidad_preliminar: 'alta' | 'media' | 'baja' | 'nula';
+  prioridad: number; // 0-5
+  
+  // Relationships
+  informe_id?: string;
+  zona_verde_id?: string;
+  user_id?: string;
+  
+  // Metadata
+  created_at?: string;
+  updated_at?: string;
+}
