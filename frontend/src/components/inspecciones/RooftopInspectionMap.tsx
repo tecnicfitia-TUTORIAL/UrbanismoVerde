@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { MapContainer, TileLayer, Polygon, useMapEvents } from 'react-leaflet';
+import { MapContainer, TileLayer, Polygon, useMapEvents, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { InspeccionTejado } from '../../types';
+import * as turf from '@turf/turf';
 
 interface RooftopInspectionMapProps {
   onRooftopClick: (geometry: any, coordinates: [number, number]) => void;
@@ -9,13 +10,107 @@ interface RooftopInspectionMapProps {
   existingInspections: InspeccionTejado[];
 }
 
-// Component to handle map clicks
+/**
+ * Query OpenStreetMap Overpass API for building at clicked location
+ */
+async function queryBuildingAtLocation(lat: number, lng: number): Promise<any | null> {
+  const radius = 10; // Search radius in meters
+  const query = `
+    [out:json];
+    (
+      way["building"](around:${radius},${lat},${lng});
+      relation["building"](around:${radius},${lat},${lng});
+    );
+    out geom;
+  `;
+  
+  try {
+    const response = await fetch('https://overpass-api.de/api/interpreter', {
+      method: 'POST',
+      body: query
+    });
+    
+    if (!response.ok) {
+      throw new Error('Overpass API request failed');
+    }
+    
+    const data = await response.json();
+    
+    if (data.elements && data.elements.length > 0) {
+      // Get the first building found
+      const building = data.elements[0];
+      
+      // Extract coordinates based on element type
+      let coordinates: [number, number][] = [];
+      
+      if (building.type === 'way' && building.geometry) {
+        // For ways, use the geometry directly
+        coordinates = building.geometry.map((node: any) => [node.lon, node.lat]);
+      } else if (building.type === 'relation' && building.members) {
+        // For relations, extract outer way coordinates
+        const outerWay = building.members.find((m: any) => m.role === 'outer');
+        if (outerWay && outerWay.geometry) {
+          coordinates = outerWay.geometry.map((node: any) => [node.lon, node.lat]);
+        }
+      }
+      
+      // Ensure the polygon is closed
+      if (coordinates.length > 0 && 
+          (coordinates[0][0] !== coordinates[coordinates.length - 1][0] ||
+           coordinates[0][1] !== coordinates[coordinates.length - 1][1])) {
+        coordinates.push(coordinates[0]);
+      }
+      
+      if (coordinates.length >= 4) {
+        return {
+          type: 'Polygon',
+          coordinates: [coordinates]
+        };
+      }
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Error querying Overpass API:', error);
+    return null;
+  }
+}
+
+// Component to handle map clicks and set cursor
 function ClickHandler({ onClick }: { onClick: (lat: number, lng: number) => void }) {
+  const map = useMap();
+  
+  useEffect(() => {
+    // Set crosshair cursor for precision
+    const container = map.getContainer();
+    container.style.cursor = 'crosshair';
+    
+    return () => {
+      container.style.cursor = '';
+    };
+  }, [map]);
+  
   useMapEvents({
     click: (e) => {
       onClick(e.latlng.lat, e.latlng.lng);
     }
   });
+  return null;
+}
+
+// Component to auto-zoom to selected rooftop
+function AutoZoom({ geometry }: { geometry: any }) {
+  const map = useMap();
+  
+  useEffect(() => {
+    if (geometry && geometry.coordinates && geometry.coordinates[0]) {
+      const coords = geometry.coordinates[0];
+      // Convert GeoJSON [lng, lat] to Leaflet [lat, lng]
+      const bounds = coords.map(([lng, lat]: [number, number]) => [lat, lng] as [number, number]);
+      map.fitBounds(bounds, { padding: [50, 50], maxZoom: 19 });
+    }
+  }, [geometry, map]);
+  
   return null;
 }
 
@@ -26,22 +121,31 @@ const RooftopInspectionMap: React.FC<RooftopInspectionMapProps> = ({
 }) => {
   const [clickedPoint, setClickedPoint] = useState<[number, number] | null>(null);
 
-  const handleMapClick = (lat: number, lng: number) => {
+  const handleMapClick = async (lat: number, lng: number) => {
     setClickedPoint([lat, lng]);
     
-    // Create a simple square polygon around the clicked point
-    // This is a placeholder - in a real implementation, you'd detect building footprints
-    const size = 0.0001; // Approximate size in degrees
-    const geometry = {
-      type: 'Polygon',
-      coordinates: [[
-        [lng - size, lat - size],
-        [lng + size, lat - size],
-        [lng + size, lat + size],
-        [lng - size, lat + size],
-        [lng - size, lat - size]
-      ]]
-    };
+    // Try to detect building from OpenStreetMap
+    const buildingGeometry = await queryBuildingAtLocation(lat, lng);
+    
+    let geometry;
+    if (buildingGeometry) {
+      // Use detected building geometry
+      geometry = buildingGeometry;
+    } else {
+      // Fallback: Create a simple square polygon around the clicked point
+      // This is a placeholder when no building is detected
+      const size = 0.0001; // Approximate size in degrees
+      geometry = {
+        type: 'Polygon',
+        coordinates: [[
+          [lng - size, lat - size],
+          [lng + size, lat - size],
+          [lng + size, lat + size],
+          [lng - size, lat + size],
+          [lng - size, lat - size]
+        ]]
+      };
+    }
 
     onRooftopClick(geometry, [lat, lng]);
   };
@@ -61,6 +165,11 @@ const RooftopInspectionMap: React.FC<RooftopInspectionMapProps> = ({
         />
 
         <ClickHandler onClick={handleMapClick} />
+        
+        {/* Auto-zoom to selected rooftop */}
+        {selectedRooftop?.coordenadas && (
+          <AutoZoom geometry={selectedRooftop.coordenadas} />
+        )}
 
         {/* Show existing inspections */}
         {existingInspections.map((inspection) => {
