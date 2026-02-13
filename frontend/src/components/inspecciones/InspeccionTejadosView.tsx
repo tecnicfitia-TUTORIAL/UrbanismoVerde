@@ -52,21 +52,21 @@ const InspeccionTejadosView: React.FC<InspeccionTejadosViewProps> = ({ onNavigat
       const address = await reverseGeocode(coordinates[0], coordinates[1]);
 
       // Calculate metrics
+      // Note: coords will be in [lon, lat] order (GeoJSON standard)
       const coords = geometry.coordinates[0].map(
-        ([lng, lat]: [number, number]) => [lat, lng] as [number, number]
+        ([lon, lat]: [number, number]) => [lon, lat] as [number, number]
       );
       const area = calculatePolygonArea(coords);
       const perimeter = calculatePerimeter(coords);
       const orientation = calculateOrientation(coords);
       const centroid = calculateCentroid(coords);
 
-      // Convert coordinates to GeoJSON format (lon, lat order)
-      const geoJsonCoords = coords.map(([lat, lng]: [number, number]) => [lng, lat]);
+      // No need to convert - geometry is already in GeoJSON [lon, lat] format
 
       setSelectedRooftop({
         coordenadas: {
           type: 'Polygon',
-          coordinates: [geoJsonCoords]
+          coordinates: [coords]
         },
         centroide: centroid,
         direccion: address.street || 'Dirección no disponible',

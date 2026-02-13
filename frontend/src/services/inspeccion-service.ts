@@ -145,29 +145,31 @@ export async function reverseGeocode(lat: number, lon: number): Promise<{
 
 /**
  * Calculate centroid of a polygon
+ * Note: GeoJSON uses [lon, lat] order
  */
 export function calculateCentroid(coordinates: [number, number][]): [number, number] {
   if (!coordinates || coordinates.length === 0) {
     return [0, 0];
   }
 
-  let sumLat = 0;
   let sumLon = 0;
+  let sumLat = 0;
 
-  coordinates.forEach(([lat, lon]) => {
-    sumLat += lat;
+  coordinates.forEach(([lon, lat]) => {
     sumLon += lon;
+    sumLat += lat;
   });
 
   return [
-    sumLat / coordinates.length,
-    sumLon / coordinates.length
+    sumLon / coordinates.length,
+    sumLat / coordinates.length
   ];
 }
 
 /**
  * Calculate area of a polygon in square meters
  * Uses the spherical excess formula for accuracy
+ * Note: GeoJSON coordinates are in [lon, lat] order
  */
 export function calculatePolygonArea(coordinates: [number, number][]): number {
   if (!coordinates || coordinates.length < 3) {
@@ -179,10 +181,10 @@ export function calculatePolygonArea(coordinates: [number, number][]): number {
 
   for (let i = 0; i < coordinates.length; i++) {
     const j = (i + 1) % coordinates.length;
-    const lat1 = coordinates[i][0] * Math.PI / 180;
-    const lat2 = coordinates[j][0] * Math.PI / 180;
-    const lon1 = coordinates[i][1] * Math.PI / 180;
-    const lon2 = coordinates[j][1] * Math.PI / 180;
+    const lon1 = coordinates[i][0] * Math.PI / 180;
+    const lat1 = coordinates[i][1] * Math.PI / 180;
+    const lon2 = coordinates[j][0] * Math.PI / 180;
+    const lat2 = coordinates[j][1] * Math.PI / 180;
 
     area += (lon2 - lon1) * (2 + Math.sin(lat1) + Math.sin(lat2));
   }
@@ -193,6 +195,7 @@ export function calculatePolygonArea(coordinates: [number, number][]): number {
 
 /**
  * Calculate perimeter of a polygon in meters
+ * Note: GeoJSON coordinates are in [lon, lat] order
  */
 export function calculatePerimeter(coordinates: [number, number][]): number {
   if (!coordinates || coordinates.length < 2) {
@@ -204,10 +207,10 @@ export function calculatePerimeter(coordinates: [number, number][]): number {
 
   for (let i = 0; i < coordinates.length; i++) {
     const j = (i + 1) % coordinates.length;
-    const lat1 = coordinates[i][0] * Math.PI / 180;
-    const lat2 = coordinates[j][0] * Math.PI / 180;
-    const lon1 = coordinates[i][1] * Math.PI / 180;
-    const lon2 = coordinates[j][1] * Math.PI / 180;
+    const lon1 = coordinates[i][0] * Math.PI / 180;
+    const lat1 = coordinates[i][1] * Math.PI / 180;
+    const lon2 = coordinates[j][0] * Math.PI / 180;
+    const lat2 = coordinates[j][1] * Math.PI / 180;
 
     const dLat = lat2 - lat1;
     const dLon = lon2 - lon1;
@@ -226,6 +229,7 @@ export function calculatePerimeter(coordinates: [number, number][]): number {
 /**
  * Calculate predominant orientation of a polygon
  * Returns cardinal/intercardinal direction
+ * Note: GeoJSON coordinates are in [lon, lat] order
  */
 export function calculateOrientation(coordinates: [number, number][]): string {
   if (!coordinates || coordinates.length < 3) {
@@ -238,14 +242,14 @@ export function calculateOrientation(coordinates: [number, number][]): string {
 
   for (let i = 0; i < coordinates.length; i++) {
     const j = (i + 1) % coordinates.length;
-    const lat1 = coordinates[i][0];
-    const lon1 = coordinates[i][1];
-    const lat2 = coordinates[j][0];
-    const lon2 = coordinates[j][1];
+    const lon1 = coordinates[i][0];
+    const lat1 = coordinates[i][1];
+    const lon2 = coordinates[j][0];
+    const lat2 = coordinates[j][1];
 
-    const dLat = lat2 - lat1;
     const dLon = lon2 - lon1;
-    const length = Math.sqrt(dLat * dLat + dLon * dLon);
+    const dLat = lat2 - lat1;
+    const length = Math.sqrt(dLon * dLon + dLat * dLat);
 
     if (length > maxLength) {
       maxLength = length;
@@ -255,8 +259,8 @@ export function calculateOrientation(coordinates: [number, number][]): string {
 
   // Calculate angle of the longest edge
   const j = (maxEdgeIndex + 1) % coordinates.length;
-  const dLat = coordinates[j][0] - coordinates[maxEdgeIndex][0];
-  const dLon = coordinates[j][1] - coordinates[maxEdgeIndex][1];
+  const dLon = coordinates[j][0] - coordinates[maxEdgeIndex][0];
+  const dLat = coordinates[j][1] - coordinates[maxEdgeIndex][1];
   
   let angle = Math.atan2(dLon, dLat) * 180 / Math.PI;
   if (angle < 0) angle += 360;
