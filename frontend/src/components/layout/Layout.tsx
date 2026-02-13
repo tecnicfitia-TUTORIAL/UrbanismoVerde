@@ -4,7 +4,7 @@ import Sidebar from './Sidebar';
 import FullScreenMap from '../maps/FullScreenMap';
 import DashboardContent from '../dashboard/DashboardContent';
 import ZonesGalleryContent from '../zones/ZonesGalleryContent';
-import ZoneDetailContent from '../zones/ZoneDetailContent';
+import ZoneDetailView from '../zones/ZoneDetailView';
 import AnalysisWorkflowContent from '../analysis/AnalysisWorkflowContent';
 import BudgetGalleryContent from '../budget/BudgetGalleryContent';
 import { AnalysisResults } from '../analysis/AnalysisResults';
@@ -12,11 +12,11 @@ import { AnalysisReportPage } from '../analysis/AnalysisReportPage';
 import SpecializedAnalysisGallery from '../analysis/SpecializedAnalysisGallery';
 import SpecializedAnalysisDetail from '../analysis/SpecializedAnalysisDetail';
 import ConjuntosGallery from '../conjuntos/ConjuntosGallery';
-import { Area, FormData, GeoJSONPolygon } from '../../types';
+import { Area, GeoJSONPolygon } from '../../types';
 import { useAnalysis } from '../../hooks/useAnalysis';
 import { coordinatesToGeoJSON } from '../../services/ai-analysis';
 import { supabase, TABLES } from '../../config/supabase';
-import { saveZonaVerde, loadZonasVerdes, deleteZonaVerde } from '../../services/zona-storage';
+import { deleteZonaVerde } from '../../services/zona-storage';
 import { SpecializedAnalysisWithZone } from '../../services/specialized-analysis-service';
 import { Z_INDEX } from '../../constants/zIndex';
 
@@ -239,13 +239,17 @@ const Layout: React.FC = () => {
       
       case 'zonas-detail':
         return selectedArea ? (
-          <ZoneDetailContent
-            area={selectedArea}
+          <ZoneDetailView
+            zone={selectedArea}
             onBack={() => setCurrentView('zonas-gallery')}
-            onNavigate={handleNavigate}
-            onDelete={handleDeleteArea}
+            onViewAnalysis={(zoneId) => {
+              // TODO: Implement navigation to analysis view for this zone
+              toast.error('Vista de análisis no implementada aún');
+            }}
           />
-        ) : null;
+        ) : (
+          <div>No zone selected</div>
+        );
       
       case 'analisis-especializados':
         return <SpecializedAnalysisGallery onNavigate={handleNavigate} />;

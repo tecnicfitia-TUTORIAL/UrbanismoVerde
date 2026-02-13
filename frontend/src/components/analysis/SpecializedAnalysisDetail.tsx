@@ -1,8 +1,20 @@
-import React, { useState } from 'react';
-import { ArrowLeft, Building2, Layers, CheckCircle, AlertCircle, Trash2, MapIcon } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ArrowLeft, Trash2, MapIcon } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { MapContainer, TileLayer, Polygon } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
 import { SpecializedAnalysisWithZone, deleteSpecializedAnalysis } from '../../services/specialized-analysis-service';
+import { supabase, TABLES } from '../../config/supabase';
 import Breadcrumbs from '../common/Breadcrumbs';
+import { calculateCenter, calculateBounds } from '../../utils/map-helpers';
+
+// Zone data structure for map display
+interface ZoneData {
+  id: string;
+  nombre: string;
+  coordenadas: [number, number][];
+  areaM2: number;
+}
 
 // Helper function to convert snake_case to Title Case
 function toTitleCase(str: string): string {
@@ -27,6 +39,56 @@ const SpecializedAnalysisDetail: React.FC<SpecializedAnalysisDetailProps> = ({
 }) => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [zone, setZone] = useState<ZoneData | null>(null);
+  const [isLoadingZone, setIsLoadingZone] = useState(true);
+
+  // Fetch zone data
+  useEffect(() => {
+    const loadZone = async () => {
+      if (!analysis.analisis_id) {
+        setIsLoadingZone(false);
+        return;
+      }
+
+      try {
+        setIsLoadingZone(true);
+        
+        // Get zona_verde_id from analisis table with join to zonas_verdes
+        const { data: analisisData, error: analisisError } = await supabase
+          .from(TABLES.ANALISIS)
+          .select('zona_verde_id, zonas_verdes(id, nombre, coordenadas, area_m2)')
+          .eq('id', analysis.analisis_id)
+          .single();
+
+        if (analisisError) {
+          console.error('Error loading analysis:', analisisError);
+          throw analisisError;
+        }
+
+        if (analisisData && analisisData.zonas_verdes) {
+          const zonaData = analisisData.zonas_verdes;
+          
+          // Convert geometry to coordinates array
+          // The geometry is stored as GeoJSON in the database
+          const coords = (zonaData as any).coordenadas?.coordinates?.[0] || [];
+          
+          setZone({
+            id: (zonaData as any).id,
+            nombre: (zonaData as any).nombre,
+            coordenadas: coords,
+            areaM2: (zonaData as any).area_m2
+          });
+        }
+      } catch (error) {
+        console.error('Error loading zone:', error);
+        toast.error('Error al cargar la zona');
+      } finally {
+        setIsLoadingZone(false);
+      }
+    };
+
+    loadZone();
+  }, [analysis.analisis_id]);
 
   const handleDelete = async () => {
     setIsDeleting(true);
@@ -91,24 +153,73 @@ const SpecializedAnalysisDetail: React.FC<SpecializedAnalysisDetailProps> = ({
 
         {/* Content Sections */}
         <div className="space-y-6">
-          {/* Map Section - Information Message */}
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold flex items-center gap-2">
+          {/* Map Section */}
+          {!isLoadingZone && zone && zone.coordenadas && zone.coordenadas.length > 0 && (
+            <div className="bg-white rounded-lg border border-gray-200 p-6">
+              <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
                 <MapIcon size={20} />
-                Ubicación de la Zona
+                Zona Analizada
               </h2>
-            </div>
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 text-center">
-              <MapIcon size={48} className="mx-auto text-blue-400 mb-3" />
-              <p className="text-gray-700 mb-2">
-                Para ver la ubicación de esta zona en el mapa, visita la galería de zonas verdes.
+              <div className="relative h-96 rounded-lg overflow-hidden border border-gray-200">
+                <MapContainer
+                  center={calculateCenter(zone.coordenadas)}
+                  zoom={16}
+                  style={{ height: '100%', width: '100%' }}
+                  bounds={calculateBounds(zone.coordenadas)}
+                  boundsOptions={{ padding: [50, 50] }}
+                >
+                  <TileLayer
+                    url="https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}"
+                    subdomains={['mt0', 'mt1', 'mt2', 'mt3']}
+                    attribution='&copy; Google'
+                  />
+                  <Polygon
+                    positions={zone.coordenadas}
+                    pathOptions={{
+                      color: '#2563eb',
+                      fillColor: '#3b82f6',
+                      fillOpacity: 0.3,
+                      weight: 3
+                    }}
+                  />
+                </MapContainer>
+              </div>
+              <p className="text-sm text-gray-600 mt-2">
+                {zone.nombre} • {zone.areaM2?.toLocaleString('es-ES')} m²
               </p>
-              <p className="text-sm text-gray-600">
-                Zona: <strong>{getZoneName(analysis)}</strong>
-              </p>
             </div>
-          </div>
+          )}
+
+          {/* Loading state for zone */}
+          {isLoadingZone && (
+            <div className="bg-white rounded-lg border border-gray-200 p-6">
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin h-8 w-8 border-4 border-blue-600 border-t-transparent rounded-full" />
+                <span className="ml-3 text-gray-600">Cargando zona...</span>
+              </div>
+            </div>
+          )}
+
+          {/* No zone data state */}
+          {!isLoadingZone && (!zone || !zone.coordenadas || zone.coordenadas.length === 0) && (
+            <div className="bg-white rounded-lg border border-gray-200 p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-semibold flex items-center gap-2">
+                  <MapIcon size={20} />
+                  Ubicación de la Zona
+                </h2>
+              </div>
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 text-center">
+                <MapIcon size={48} className="mx-auto text-blue-400 mb-3" />
+                <p className="text-gray-700 mb-2">
+                  No se pudo cargar la información de ubicación de la zona.
+                </p>
+                <p className="text-sm text-gray-600">
+                  Zona: <strong>{getZoneName(analysis)}</strong>
+                </p>
+              </div>
+            </div>
+          )}
 
           {/* Base Data */}
           <div className="bg-white rounded-lg border border-gray-200 p-6">
