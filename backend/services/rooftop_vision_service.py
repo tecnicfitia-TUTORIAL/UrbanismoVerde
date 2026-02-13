@@ -151,7 +151,7 @@ async def analyze_rooftop_from_image(
         logger.info(f"🔍 Analyzing rooftop image with Gemini Vision")
         
         # Initialize Gemini model with specific version
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        model = genai.GenerativeModel('gemini-pro-vision')
         
         # For Gemini API, we need to pass the image URL directly in a different format
         # Using the proper format for image URLs
