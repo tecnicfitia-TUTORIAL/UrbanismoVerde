@@ -12,6 +12,14 @@ export interface SpecializedAnalysisWithZone extends AnalisisEspecializado {
     nombre: string;
     tipo: string;
   };
+  // Nested data from JOIN for detail view
+  analisis?: {
+    zona_verde_id: string;
+    zonas_verdes?: {
+      nombre: string;
+      tipo: string;
+    };
+  };
 }
 
 /**
