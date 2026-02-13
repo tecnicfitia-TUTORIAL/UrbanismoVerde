@@ -49,7 +49,7 @@ async def analyze_single_rooftop(request: RooftopAnalysisRequest):
         
         # Add original request data to response
         response = {
-            **request.dict(),
+            **request.model_dump(),
             **result
         }
         
@@ -73,7 +73,7 @@ async def analyze_batch(request: BatchAnalysisRequest):
         List of analysis results for all rooftops
     """
     try:
-        rooftops_data = [r.dict() for r in request.rooftops]
+        rooftops_data = [r.model_dump() for r in request.rooftops]
         logger.info(f"📥 Received batch analysis request for {len(rooftops_data)} rooftops")
         
         results = await batch_analyze_rooftops(rooftops_data)

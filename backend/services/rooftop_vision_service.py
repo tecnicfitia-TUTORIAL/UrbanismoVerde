@@ -90,16 +90,24 @@ async def analyze_rooftop_from_image(
     try:
         logger.info(f"🔍 Analyzing rooftop image with Gemini Vision")
         
-        # Initialize Gemini model
-        model = genai.GenerativeModel('gemini-1.5-flash-latest')
+        # Initialize Gemini model with specific version
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        
+        # For Gemini API, we need to pass the image URL directly in a different format
+        # Using the proper format for image URLs
+        import requests
+        from PIL import Image
+        from io import BytesIO
+        
+        # Download image from URL
+        response_img = requests.get(image_url, timeout=30)
+        response_img.raise_for_status()
+        img = Image.open(BytesIO(response_img.content))
         
         # Generate content with image and prompt
         response = model.generate_content([
             ANALYSIS_PROMPT,
-            {
-                "mime_type": "image/jpeg",
-                "data": image_url
-            }
+            img
         ])
         
         # Extract and clean response
