@@ -158,6 +158,17 @@ async def test_env():
 async def startup_event():
     """Actions to perform on application startup"""
     logger.info("🚀 Starting UrbanismoVerde AI Backend")
+    
+    # Log google-generativeai version
+    try:
+        import google.generativeai as genai
+        logger.info(f"📦 google-generativeai version: {genai.__version__}")
+    except ImportError as e:
+        logger.warning(f"⚠️ google-generativeai not available: {e}")
+    except AttributeError:
+        logger.warning("⚠️ google-generativeai version unknown")
+    
+    logger.info(f"🔑 GOOGLE_API_KEY configured: {bool(os.getenv('GOOGLE_API_KEY'))}")
     logger.info(f"📍 Environment: {'Production' if os.getenv('GOOGLE_API_KEY') else 'Development'}")
     logger.info(f"🤖 Vision Provider: {os.getenv('VISION_PROVIDER', 'gemini')}")
     logger.info(f"🔌 Port: {os.getenv('PORT', '8080')}")

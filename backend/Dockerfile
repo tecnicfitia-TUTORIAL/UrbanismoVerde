@@ -2,7 +2,7 @@
 FROM python:3.11-slim
 
 # Argument to bust Docker cache
-ARG CACHEBUST=1
+ARG CACHEBUST=20260213
 
 # Set working directory
 WORKDIR /app
@@ -24,6 +24,9 @@ RUN pip cache purge && \
         pydantic==2.11.7 \
         supabase==2.28.0 && \
     pip install --no-cache-dir --force-reinstall -r requirements.txt
+
+# Verify installed version
+RUN python -c "import google.generativeai as genai; print(f'✅ Installed: google-generativeai {genai.__version__}')"
 
 # Copy application code
 COPY . .
