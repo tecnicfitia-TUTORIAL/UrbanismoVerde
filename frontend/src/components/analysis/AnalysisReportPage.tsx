@@ -209,7 +209,10 @@ export const AnalysisReportPage: React.FC<AnalysisReportPageProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-white">
+    <div 
+      className="fixed inset-0 flex flex-col bg-white"
+      style={{ zIndex: Z_INDEX.PAGE_OVERLAY }}
+    >
       {/* Header */}
       <div className={`${scoreColor} text-white shadow-lg`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
@@ -325,7 +328,10 @@ export const AnalysisReportPage: React.FC<AnalysisReportPageProps> = ({
 
       {/* Error Toast */}
       {error && (
-        <div className="fixed bottom-4 right-4 bg-red-600 text-white px-6 py-3 rounded-lg shadow-lg z-50 max-w-md">
+        <div 
+          className="fixed bottom-4 right-4 bg-red-600 text-white px-6 py-3 rounded-lg shadow-lg max-w-md"
+          style={{ zIndex: Z_INDEX.PAGE_OVERLAY + 1 }}
+        >
           <div className="flex items-center gap-2">
             <X size={20} />
             <span>{error}</span>
@@ -335,7 +341,10 @@ export const AnalysisReportPage: React.FC<AnalysisReportPageProps> = ({
 
       {/* Success Toast */}
       {showSuccessMessage && (
-        <div className="fixed bottom-4 right-4 bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg z-50 max-w-md">
+        <div 
+          className="fixed bottom-4 right-4 bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg max-w-md"
+          style={{ zIndex: Z_INDEX.PAGE_OVERLAY + 1 }}
+        >
           <div className="flex items-center gap-2">
             <CheckCircle size={20} />
             <span>Análisis guardado exitosamente</span>
