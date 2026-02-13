@@ -10,8 +10,37 @@ interface RooftopInspectionMapProps {
   existingInspections: InspeccionTejado[];
 }
 
+// Type definitions for OpenStreetMap Overpass API response
+interface OSMNode {
+  lon: number;
+  lat: number;
+}
+
+interface OSMWay {
+  type: 'way';
+  geometry: OSMNode[];
+}
+
+interface OSMRelation {
+  type: 'relation';
+  members: Array<{
+    role: string;
+    geometry?: OSMNode[];
+  }>;
+}
+
+type OSMElement = OSMWay | OSMRelation;
+
 /**
  * Query OpenStreetMap Overpass API for building at clicked location
+ * @param lat - Latitude of the clicked location
+ * @param lng - Longitude of the clicked location
+ * @returns GeoJSON polygon geometry or null if no building found
+ * 
+ * Search radius is set to 10 meters, which is appropriate for:
+ * - Detecting small to medium buildings
+ * - Minimizing false positives from nearby buildings
+ * - Allowing slight click inaccuracies
  */
 async function queryBuildingAtLocation(lat: number, lng: number): Promise<any | null> {
   const radius = 10; // Search radius in meters
@@ -38,19 +67,19 @@ async function queryBuildingAtLocation(lat: number, lng: number): Promise<any | 
     
     if (data.elements && data.elements.length > 0) {
       // Get the first building found
-      const building = data.elements[0];
+      const building = data.elements[0] as OSMElement;
       
       // Extract coordinates based on element type
       let coordinates: [number, number][] = [];
       
       if (building.type === 'way' && building.geometry) {
         // For ways, use the geometry directly
-        coordinates = building.geometry.map((node: any) => [node.lon, node.lat]);
+        coordinates = building.geometry.map((node: OSMNode) => [node.lon, node.lat]);
       } else if (building.type === 'relation' && building.members) {
         // For relations, extract outer way coordinates
-        const outerWay = building.members.find((m: any) => m.role === 'outer');
+        const outerWay = building.members.find((m) => m.role === 'outer');
         if (outerWay && outerWay.geometry) {
-          coordinates = outerWay.geometry.map((node: any) => [node.lon, node.lat]);
+          coordinates = outerWay.geometry.map((node: OSMNode) => [node.lon, node.lat]);
         }
       }
       

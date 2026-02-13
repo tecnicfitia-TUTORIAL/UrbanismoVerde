@@ -178,8 +178,17 @@ export function calculatePolygonArea(coordinates: [number, number][]): number {
   }
 
   try {
+    // Ensure the polygon is closed (first and last coordinates must be identical)
+    let coords = coordinates;
+    const first = coordinates[0];
+    const last = coordinates[coordinates.length - 1];
+    
+    if (first[0] !== last[0] || first[1] !== last[1]) {
+      coords = [...coordinates, first];
+    }
+    
     // Create a turf polygon from coordinates
-    const polygon = turf.polygon([coordinates]);
+    const polygon = turf.polygon([coords]);
     
     // Calculate area in square meters
     const area = turf.area(polygon);
