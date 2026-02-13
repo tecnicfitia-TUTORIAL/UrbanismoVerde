@@ -81,6 +81,65 @@ async def health():
         }
     }
 
+@app.get("/api/info")
+async def api_info():
+    """
+    Comprehensive API information endpoint with diagnostics
+    """
+    import sys
+    
+    try:
+        import google.generativeai as genai
+        genai_version = getattr(genai, '__version__', 'unknown')
+        genai_available = True
+    except ImportError:
+        genai_version = 'not installed'
+        genai_available = False
+    
+    try:
+        import fastapi
+        fastapi_version = fastapi.__version__
+    except:
+        fastapi_version = 'unknown'
+    
+    google_api_configured = bool(os.getenv("GOOGLE_API_KEY"))
+    supabase_configured = bool(os.getenv("SUPABASE_URL"))
+    
+    return {
+        "service": "UrbanismoVerde AI API",
+        "version": "1.0.0",
+        "status": "healthy" if (google_api_configured and supabase_configured) else "degraded",
+        "environment": "production" if google_api_configured else "development",
+        "vision": {
+            "provider": os.getenv("VISION_PROVIDER", "gemini"),
+            "model_name": "gemini-1.5-flash",
+            "library_version": genai_version,
+            "api_version": "v1",
+            "available": genai_available and google_api_configured,
+            "configuration": {
+                "temperature": 0.4,
+                "top_p": 0.95,
+                "top_k": 40,
+                "max_output_tokens": 2048
+            }
+        },
+        "backend": {
+            "framework": "FastAPI",
+            "framework_version": fastapi_version,
+            "python_version": sys.version.split()[0],
+            "port": os.getenv("PORT", "8080")
+        },
+        "database": {
+            "provider": "Supabase",
+            "configured": supabase_configured
+        },
+        "endpoints": {
+            "docs": "/docs",
+            "health": "/health",
+            "inspections": "/api/inspecciones/*"
+        }
+    }
+
 @app.get("/test-env")
 async def test_env():
     """

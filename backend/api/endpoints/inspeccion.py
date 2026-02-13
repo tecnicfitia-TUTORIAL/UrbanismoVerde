@@ -92,9 +92,18 @@ async def analyze_batch(request: BatchAnalysisRequest):
 @router.get("/inspecciones/test")
 async def test_ai_service():
     """
-    Test endpoint to verify Gemini AI service is working
+    Test endpoint to verify Gemini AI service is working with comprehensive diagnostics
     """
     import os
+    import sys
+    
+    try:
+        import google.generativeai as genai
+        genai_version = getattr(genai, '__version__', 'unknown')
+        genai_available = True
+    except ImportError:
+        genai_version = 'not installed'
+        genai_available = False
     
     google_api_configured = bool(os.getenv("GOOGLE_API_KEY"))
     
@@ -102,12 +111,25 @@ async def test_ai_service():
         return {
             "status": "error",
             "message": "GOOGLE_API_KEY not configured",
-            "gemini_available": False
+            "gemini_available": False,
+            "vision_provider": os.getenv("VISION_PROVIDER", "gemini"),
+            "library_version": genai_version,
+            "python_version": sys.version
         }
     
     return {
         "status": "ok",
         "message": "Gemini Vision AI service is ready",
-        "gemini_available": True,
-        "vision_provider": os.getenv("VISION_PROVIDER", "gemini")
+        "gemini_available": genai_available,
+        "vision_provider": os.getenv("VISION_PROVIDER", "gemini"),
+        "model_name": "gemini-1.5-flash",
+        "library_version": genai_version,
+        "api_version": "v1",
+        "python_version": sys.version,
+        "configuration": {
+            "temperature": 0.4,
+            "top_p": 0.95,
+            "top_k": 40,
+            "max_output_tokens": 2048
+        }
     }
