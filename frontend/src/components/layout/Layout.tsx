@@ -5,6 +5,7 @@ import FullScreenMap from '../maps/FullScreenMap';
 import DashboardContent from '../dashboard/DashboardContent';
 import ZonesGalleryContent from '../zones/ZonesGalleryContent';
 import ZoneDetailContent from '../zones/ZoneDetailContent';
+import ZoneDetailView from '../zones/ZoneDetailView';
 import AnalysisWorkflowContent from '../analysis/AnalysisWorkflowContent';
 import BudgetGalleryContent from '../budget/BudgetGalleryContent';
 import { AnalysisResults } from '../analysis/AnalysisResults';
@@ -239,13 +240,18 @@ const Layout: React.FC = () => {
       
       case 'zonas-detail':
         return selectedArea ? (
-          <ZoneDetailContent
-            area={selectedArea}
+          <ZoneDetailView
+            zone={selectedArea}
             onBack={() => setCurrentView('zonas-gallery')}
+            onViewAnalysis={(zoneId) => {
+              // Navigate to analysis view for this zone
+              console.log('View analysis for zone:', zoneId);
+            }}
             onNavigate={handleNavigate}
-            onDelete={handleDeleteArea}
           />
-        ) : null;
+        ) : (
+          <div>No zone selected</div>
+        );
       
       case 'analisis-especializados':
         return <SpecializedAnalysisGallery onNavigate={handleNavigate} />;
