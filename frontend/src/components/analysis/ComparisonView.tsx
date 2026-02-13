@@ -19,6 +19,7 @@ import {
   Building
 } from 'lucide-react';
 import { AnalisisEspecializado } from '../../types';
+import { Z_INDEX } from '../../constants/zIndex';
 
 interface ComparisonViewProps {
   especializado: AnalisisEspecializado;
@@ -69,7 +70,10 @@ export const ComparisonView: React.FC<ComparisonViewProps> = ({
   const advertencias = analisis_adicional?.advertencias || [];
 
   return (
-    <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4 overflow-y-auto">
+    <div 
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 overflow-y-auto"
+      style={{ zIndex: Z_INDEX.SAVE_DIALOG_OVERLAY }}
+    >
       <div className="bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="sticky top-0 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-4 flex justify-between items-center">
