@@ -18,6 +18,7 @@ import { coordinatesToGeoJSON } from '../../services/ai-analysis';
 import { supabase, TABLES } from '../../config/supabase';
 import { saveZonaVerde, loadZonasVerdes, deleteZonaVerde } from '../../services/zona-storage';
 import { SpecializedAnalysisWithZone } from '../../services/specialized-analysis-service';
+import { Z_INDEX } from '../../constants/zIndex';
 
 // Calcular área usando fórmula de Haversine (aproximación para polígonos pequeños)
 const calcularArea = (coords: [number, number][]): number => {
@@ -324,7 +325,7 @@ const Layout: React.FC = () => {
           {isAnalyzing && (
             <div 
               className="fixed inset-0 bg-black/50 flex items-center justify-center"
-              style={{ zIndex: 9999 }}
+              style={{ zIndex: Z_INDEX.PAGE_OVERLAY }}
             >
               <div className="bg-white rounded-lg p-6 text-center max-w-md">
                 <div className="animate-spin h-12 w-12 border-4 border-green-600 border-t-transparent rounded-full mx-auto mb-4" />
@@ -341,7 +342,10 @@ const Layout: React.FC = () => {
           
           {/* Analysis results overlay */}
           {showAnalysisResults && analysisResult && (
-            <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 overflow-auto" style={{ zIndex: 9999 }}>
+            <div 
+              className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 overflow-auto" 
+              style={{ zIndex: Z_INDEX.SAVE_DIALOG_OVERLAY }}
+            >
               <AnalysisResults
                 analysis={analysisResult}
                 onGenerateBudget={handleGenerateBudget}
