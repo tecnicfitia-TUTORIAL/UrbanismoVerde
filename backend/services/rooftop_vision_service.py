@@ -8,6 +8,7 @@ import os
 import json
 import logging
 from typing import Dict, List, Optional
+from urllib.parse import urlparse
 
 logger = logging.getLogger(__name__)
 
@@ -18,6 +19,60 @@ if GOOGLE_API_KEY:
     logger.info("✅ Gemini API configured")
 else:
     logger.warning("⚠️ GOOGLE_API_KEY not set - AI features will not work")
+
+
+# Allowed URL schemes and domains for image downloads (security measure)
+ALLOWED_SCHEMES = ['https']
+ALLOWED_DOMAINS = [
+    'maps.googleapis.com',
+    'maps.gstatic.com',
+    'storage.googleapis.com',
+    'firebasestorage.googleapis.com',
+    'supabase.co',
+    'wxxztdpkwbyvggpwqdgx.supabase.co'
+]
+
+
+def validate_image_url(url: str) -> bool:
+    """
+    Validate that the image URL is from an allowed source to prevent SSRF attacks
+    
+    Args:
+        url: URL to validate
+        
+    Returns:
+        bool: True if URL is valid and from allowed source
+    """
+    try:
+        parsed = urlparse(url)
+        
+        # Check scheme
+        if parsed.scheme not in ALLOWED_SCHEMES:
+            logger.warning(f"❌ Invalid URL scheme: {parsed.scheme}")
+            return False
+        
+        # Check domain
+        hostname = parsed.hostname
+        if not hostname:
+            logger.warning(f"❌ Invalid URL: no hostname")
+            return False
+        
+        # Allow exact matches or subdomains of allowed domains
+        is_allowed = False
+        for allowed_domain in ALLOWED_DOMAINS:
+            if hostname == allowed_domain or hostname.endswith('.' + allowed_domain):
+                is_allowed = True
+                break
+        
+        if not is_allowed:
+            logger.warning(f"❌ Domain not in allowlist: {hostname}")
+            return False
+        
+        return True
+        
+    except Exception as e:
+        logger.error(f"❌ Error validating URL: {e}")
+        return False
 
 
 ANALYSIS_PROMPT = """
@@ -87,6 +142,11 @@ async def analyze_rooftop_from_image(
         logger.error("❌ GOOGLE_API_KEY not configured")
         return _fallback_response("API key not configured")
     
+    # Validate URL to prevent SSRF attacks
+    if not validate_image_url(image_url):
+        logger.error(f"❌ Invalid or disallowed image URL: {image_url}")
+        return _fallback_response("Invalid image URL or source not allowed")
+    
     try:
         logger.info(f"🔍 Analyzing rooftop image with Gemini Vision")
         
@@ -99,9 +159,20 @@ async def analyze_rooftop_from_image(
         from PIL import Image
         from io import BytesIO
         
-        # Download image from URL
-        response_img = requests.get(image_url, timeout=30)
+        # Download image from URL with additional security checks
+        response_img = requests.get(
+            image_url,
+            timeout=30,
+            allow_redirects=False  # Prevent redirect-based SSRF
+        )
         response_img.raise_for_status()
+        
+        # Verify content type
+        content_type = response_img.headers.get('content-type', '')
+        if not content_type.startswith('image/'):
+            logger.error(f"❌ Invalid content type: {content_type}")
+            return _fallback_response("URL does not point to an image")
+        
         img = Image.open(BytesIO(response_img.content))
         
         # Generate content with image and prompt
