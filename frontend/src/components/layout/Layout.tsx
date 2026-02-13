@@ -22,14 +22,20 @@ import { SpecializedAnalysisWithZone } from '../../services/specialized-analysis
 import { Z_INDEX } from '../../constants/zIndex';
 
 // Type guard to check if an object is an Area
-const isArea = (obj: any): obj is Area => {
-  return obj && 
+const isArea = (obj: unknown): obj is Area => {
+  return obj !== null &&
+    obj !== undefined &&
     typeof obj === 'object' &&
-    typeof obj.id === 'string' &&
-    typeof obj.nombre === 'string' &&
-    typeof obj.tipo === 'string' &&
-    Array.isArray(obj.coordenadas) &&
-    typeof obj.areaM2 === 'number';
+    'id' in obj &&
+    'nombre' in obj &&
+    'tipo' in obj &&
+    'coordenadas' in obj &&
+    'areaM2' in obj &&
+    typeof (obj as any).id === 'string' &&
+    typeof (obj as any).nombre === 'string' &&
+    typeof (obj as any).tipo === 'string' &&
+    Array.isArray((obj as any).coordenadas) &&
+    typeof (obj as any).areaM2 === 'number';
 };
 
 // Calcular área usando fórmula de Haversine (aproximación para polígonos pequeños)
