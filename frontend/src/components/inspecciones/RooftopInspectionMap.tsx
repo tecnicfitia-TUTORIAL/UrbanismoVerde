@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect } from 'react';
 import { MapContainer, TileLayer, Polygon, useMapEvents, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { InspeccionTejado } from '../../types';
@@ -93,11 +93,7 @@ const RooftopInspectionMap: React.FC<RooftopInspectionMapProps> = ({
   selectedRooftops = [],
   selectionMode = 'single'
 }) => {
-  const [clickedPoint, setClickedPoint] = useState<[number, number] | null>(null);
-
   const handleMapClick = async (lat: number, lng: number) => {
-    setClickedPoint([lat, lng]);
-    
     // Create a placeholder geometry around the clicked point
     // Note: We no longer query external APIs which can timeout or be unreliable.
     // The user can adjust the rooftop boundary in the inspection form if needed.
@@ -123,7 +119,7 @@ const RooftopInspectionMap: React.FC<RooftopInspectionMapProps> = ({
         {/* Address Search Control */}
         {/* Note: SearchControl internally handles map panning to selected location with smooth flyTo animation */}
         <SearchControl 
-          onLocationSelected={(lat, lng, label) => {
+          onLocationSelected={(_lat, _lng, label) => {
             console.log('📍 Dirección encontrada:', label);
             // Map is automatically centered by SearchControl at zoom level 18 with smooth animation
           }}
@@ -140,8 +136,8 @@ const RooftopInspectionMap: React.FC<RooftopInspectionMapProps> = ({
         {existingInspections.map((inspection) => {
           if (!inspection.coordenadas?.coordinates?.[0]) return null;
           
-          const coords = inspection.coordenadas.coordinates[0].map(
-            ([lng, lat]: [number, number]) => [lat, lng] as [number, number]
+          const coords = (inspection.coordenadas.coordinates[0] as [number, number][]).map(
+            ([lng, lat]) => [lat, lng] as [number, number]
           );
 
           return (
@@ -162,8 +158,8 @@ const RooftopInspectionMap: React.FC<RooftopInspectionMapProps> = ({
         {selectionMode === 'multi' && selectedRooftops.map((rooftop, idx) => {
           if (!rooftop.coordenadas?.coordinates?.[0]) return null;
           
-          const coords = rooftop.coordenadas.coordinates[0].map(
-            ([lng, lat]: [number, number]) => [lat, lng] as [number, number]
+          const coords = (rooftop.coordenadas.coordinates[0] as [number, number][]).map(
+            ([lng, lat]) => [lat, lng] as [number, number]
           );
 
           return (
@@ -183,8 +179,8 @@ const RooftopInspectionMap: React.FC<RooftopInspectionMapProps> = ({
         {/* Show currently selected rooftop (for single mode or preview) */}
         {selectionMode === 'single' && selectedRooftop?.coordenadas?.coordinates?.[0] && (
           <Polygon
-            positions={selectedRooftop.coordenadas.coordinates[0].map(
-              ([lng, lat]: [number, number]) => [lat, lng] as [number, number]
+            positions={(selectedRooftop.coordenadas.coordinates[0] as [number, number][]).map(
+              ([lng, lat]) => [lat, lng] as [number, number]
             )}
             pathOptions={{
               color: '#16a34a',
