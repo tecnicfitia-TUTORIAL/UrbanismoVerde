@@ -1,7 +1,20 @@
-import React from 'react';
-import { ArrowLeft, Building2, Layers, CheckCircle, AlertCircle } from 'lucide-react';
-import { SpecializedAnalysisWithZone } from '../../services/specialized-analysis-service';
+import React, { useState } from 'react';
+import { ArrowLeft, Building2, Layers, CheckCircle, AlertCircle, Trash2, MapIcon } from 'lucide-react';
+import toast from 'react-hot-toast';
+import { SpecializedAnalysisWithZone, deleteSpecializedAnalysis } from '../../services/specialized-analysis-service';
 import Breadcrumbs from '../common/Breadcrumbs';
+
+// Helper function to convert snake_case to Title Case
+function toTitleCase(str: string): string {
+  return str.split('_').map(w => 
+    w.charAt(0).toUpperCase() + w.slice(1)
+  ).join(' ');
+}
+
+// Helper function to get zone name from analysis
+function getZoneName(analysis: SpecializedAnalysisWithZone): string {
+  return analysis.analisis?.zonas_verdes?.nombre || analysis.zona_verde?.nombre || 'Zona sin nombre';
+}
 
 interface SpecializedAnalysisDetailProps {
   analysis: SpecializedAnalysisWithZone;
@@ -12,6 +25,23 @@ const SpecializedAnalysisDetail: React.FC<SpecializedAnalysisDetailProps> = ({
   analysis,
   onBack
 }) => {
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    try {
+      await deleteSpecializedAnalysis(analysis.id);
+      toast.success('Análisis eliminado exitosamente');
+      onBack(); // Navigate back to gallery
+    } catch (error) {
+      console.error('Error deleting analysis:', error);
+      toast.error('Error al eliminar el análisis');
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteModal(false);
+    }
+  };
   const breadcrumbItems = [
     { label: 'Dashboard', path: 'dashboard' },
     { label: 'Análisis Especializados', path: 'analisis-especializados' },
@@ -39,7 +69,7 @@ const SpecializedAnalysisDetail: React.FC<SpecializedAnalysisDetailProps> = ({
                 </h1>
                 <div className="flex items-center gap-3">
                   <span className="text-lg text-gray-600">
-                    {analysis.analisis?.zonas_verdes?.nombre || analysis.zona_verde?.nombre || 'Zona sin nombre'}
+                    {getZoneName(analysis)}
                   </span>
                   <span className={`px-3 py-1 rounded-full text-sm font-semibold ${getViabilityColor(analysis.viabilidad_final)}`}>
                     {analysis.viabilidad_final?.toUpperCase() || 'N/A'}
@@ -47,11 +77,39 @@ const SpecializedAnalysisDetail: React.FC<SpecializedAnalysisDetailProps> = ({
                 </div>
               </div>
             </div>
+            
+            {/* Delete Button */}
+            <button
+              onClick={() => setShowDeleteModal(true)}
+              className="flex items-center gap-2 px-4 py-2 text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors"
+            >
+              <Trash2 size={20} />
+              <span>Eliminar Análisis</span>
+            </button>
           </div>
         </div>
 
         {/* Content Sections */}
         <div className="space-y-6">
+          {/* Map Section - Information Message */}
+          <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold flex items-center gap-2">
+                <MapIcon size={20} />
+                Ubicación de la Zona
+              </h2>
+            </div>
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 text-center">
+              <MapIcon size={48} className="mx-auto text-blue-400 mb-3" />
+              <p className="text-gray-700 mb-2">
+                Para ver la ubicación de esta zona en el mapa, visita la galería de zonas verdes.
+              </p>
+              <p className="text-sm text-gray-600">
+                Zona: <strong>{getZoneName(analysis)}</strong>
+              </p>
+            </div>
+          </div>
+
           {/* Base Data */}
           <div className="bg-white rounded-lg border border-gray-200 p-6">
             <h2 className="text-xl font-semibold mb-4">Datos Base</h2>
@@ -115,10 +173,17 @@ const SpecializedAnalysisDetail: React.FC<SpecializedAnalysisDetailProps> = ({
           {analysis.caracteristicas_especificas && Object.keys(analysis.caracteristicas_especificas).length > 0 && (
             <div className="bg-white rounded-lg border border-gray-200 p-6">
               <h2 className="text-xl font-semibold mb-4">Características Específicas</h2>
-              <div className="bg-gray-50 rounded-lg p-4">
-                <pre className="text-sm text-gray-700 whitespace-pre-wrap">
-                  {JSON.stringify(analysis.caracteristicas_especificas, null, 2)}
-                </pre>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {Object.entries(analysis.caracteristicas_especificas).map(([key, value]) => (
+                  <div key={key} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                    <div className="text-sm text-gray-600 mb-1">
+                      {formatFieldName(key)}
+                    </div>
+                    <div className="text-lg font-semibold text-gray-900">
+                      {formatFieldValue(key, value)}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           )}
@@ -132,6 +197,34 @@ const SpecializedAnalysisDetail: React.FC<SpecializedAnalysisDetailProps> = ({
           )}
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]">
+          <div className="bg-white rounded-lg p-6 max-w-md mx-4">
+            <h3 className="text-xl font-bold mb-4">¿Eliminar Análisis?</h3>
+            <p className="text-gray-600 mb-6">
+              Esta acción no se puede deshacer. Se eliminará permanentemente el análisis especializado.
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                disabled={isDeleting}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleDelete}
+                className="px-4 py-2 text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={isDeleting}
+              >
+                {isDeleting ? 'Eliminando...' : 'Eliminar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -150,6 +243,51 @@ function getSpecializationLabel(type: string): string {
     otro: 'Otro'
   };
   return labels[type] || type;
+}
+
+function formatFieldName(key: string): string {
+  const labels: Record<string, string> = {
+    carga_estructural_kg_m2: 'Carga Estructural',
+    inclinacion_grados: 'Inclinación',
+    impermeabilizacion: 'Impermeabilización',
+    orientacion: 'Orientación',
+    altura_metros: 'Altura',
+    sistema_anclaje: 'Sistema de Anclaje',
+    tipo_muro: 'Tipo de Muro',
+    topografia: 'Topografía',
+    uso_publico: 'Uso Público',
+    accesibilidad: 'Accesibilidad',
+    exposicion_solar: 'Exposición Solar',
+    sistema_riego: 'Sistema de Riego',
+    drenaje: 'Drenaje',
+    vegetacion_existente: 'Vegetación Existente',
+    proximidad_agua: 'Proximidad al Agua',
+    estado_superficie: 'Estado de la Superficie'
+  };
+  return labels[key] || toTitleCase(key);
+}
+
+function formatFieldValue(key: string, value: any): string {
+  if (value === null || value === undefined) {
+    return 'N/A';
+  }
+  if (typeof value === 'boolean') {
+    return value ? 'Sí' : 'No';
+  }
+  if (key.includes('kg_m2')) {
+    return `${value} kg/m²`;
+  }
+  if (key.includes('grados')) {
+    return `${value}°`;
+  }
+  if (key.includes('metros')) {
+    return `${value} m`;
+  }
+  // Handle snake_case values (convert to readable format)
+  if (typeof value === 'string' && value.includes('_')) {
+    return toTitleCase(value);
+  }
+  return String(value);
 }
 
 function getViabilityColor(viability: string | undefined): string {

@@ -162,3 +162,27 @@ export async function countSpecializedAnalysesByType(): Promise<Record<TipoEspec
     return {} as Record<TipoEspecializacion, number>;
   }
 }
+
+/**
+ * Delete a specialized analysis
+ */
+export async function deleteSpecializedAnalysis(id: string): Promise<void> {
+  console.log(`🗑️ Eliminando análisis especializado ${id}...`);
+  
+  try {
+    const { error } = await supabase
+      .from(TABLES.ANALISIS_ESPECIALIZADOS)
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error deleting specialized analysis:', error);
+      throw new Error(`Failed to delete: ${error.message}`);
+    }
+
+    console.log('✅ Análisis especializado eliminado');
+  } catch (error) {
+    console.error('❌ Error eliminando análisis especializado:', error);
+    throw error;
+  }
+}

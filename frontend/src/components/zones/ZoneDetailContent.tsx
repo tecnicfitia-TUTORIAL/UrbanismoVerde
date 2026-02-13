@@ -1,11 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, MapIcon, Edit2, Trash2, Brain, Euro, History, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { MapContainer, TileLayer, Polygon } from 'react-leaflet';
+import { LatLngBoundsExpression } from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 import { Area } from '../../types';
 import Breadcrumbs from '../common/Breadcrumbs';
 import { coloresPorTipo } from '../../types';
 import { supabase, TABLES } from '../../config/supabase';
 import { deleteZonaVerde } from '../../services/zona-storage';
+
+// Helper function to calculate center of coordinates
+function calculateCenter(coords: [number, number][]): [number, number] {
+  const sum = coords.reduce((acc, coord) => {
+    return [acc[0] + coord[0], acc[1] + coord[1]];
+  }, [0, 0]);
+  return [sum[0] / coords.length, sum[1] / coords.length];
+}
 
 interface ZoneDetailContentProps {
   area: Area;
@@ -319,6 +330,36 @@ const ZoneDetailContent: React.FC<ZoneDetailContentProps> = ({
           <div className="p-6">
             {activeTab === 'info' && (
               <div className="space-y-6">
+                {/* ========== MAP VISUALIZATION ========== */}
+                <div className="bg-white rounded-lg border border-gray-200 p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                    <MapIcon size={20} />
+                    Ubicación de la Zona
+                  </h3>
+                  <div className="relative h-96 rounded-lg overflow-hidden border border-gray-200">
+                    <MapContainer
+                      center={calculateCenter(area.coordenadas)}
+                      zoom={16}
+                      style={{ height: '100%', width: '100%' }}
+                      scrollWheelZoom={true}
+                    >
+                      <TileLayer
+                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                      />
+                      <Polygon
+                        positions={area.coordenadas}
+                        pathOptions={{
+                          color: coloresPorTipo[area.tipo],
+                          fillColor: coloresPorTipo[area.tipo],
+                          fillOpacity: 0.3,
+                          weight: 3
+                        }}
+                      />
+                    </MapContainer>
+                  </div>
+                </div>
+
                 {/* ========== SECTION 1: BASIC ZONE INFO ========== */}
                 <div className="bg-white rounded-lg border border-gray-200 p-6">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Datos Generales</h3>
