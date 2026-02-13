@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect } from 'react';
 import { MapContainer, TileLayer, Polygon, useMapEvents, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { InspeccionTejado } from '../../types';
@@ -20,99 +20,32 @@ interface RooftopInspectionMapProps {
   selectionMode?: 'single' | 'multi';
 }
 
-// Type definitions for OpenStreetMap Overpass API response
-interface OSMNode {
-  lon: number;
-  lat: number;
-}
-
-interface OSMWay {
-  type: 'way';
-  geometry: OSMNode[];
-}
-
-interface OSMRelation {
-  type: 'relation';
-  members: Array<{
-    role: string;
-    geometry?: OSMNode[];
-  }>;
-}
-
-type OSMElement = OSMWay | OSMRelation;
-
 /**
- * Query OpenStreetMap Overpass API for building at clicked location
+ * Create a simple polygon geometry around a clicked point.
+ * This is used as a placeholder for rooftop selection when precise building
+ * boundaries are not available from the map tiles.
+ * 
+ * The user can later adjust the area or geometry as needed.
+ * 
  * @param lat - Latitude of the clicked location
  * @param lng - Longitude of the clicked location
- * @returns GeoJSON polygon geometry or null if no building found
- * 
- * Search radius is set to 10 meters, which is appropriate for:
- * - Detecting small to medium buildings
- * - Minimizing false positives from nearby buildings
- * - Allowing slight click inaccuracies
+ * @returns GeoJSON polygon geometry representing a simple square area
  */
-async function queryBuildingAtLocation(lat: number, lng: number): Promise<any | null> {
-  const radius = 10; // Search radius in meters
-  const query = `
-    [out:json];
-    (
-      way["building"](around:${radius},${lat},${lng});
-      relation["building"](around:${radius},${lat},${lng});
-    );
-    out geom;
-  `;
+function createPlaceholderGeometry(lat: number, lng: number): any {
+  // Create a simple square polygon around the clicked point
+  // Size is approximately 30x30 meters (0.00015 degrees creates 15m radius from center)
+  const size = 0.00015;
   
-  try {
-    const response = await fetch('https://overpass-api.de/api/interpreter', {
-      method: 'POST',
-      body: query
-    });
-    
-    if (!response.ok) {
-      throw new Error('Overpass API request failed');
-    }
-    
-    const data = await response.json();
-    
-    if (data.elements && data.elements.length > 0) {
-      // Get the first building found
-      const building = data.elements[0] as OSMElement;
-      
-      // Extract coordinates based on element type
-      let coordinates: [number, number][] = [];
-      
-      if (building.type === 'way' && building.geometry) {
-        // For ways, use the geometry directly
-        coordinates = building.geometry.map((node: OSMNode) => [node.lon, node.lat]);
-      } else if (building.type === 'relation' && building.members) {
-        // For relations, extract outer way coordinates
-        const outerWay = building.members.find((m) => m.role === 'outer');
-        if (outerWay && outerWay.geometry) {
-          coordinates = outerWay.geometry.map((node: OSMNode) => [node.lon, node.lat]);
-        }
-      }
-      
-      // Ensure the polygon is closed
-      if (coordinates.length > 0 && 
-          (coordinates[0][0] !== coordinates[coordinates.length - 1][0] ||
-           coordinates[0][1] !== coordinates[coordinates.length - 1][1])) {
-        coordinates.push(coordinates[0]);
-      }
-      
-      if (coordinates.length >= 4) {
-        return {
-          type: 'Polygon',
-          coordinates: [coordinates]
-        };
-      }
-    }
-    
-    return null;
-  } catch (error) {
-    console.error('Error querying Overpass API:', error);
-    return null;
-  }
+  return {
+    type: 'Polygon',
+    coordinates: [[
+      [lng - size, lat - size],
+      [lng + size, lat - size],
+      [lng + size, lat + size],
+      [lng - size, lat + size],
+      [lng - size, lat - size]
+    ]]
+  };
 }
 
 // Component to handle map clicks and set cursor
@@ -160,33 +93,11 @@ const RooftopInspectionMap: React.FC<RooftopInspectionMapProps> = ({
   selectedRooftops = [],
   selectionMode = 'single'
 }) => {
-  const [clickedPoint, setClickedPoint] = useState<[number, number] | null>(null);
-
   const handleMapClick = async (lat: number, lng: number) => {
-    setClickedPoint([lat, lng]);
-    
-    // Try to detect building from OpenStreetMap
-    const buildingGeometry = await queryBuildingAtLocation(lat, lng);
-    
-    let geometry;
-    if (buildingGeometry) {
-      // Use detected building geometry
-      geometry = buildingGeometry;
-    } else {
-      // Fallback: Create a simple square polygon around the clicked point
-      // This is a placeholder when no building is detected
-      const size = 0.0001; // Approximate size in degrees
-      geometry = {
-        type: 'Polygon',
-        coordinates: [[
-          [lng - size, lat - size],
-          [lng + size, lat - size],
-          [lng + size, lat + size],
-          [lng - size, lat + size],
-          [lng - size, lat - size]
-        ]]
-      };
-    }
+    // Create a placeholder geometry around the clicked point
+    // Note: We no longer query external APIs which can timeout or be unreliable.
+    // The user can adjust the rooftop boundary in the inspection form if needed.
+    const geometry = createPlaceholderGeometry(lat, lng);
 
     onRooftopClick(geometry, [lat, lng]);
   };
@@ -208,7 +119,7 @@ const RooftopInspectionMap: React.FC<RooftopInspectionMapProps> = ({
         {/* Address Search Control */}
         {/* Note: SearchControl internally handles map panning to selected location with smooth flyTo animation */}
         <SearchControl 
-          onLocationSelected={(lat, lng, label) => {
+          onLocationSelected={(_lat, _lng, label) => {
             console.log('📍 Dirección encontrada:', label);
             // Map is automatically centered by SearchControl at zoom level 18 with smooth animation
           }}
@@ -225,8 +136,8 @@ const RooftopInspectionMap: React.FC<RooftopInspectionMapProps> = ({
         {existingInspections.map((inspection) => {
           if (!inspection.coordenadas?.coordinates?.[0]) return null;
           
-          const coords = inspection.coordenadas.coordinates[0].map(
-            ([lng, lat]: [number, number]) => [lat, lng] as [number, number]
+          const coords = (inspection.coordenadas.coordinates[0] as [number, number][]).map(
+            ([lng, lat]) => [lat, lng] as [number, number]
           );
 
           return (
@@ -247,8 +158,8 @@ const RooftopInspectionMap: React.FC<RooftopInspectionMapProps> = ({
         {selectionMode === 'multi' && selectedRooftops.map((rooftop, idx) => {
           if (!rooftop.coordenadas?.coordinates?.[0]) return null;
           
-          const coords = rooftop.coordenadas.coordinates[0].map(
-            ([lng, lat]: [number, number]) => [lat, lng] as [number, number]
+          const coords = (rooftop.coordenadas.coordinates[0] as [number, number][]).map(
+            ([lng, lat]) => [lat, lng] as [number, number]
           );
 
           return (
@@ -268,8 +179,8 @@ const RooftopInspectionMap: React.FC<RooftopInspectionMapProps> = ({
         {/* Show currently selected rooftop (for single mode or preview) */}
         {selectionMode === 'single' && selectedRooftop?.coordenadas?.coordinates?.[0] && (
           <Polygon
-            positions={selectedRooftop.coordenadas.coordinates[0].map(
-              ([lng, lat]: [number, number]) => [lat, lng] as [number, number]
+            positions={(selectedRooftop.coordenadas.coordinates[0] as [number, number][]).map(
+              ([lng, lat]) => [lat, lng] as [number, number]
             )}
             pathOptions={{
               color: '#16a34a',
@@ -289,7 +200,7 @@ const RooftopInspectionMap: React.FC<RooftopInspectionMapProps> = ({
         <p className="text-sm text-gray-600">
           {selectionMode === 'multi' 
             ? 'Haz clic en múltiples tejados para seleccionarlos. Usa el botón "Analizar con IA" cuando termines.'
-            : 'Haz clic en cualquier ubicación del mapa para crear una inspección de tejado y obtener datos completos.'}
+            : 'Haz clic en cualquier ubicación del mapa para crear una inspección de tejado. Se creará un área inicial que podrás ajustar después.'}
         </p>
       </div>
     </div>
