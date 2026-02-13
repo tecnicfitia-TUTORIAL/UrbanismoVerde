@@ -1,5 +1,6 @@
 import { supabase, TABLES } from '../config/supabase';
 import { InspeccionTejado } from '../types';
+import * as turf from '@turf/turf';
 
 /**
  * Save new rooftop inspection
@@ -168,7 +169,7 @@ export function calculateCentroid(coordinates: [number, number][]): [number, num
 
 /**
  * Calculate area of a polygon in square meters
- * Uses the spherical excess formula for accuracy
+ * Uses @turf/area for accurate calculation
  * Note: GeoJSON coordinates are in [lon, lat] order
  */
 export function calculatePolygonArea(coordinates: [number, number][]): number {
@@ -176,21 +177,27 @@ export function calculatePolygonArea(coordinates: [number, number][]): number {
     return 0;
   }
 
-  const R = 6371000; // Earth's radius in meters
-  let area = 0;
-
-  for (let i = 0; i < coordinates.length; i++) {
-    const j = (i + 1) % coordinates.length;
-    const lon1 = coordinates[i][0] * Math.PI / 180;
-    const lat1 = coordinates[i][1] * Math.PI / 180;
-    const lon2 = coordinates[j][0] * Math.PI / 180;
-    const lat2 = coordinates[j][1] * Math.PI / 180;
-
-    area += (lon2 - lon1) * (2 + Math.sin(lat1) + Math.sin(lat2));
+  try {
+    // Ensure the polygon is closed (first and last coordinates must be identical)
+    let coords = coordinates;
+    const first = coordinates[0];
+    const last = coordinates[coordinates.length - 1];
+    
+    if (first[0] !== last[0] || first[1] !== last[1]) {
+      coords = [...coordinates, first];
+    }
+    
+    // Create a turf polygon from coordinates
+    const polygon = turf.polygon([coords]);
+    
+    // Calculate area in square meters
+    const area = turf.area(polygon);
+    
+    return Math.round(area * 100) / 100; // Round to 2 decimal places
+  } catch (error) {
+    console.error('Error calculating area:', error);
+    return 0;
   }
-
-  area = Math.abs(area * R * R / 2);
-  return Math.round(area * 100) / 100; // Round to 2 decimal places
 }
 
 /**
