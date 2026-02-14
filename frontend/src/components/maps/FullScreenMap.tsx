@@ -117,14 +117,12 @@ const FullScreenMap: React.FC<FullScreenMapProps> = ({
   // Map mode management
   const { mode, changeMode } = useMapMode('idle');
 
-  // Sync mode with isDrawing prop
+  // Sync mode with isDrawing prop - Only respond to external isDrawing changes
   useEffect(() => {
     if (isDrawing && mode !== 'draw') {
       changeMode('draw');
-    } else if (!isDrawing && mode === 'draw') {
-      changeMode('idle');
     }
-  }, [isDrawing, mode, changeMode]);
+  }, [isDrawing, changeMode]); // Removed 'mode' to prevent infinite loop
 
   // Handle mode changes
   const handleModeChange = useCallback((newMode: MapMode) => {
@@ -157,7 +155,7 @@ const FullScreenMap: React.FC<FullScreenMapProps> = ({
     } else if (newMode === 'gallery') {
       toast.success('Modo Galería activado. Explora las zonas guardadas.', { icon: '📋' });
     }
-  }, [mode, changeMode, isSelectionMode, setIsDrawing]);
+  }, [mode, changeMode, isSelectionMode, handleCancelSelectionMode, setIsDrawing]);
 
   // Deshacer último punto
   const handleUndoPoint = useCallback(() => {
@@ -249,7 +247,7 @@ const FullScreenMap: React.FC<FullScreenMapProps> = ({
   };
 
   // Multi-selection handlers
-  const handleStartSelectionMode = () => {
+  const handleStartSelectionMode = useCallback(() => {
     setIsSelectionMode(true);
     setSelectedZones([]);
     // Switch to gallery mode when starting multi-selection
@@ -259,16 +257,16 @@ const FullScreenMap: React.FC<FullScreenMapProps> = ({
       setIsDrawing(false);
       setCurrentPolygon([]);
     }
-  };
+  }, [changeMode, isDrawing, setIsDrawing]);
 
-  const handleCancelSelectionMode = () => {
+  const handleCancelSelectionMode = useCallback(() => {
     setIsSelectionMode(false);
     setSelectedZones([]);
     // Return to idle mode
     if (mode === 'gallery') {
       changeMode('idle');
     }
-  };
+  }, [mode, changeMode]);
 
   const handleOpenSaveModal = () => {
     setShowSaveModal(true);

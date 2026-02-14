@@ -185,7 +185,7 @@ const RooftopInspectionMap: React.FC<RooftopInspectionMapProps> = ({
   const handleAutoDetect = () => {
     // Placeholder for future auto-detection feature
     // This would use ML/AI to detect building boundaries
-    console.log('Auto-detect clicked - feature coming soon');
+    // Currently disabled - will be implemented in future release
   };
 
   const handleMapClick = async (lat: number, lng: number) => {
