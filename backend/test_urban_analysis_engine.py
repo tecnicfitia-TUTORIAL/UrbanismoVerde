@@ -3,7 +3,7 @@
 Test script for Urban Analysis Engine fixes
 Tests the critical bug fixes:
 1. API key in Google Maps URLs
-2. Grid reduced from 17x3 to 5x5 
+2. Grid reduced from spacing-based (~51 points) to 5x5 (25 points)
 3. Improved address format
 """
 import os

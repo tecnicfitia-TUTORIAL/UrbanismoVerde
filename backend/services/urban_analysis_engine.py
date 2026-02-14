@@ -18,6 +18,8 @@ GRID_SPACING_M = 100  # Distance between sample points in meters
 MAX_ROOFTOPS_PER_ANALYSIS = 50  # Limit to prevent timeout
 MIN_AREA_M2 = 50  # Minimum rooftop area to consider
 MAX_AREA_KM2 = 5.0  # Maximum area to analyze
+MAX_ANALYSES_PER_RUN = 25  # Maximum number of analyses to perform per run
+MIN_VIABILITY_SCORE = 50  # Minimum viability score to include in results
 
 # Cost and impact estimates
 COST_PER_M2_EUR = 100  # €/m² for green roof installation
@@ -177,7 +179,7 @@ class UrbanAnalysisEngine:
             
             # Analyze rooftops at each point (with limit)
             green_roof_opportunities = []
-            max_analyses = 25  # Límite para no saturar
+            max_analyses = MAX_ANALYSES_PER_RUN  # Límite para no saturar
             
             for i, (lat, lng) in enumerate(grid_points[:max_analyses], 1):
                 self.logger.info(f"🤖 Analizando punto {i}/{len(grid_points[:max_analyses])}")
@@ -213,8 +215,8 @@ class UrbanAnalysisEngine:
                         confianza=analysis.get("confianza", 50)
                     )
                     
-                    # Only include viable opportunities (score > 50 per problem statement)
-                    if viability_score < 50:
+                    # Only include viable opportunities (score >= MIN_VIABILITY_SCORE)
+                    if viability_score < MIN_VIABILITY_SCORE:
                         self.logger.info(f"❌ Viabilidad baja ({viability_score}%), descartado")
                         continue
                     
