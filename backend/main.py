@@ -22,28 +22,28 @@ app = FastAPI(
     redoc_url="/redoc"
 )
 
-# CORS configuration - Updated with correct frontend domain
+# CORS configuration
 allowed_origins = [
-    "https://urbanismo-verde.vercel.app",      # ✅ Production domain (with hyphen)
-    "https://urbanismoverde.vercel.app",       # ✅ Alternative (without hyphen)
-    "http://localhost:5173",                    # ✅ Local development (Vite)
-    "http://localhost:3000",                    # ✅ Local development (alternative)
-    "http://localhost:8080"                     # ✅ Local development (alternative)
+    "https://urbanismo-verde.vercel.app",
+    "https://urbanismoverde.vercel.app",
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "http://localhost:8080"
 ]
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
-    allow_origin_regex=r"https://(urbanismo-verde|urbanismoverde)-.*\.vercel\.app",  # ✅ Preview deployments
+    allow_origin_regex=r"https://(urbanismo-verde|urbanismoverde)-.*\.vercel\.app",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Import routers (will be added in separate files)
+# Import routers
 try:
     from api.endpoints.inspeccion import router as inspeccion_router
-    app.include_router(inspeccion_router, prefix="/api", tags=["inspecciones"])
+    app.include_router(inspeccion_router, prefix="/api/inspecciones", tags=["inspecciones"])
     logger.info("✅ Inspection router loaded")
 except ImportError as e:
     logger.warning(f"⚠️ Could not load inspection router: {e}")
@@ -55,30 +55,25 @@ async def root():
         "message": "UrbanismoVerde AI API",
         "status": "running",
         "version": "1.0.0",
-        "environment": "production" if os.getenv("GOOGLE_CLOUD_PROJECT") else "development",
+        "environment": "production" if os.getenv("GOOGLE_API_KEY") else "development",
         "docs": "/docs",
         "health": "/health"
     }
 
 @app.get("/health")
 async def health():
-    """
-    Health check endpoint for Cloud Run and monitoring
-    Returns service status and configuration
-    """
-    vertex_ai_configured = bool(os.getenv("GOOGLE_CLOUD_PROJECT"))
+    """Health check endpoint for Cloud Run and monitoring"""
+    google_api_key_configured = bool(os.getenv("GOOGLE_API_KEY"))
     supabase_configured = bool(os.getenv("SUPABASE_URL"))
     
     return {
-        "status": "healthy" if (vertex_ai_configured and supabase_configured) else "degraded",
+        "status": "healthy" if (google_api_key_configured and supabase_configured) else "degraded",
         "service": "urbanismoverde-backend",
         "cloud_run": True,
         "configuration": {
-            "vertex_ai_project": os.getenv("GOOGLE_CLOUD_PROJECT", "not configured"),
-            "vertex_ai_location": os.getenv("GOOGLE_CLOUD_LOCATION", "europe-west9"),
-            "vision_provider": "gemini",
-            "vision_backend": "vertex-ai",
-            "model": os.getenv("GEMINI_MODEL_NAME", "gemini-1.5-flash-001"),
+            "vision_provider": os.getenv("VISION_PROVIDER", "gemini"),
+            "model": os.getenv("GEMINI_MODEL_NAME", "gemini-2.5-flash"),
+            "api_key_configured": google_api_key_configured,
             "supabase": "configured" if supabase_configured else "missing",
             "port": os.getenv("PORT", "8080")
         }
@@ -86,18 +81,16 @@ async def health():
 
 @app.get("/api/info")
 async def api_info():
-    """
-    Comprehensive API information endpoint with diagnostics
-    """
+    """Comprehensive API information endpoint with diagnostics"""
     import sys
     
     try:
-        import vertexai
-        vertexai_available = True
-        vertexai_version = "google-cloud-aiplatform"
+        import google.generativeai as genai
+        genai_available = True
+        genai_version = "google-generativeai==0.8.3"
     except ImportError:
-        vertexai_available = False
-        vertexai_version = 'not installed'
+        genai_available = False
+        genai_version = 'not installed'
     
     try:
         import fastapi
@@ -105,28 +98,25 @@ async def api_info():
     except (ImportError, AttributeError):
         fastapi_version = 'unknown'
     
-    vertex_ai_configured = bool(os.getenv("GOOGLE_CLOUD_PROJECT"))
+    google_api_key_configured = bool(os.getenv("GOOGLE_API_KEY"))
     supabase_configured = bool(os.getenv("SUPABASE_URL"))
+    vision_provider = os.getenv("VISION_PROVIDER", "gemini")
+    model_name = os.getenv("GEMINI_MODEL_NAME", "gemini-2.5-flash")
     
     return {
         "service": "UrbanismoVerde AI API",
         "version": "1.0.0",
-        "status": "healthy" if (vertex_ai_configured and supabase_configured) else "degraded",
-        "environment": "production" if vertex_ai_configured else "development",
+        "status": "healthy" if (google_api_key_configured and supabase_configured) else "degraded",
+        "environment": "production" if google_api_key_configured else "development",
         "vision": {
-            "provider": "gemini",
-            "model_name": os.getenv("GEMINI_MODEL_NAME", "gemini-1.5-flash-001"),
-            "api_key_configured": vertex_ai_configured,
-            "library": "google-cloud-aiplatform",
-            "version": vertexai_version,
-            "available": vertexai_available and vertex_ai_configured,
-            "backend_type": "vertex-ai",
-            "project_id": os.getenv("GOOGLE_CLOUD_PROJECT") or "not configured",
-            "location": os.getenv("GOOGLE_CLOUD_LOCATION", "europe-west9"),
+            "provider": vision_provider,
+            "model_name": model_name,
+            "api_key_configured": google_api_key_configured,
+            "library": "google-generativeai",
+            "library_version": genai_version,
+            "available": genai_available and google_api_key_configured,
             "configuration": {
                 "temperature": 0.4,
-                "top_p": 0.95,
-                "top_k": 40,
                 "max_output_tokens": 2048
             }
         },
@@ -149,15 +139,11 @@ async def api_info():
 
 @app.get("/test-env")
 async def test_env():
-    """
-    Test endpoint to verify environment variables (development only)
-    """
+    """Test endpoint to verify environment variables"""
     return {
-        "vertex_ai_project": os.getenv("GOOGLE_CLOUD_PROJECT", "not_set"),
-        "vertex_ai_location": os.getenv("GOOGLE_CLOUD_LOCATION", "europe-west9"),
-        "vision_provider": "gemini",
-        "vision_backend": "vertex-ai",
-        "model_name": os.getenv("GEMINI_MODEL_NAME", "gemini-1.5-flash-001"),
+        "vision_provider": os.getenv("VISION_PROVIDER", "gemini"),
+        "model_name": os.getenv("GEMINI_MODEL_NAME", "gemini-2.5-flash"),
+        "api_key_configured": bool(os.getenv("GOOGLE_API_KEY")),
         "supabase_url": os.getenv("SUPABASE_URL", "not_set")[:30] + "..." if os.getenv("SUPABASE_URL") else None,
         "supabase_configured": bool(os.getenv("SUPABASE_ANON_KEY")),
         "port": os.getenv("PORT", "8080")
@@ -168,24 +154,21 @@ async def startup_event():
     """Actions to perform on application startup"""
     logger.info("🚀 Starting UrbanismoVerde AI Backend")
     
-    # Log Vertex AI configuration
     try:
-        import vertexai
-        logger.info(f"📦 Vertex AI SDK available: google-cloud-aiplatform")
+        import google.generativeai as genai
+        logger.info(f"📦 google-generativeai SDK available")
     except ImportError as e:
-        logger.warning(f"⚠️ Vertex AI SDK not available: {e}")
+        logger.warning(f"⚠️ google-generativeai SDK not available: {e}")
     
-    logger.info(f"🔑 GOOGLE_CLOUD_PROJECT: {os.getenv('GOOGLE_CLOUD_PROJECT', 'not set')}")
-    logger.info(f"📍 Environment: {'Production' if os.getenv('GOOGLE_CLOUD_PROJECT') else 'Development'}")
-    logger.info(f"🤖 Vision Provider: gemini (via Vertex AI)")
-    logger.info(f"📍 Vertex AI Location: {os.getenv('GOOGLE_CLOUD_LOCATION', 'europe-west9')}")
-    logger.info(f"🤖 Model: {os.getenv('GEMINI_MODEL_NAME', 'gemini-1.5-flash-001')}")
+    logger.info(f"🔑 GOOGLE_API_KEY: {'configured' if os.getenv('GOOGLE_API_KEY') else 'not set'}")
+    logger.info(f"📍 Environment: {'Production' if os.getenv('GOOGLE_API_KEY') else 'Development'}")
+    logger.info(f"🤖 Vision Provider: {os.getenv('VISION_PROVIDER', 'gemini')}")
+    logger.info(f"🤖 Model: {os.getenv('GEMINI_MODEL_NAME', 'gemini-2.5-flash')}")
     logger.info(f"🔌 Port: {os.getenv('PORT', '8080')}")
-    logger.info(f"🌐 Allowed origins: {allowed_origins}")  # ✅ Log CORS origins
+    logger.info(f"🌐 Allowed origins: {allowed_origins}")
     
-    # Verify critical environment variables
-    if not os.getenv("GOOGLE_CLOUD_PROJECT"):
-        logger.warning("⚠️ GOOGLE_CLOUD_PROJECT not set - AI features will not work")
+    if not os.getenv("GOOGLE_API_KEY"):
+        logger.warning("⚠️ GOOGLE_API_KEY not set - AI features will not work")
     if not os.getenv("SUPABASE_URL"):
         logger.warning("⚠️ SUPABASE_URL not set - Database features will not work")
 
