@@ -9,40 +9,29 @@ import os
 import logging
 import asyncio
 from typing import Dict
-from functools import partial
 
 logger = logging.getLogger(__name__)
 
 # Configuración de Vertex AI
-PROJECT_ID = os.getenv('GOOGLE_CLOUD_PROJECT')
-LOCATION = os.getenv('GOOGLE_CLOUD_LOCATION', 'europe-west9')
-MODEL_NAME = os.getenv('GEMINI_MODEL_NAME', 'gemini-1.5-flash-001')
+PROJECT_ID = os.getenv('GOOGLE_CLOUD_PROJECT', 'ecourbe-ai')
+LOCATION = os.getenv('GOOGLE_CLOUD_LOCATION', 'us-central1')
+MODEL_NAME = os.getenv('GEMINI_MODEL_NAME', 'gemini-1.5-flash')
 
-if not PROJECT_ID:
-    # Using hardcoded default only for this specific Cloud Run deployment
-    # In production, GOOGLE_CLOUD_PROJECT should always be set explicitly
-    PROJECT_ID = 'ecourbe-ai'
-    logger.warning("⚠️ ⚠️ ⚠️  SECURITY WARNING  ⚠️ ⚠️ ⚠️")
-    logger.warning("GOOGLE_CLOUD_PROJECT environment variable is NOT set!")
-    logger.warning(f"Falling back to hardcoded project: {PROJECT_ID}")
-    logger.warning("This should only happen in the specific Cloud Run deployment.")
-    logger.warning("For other environments, set GOOGLE_CLOUD_PROJECT explicitly!")
+logger.info("🔧 Initializing Vertex AI...")
+logger.info(f"   Project: {PROJECT_ID}")
+logger.info(f"   Location: {LOCATION}")
+logger.info(f"   Model: {MODEL_NAME}")
 
 # Inicializar Vertex AI
 try:
     vertexai.init(project=PROJECT_ID, location=LOCATION)
-    logger.info("✅ Vertex AI initialized")
-    logger.info(f"   Project: {PROJECT_ID}")
-    logger.info(f"   Location: {LOCATION}")
-    logger.info(f"   Model: {MODEL_NAME}")
+    logger.info("✅ Vertex AI initialized successfully")
 except Exception as e:
     logger.error(f"❌ Error initializing Vertex AI: {e}")
+    logger.error(f"   This will cause all vision requests to fail")
 
 
-def _analyze_rooftop_sync(
-    image_bytes: bytes,
-    prompt: str
-) -> Dict:
+def _analyze_rooftop_sync(image_bytes: bytes, prompt: str) -> Dict:
     """
     Synchronous function to analyze image with Vertex AI
     
@@ -54,6 +43,8 @@ def _analyze_rooftop_sync(
         Dict con el resultado del análisis
     """
     try:
+        logger.info(f"🤖 Creating GenerativeModel with: {MODEL_NAME}")
+        
         # Crear modelo
         model = GenerativeModel(MODEL_NAME)
         
@@ -71,6 +62,8 @@ def _analyze_rooftop_sync(
             data=image_bytes
         )
         
+        logger.info(f"📤 Sending request to Vertex AI...")
+        
         # Generar contenido (blocking call)
         response = model.generate_content(
             [image_part, prompt],
@@ -79,27 +72,32 @@ def _analyze_rooftop_sync(
         
         # Procesar respuesta
         result_text = response.text
-        logger.info(f"✅ Vertex AI analysis completed")
+        logger.info(f"✅ Vertex AI analysis completed successfully")
+        logger.info(f"   Response length: {len(result_text)} characters")
         
         return {
             "success": True,
             "result": result_text,
-            "model": MODEL_NAME
+            "model": MODEL_NAME,
+            "location": LOCATION
         }
         
     except Exception as e:
-        logger.error(f"❌ Error in Vertex AI analysis: {e}")
+        error_msg = str(e)
+        logger.error(f"❌ Error in Vertex AI analysis: {error_msg}")
+        logger.error(f"   Model: {MODEL_NAME}")
+        logger.error(f"   Location: {LOCATION}")
+        logger.error(f"   Project: {PROJECT_ID}")
+        
         return {
             "success": False,
-            "error": str(e),
-            "model": MODEL_NAME
+            "error": error_msg,
+            "model": MODEL_NAME,
+            "location": LOCATION
         }
 
 
-async def analyze_rooftop_with_vertex_ai(
-    image_bytes: bytes,
-    prompt: str
-) -> Dict:
+async def analyze_rooftop_with_vertex_ai(image_bytes: bytes, prompt: str) -> Dict:
     """
     Analizar imagen de cubierta usando Vertex AI Gemini (async wrapper)
     
@@ -112,4 +110,3 @@ async def analyze_rooftop_with_vertex_ai(
     """
     # Run the synchronous Vertex AI call in a thread pool to avoid blocking the event loop
     return await asyncio.to_thread(_analyze_rooftop_sync, image_bytes, prompt)
-
