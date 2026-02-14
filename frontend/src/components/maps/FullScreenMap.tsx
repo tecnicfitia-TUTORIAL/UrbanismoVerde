@@ -4,17 +4,11 @@ import { LatLng, Icon } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Area, coloresPorTipo, SelectedZone } from '../../types';
 import { AnalysisPanel } from '../panels/AnalysisPanel';
-import { DrawingToolsPanel } from '../panels/DrawingToolsPanel';
-import { DrawingMarkers } from './DrawingMarker';
 import SearchControl from './SearchControl';
-import MultiSelectionMode from './MultiSelectionMode';
-import SelectionToolbar from './SelectionToolbar';
-import SaveSelectionModal from './SaveSelectionModal';
 import { MapModeControl, MapMode } from './MapModeControl';
 import { HelpPanel } from './HelpPanel';
 import { ModeIndicator } from './ModeIndicator';
 import { useMapMode } from '../../hooks/useMapMode';
-import { saveConjuntoZonas } from '../../services/conjunto-zonas-service';
 import { Layers } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -109,10 +103,10 @@ const FullScreenMap: React.FC<FullScreenMapProps> = ({
   const [searchMarker, setSearchMarker] = useState<{ lat: number; lng: number; label: string } | null>(null);
   const [showHelpPanel, setShowHelpPanel] = useState(true);
 
-  // Multi-selection mode state
-  const [isSelectionMode, setIsSelectionMode] = useState(false);
-  const [selectedZones, setSelectedZones] = useState<SelectedZone[]>([]);
-  const [showSaveModal, setShowSaveModal] = useState(false);
+  // Multi-selection mode state - REMOVED (obsolete functionality)
+  // const [isSelectionMode, setIsSelectionMode] = useState(false);
+  // const [selectedZones, setSelectedZones] = useState<SelectedZone[]>([]);
+  // const [showSaveModal, setShowSaveModal] = useState(false);
 
   // Map mode management
   const { mode, changeMode } = useMapMode('idle');
@@ -139,9 +133,7 @@ const FullScreenMap: React.FC<FullScreenMapProps> = ({
       setSelectedPoint(null);
     }
 
-    if (isSelectionMode) {
-      handleCancelSelectionMode();
-    }
+    // Multi-selection mode removed (obsolete)
 
     // Set new mode
     changeMode(newMode);
@@ -155,7 +147,7 @@ const FullScreenMap: React.FC<FullScreenMapProps> = ({
     } else if (newMode === 'gallery') {
       toast.success('Modo Galería activado. Explora las zonas guardadas.', { icon: '📋' });
     }
-  }, [mode, changeMode, isSelectionMode, handleCancelSelectionMode, setIsDrawing]);
+  }, [mode, changeMode, setIsDrawing]);
 
   // Deshacer último punto
   const handleUndoPoint = useCallback(() => {
@@ -246,13 +238,12 @@ const FullScreenMap: React.FC<FullScreenMapProps> = ({
     handleMapClick(latlng);
   };
 
-  // Multi-selection handlers
+  // Multi-selection handlers - REMOVED (obsolete functionality)
+  /*
   const handleStartSelectionMode = useCallback(() => {
     setIsSelectionMode(true);
     setSelectedZones([]);
-    // Switch to gallery mode when starting multi-selection
     changeMode('gallery');
-    // Disable drawing mode if active
     if (isDrawing) {
       setIsDrawing(false);
       setCurrentPolygon([]);
@@ -262,7 +253,6 @@ const FullScreenMap: React.FC<FullScreenMapProps> = ({
   const handleCancelSelectionMode = useCallback(() => {
     setIsSelectionMode(false);
     setSelectedZones([]);
-    // Return to idle mode
     if (mode === 'gallery') {
       changeMode('idle');
     }
@@ -273,29 +263,9 @@ const FullScreenMap: React.FC<FullScreenMapProps> = ({
   };
 
   const handleSaveSelection = async (nombre: string, descripcion?: string) => {
-    try {
-      // Convert selected zones to ZonaEnConjunto format
-      const zonas = selectedZones.map((zone, index) => ({
-        tipo_zona: zone.type,
-        coordenadas: zone.geometry,
-        area_m2: zone.area_m2,
-        orden: index,
-        metadata: {},
-      }));
-
-      await saveConjuntoZonas(nombre, descripcion, zonas);
-      
-      toast.success(`Conjunto "${nombre}" guardado exitosamente`);
-      
-      // Reset selection state
-      setIsSelectionMode(false);
-      setSelectedZones([]);
-      setShowSaveModal(false);
-    } catch (error) {
-      console.error('Error saving conjunto:', error);
-      throw error; // Let the modal handle the error display
-    }
+    // ... save logic
   };
+  */
 
   const calculateTotalArea = (zones: SelectedZone[]) => {
     return zones.reduce((sum, zone) => sum + zone.area_m2, 0);
@@ -303,14 +273,12 @@ const FullScreenMap: React.FC<FullScreenMapProps> = ({
 
   return (
     <div className="relative w-full h-full">
-      {/* Map Mode Control - Replaces standalone Multi-Selection button */}
-      {!isSelectionMode && (
-        <MapModeControl
-          currentMode={mode}
-          onModeChange={handleModeChange}
-          disabled={isSelectionMode}
-        />
-      )}
+      {/* Map Mode Control */}
+      <MapModeControl
+        currentMode={mode}
+        onModeChange={handleModeChange}
+        disabled={false}
+      />
 
       {/* Mode Indicator */}
       <ModeIndicator mode={mode} />
@@ -323,36 +291,9 @@ const FullScreenMap: React.FC<FullScreenMapProps> = ({
         />
       )}
 
-      {/* Multi-Selection Mode Button - Only visible in gallery mode */}
-      {mode === 'gallery' && !isSelectionMode && (
-        <button
-          onClick={handleStartSelectionMode}
-          className="absolute top-44 right-4 z-[1000] bg-white hover:bg-gray-50 text-gray-700 font-medium py-2 px-4 rounded-lg shadow-lg border border-gray-200 flex items-center space-x-2 transition-colors"
-          title="Activar selección múltiple"
-        >
-          <Layers size={20} />
-          <span>Selección Múltiple</span>
-        </button>
-      )}
+      {/* Multi-Selection Mode Button - REMOVED (obsolete functionality) */}
 
-      {/* Multi-Selection Components */}
-      {isSelectionMode && (
-        <>
-          <SelectionToolbar
-            selectedZones={selectedZones}
-            totalArea={calculateTotalArea(selectedZones)}
-            onClear={() => setSelectedZones([])}
-            onSave={handleOpenSaveModal}
-            onCancel={handleCancelSelectionMode}
-          />
-          <SaveSelectionModal
-            isOpen={showSaveModal}
-            selectedZones={selectedZones}
-            onSave={handleSaveSelection}
-            onClose={() => setShowSaveModal(false)}
-          />
-        </>
-      )}
+      {/* Multi-Selection Components - REMOVED (obsolete functionality) */}
 
       {/* Mapa principal */}
       <MapContainer
@@ -399,16 +340,7 @@ const FullScreenMap: React.FC<FullScreenMapProps> = ({
         {/* Cursor Controller */}
         <CursorController mode={mode} />
 
-        {/* Multi-Selection Mode Handler */}
-        {isSelectionMode && (
-          <MultiSelectionMode
-            isActive={isSelectionMode}
-            areas={areas}
-            onSelectionChange={setSelectedZones}
-            onComplete={handleOpenSaveModal}
-            onCancel={handleCancelSelectionMode}
-          />
-        )}
+        {/* Multi-Selection Mode Handler - REMOVED (obsolete functionality) */}
 
         {/* Search Control */}
         <SearchControl onLocationSelected={handleLocationSelected} />
@@ -433,15 +365,8 @@ const FullScreenMap: React.FC<FullScreenMapProps> = ({
           </Marker>
         )}
 
-        {/* Drawing Markers & Lines */}
-        {isDrawing && currentPolygon.length > 0 && (
-          <DrawingMarkers
-            points={currentPolygon}
-            onRemovePoint={(idx) => {
-              setCurrentPolygon(prev => prev.filter((_, i) => i !== idx));
-            }}
-          />
-        )}
+        {/* Drawing Markers & Lines - Simplified (DrawingMarker component removed) */}
+        {/* Points are shown but without the custom DrawingMarker component */}
 
         {/* Polígono en construcción */}
         {currentPolygon.length >= 2 && (
@@ -495,16 +420,43 @@ const FullScreenMap: React.FC<FullScreenMapProps> = ({
         ))}
       </MapContainer>
 
-      {/* Drawing Tools Panel */}
-      <DrawingToolsPanel
-        isDrawing={isDrawing}
-        pointCount={currentPolygon.length}
-        onUndo={handleUndoPoint}
-        onReset={handleResetDrawing}
-        onComplete={handleCompleteDrawing}
-        onCancel={handleCancelDrawing}
-        minPoints={3}
-      />
+      {/* Drawing Tools Panel - REMOVED (obsolete DrawingToolsPanel component) */}
+      {/* Simple inline toolbar for basic drawing controls */}
+      {isDrawing && (
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-[1000] bg-white rounded-lg shadow-lg border border-gray-200 p-3">
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-medium text-gray-700">
+              Puntos: {currentPolygon.length}
+            </span>
+            <button
+              onClick={handleUndoPoint}
+              disabled={currentPolygon.length === 0}
+              className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+            >
+              Deshacer
+            </button>
+            <button
+              onClick={handleResetDrawing}
+              className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 text-sm"
+            >
+              Reiniciar
+            </button>
+            <button
+              onClick={handleCompleteDrawing}
+              disabled={currentPolygon.length < 3}
+              className="px-3 py-1.5 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+            >
+              Completar
+            </button>
+            <button
+              onClick={handleCancelDrawing}
+              className="px-3 py-1.5 bg-red-100 text-red-700 rounded hover:bg-red-200 text-sm"
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Analysis Panel */}
       {showAnalysis && (

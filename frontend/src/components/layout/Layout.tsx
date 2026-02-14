@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import Sidebar from './Sidebar';
 import FullScreenMap from '../maps/FullScreenMap';
+import MapWithAnalysis from '../maps/MapWithAnalysis';
 import DashboardContent from '../dashboard/DashboardContent';
 import ZonesGalleryContent from '../zones/ZonesGalleryContent';
 import ZoneDetailView from '../zones/ZoneDetailView';
@@ -13,9 +14,11 @@ import SpecializedAnalysisGallery from '../analysis/SpecializedAnalysisGallery';
 import SpecializedAnalysisDetail from '../analysis/SpecializedAnalysisDetail';
 import ConjuntosGallery from '../conjuntos/ConjuntosGallery';
 import InspeccionTejadosView from '../inspecciones/InspeccionTejadosView';
-import { Area, GeoJSONPolygon } from '../../types';
+import ReportView from '../reports/ReportView';
+import { Area, GeoJSONPolygon, AreaBounds, UrbanAnalysisReport } from '../../types';
 import { useAnalysis } from '../../hooks/useAnalysis';
 import { coordinatesToGeoJSON } from '../../services/ai-analysis';
+import { analyzeUrbanArea } from '../../services/urban-analysis';
 import { supabase, TABLES } from '../../config/supabase';
 import { deleteZonaVerde } from '../../services/zona-storage';
 import { SpecializedAnalysisWithZone } from '../../services/specialized-analysis-service';
@@ -73,6 +76,11 @@ const Layout: React.FC = () => {
   const [showAnalysisResults, setShowAnalysisResults] = useState(false);
   const [showAnalysisReport, setShowAnalysisReport] = useState(false);
   const [currentPolygon, setCurrentPolygon] = useState<GeoJSONPolygon | null>(null);
+
+  // Urban Analysis state
+  const [isAnalyzingUrban, setIsAnalyzingUrban] = useState(false);
+  const [urbanReport, setUrbanReport] = useState<UrbanAnalysisReport | null>(null);
+  const [showUrbanReport, setShowUrbanReport] = useState(false);
 
   const loadZonasCount = async () => {
     try {
@@ -192,6 +200,29 @@ const Layout: React.FC = () => {
     tempCoordsRef.current = [];
   };
 
+  // Urban Analysis handlers
+  const handleUrbanAreaSelected = async (bounds: AreaBounds) => {
+    console.log('🗺️ Area selected for urban analysis:', bounds);
+    setIsAnalyzingUrban(true);
+    
+    try {
+      const report = await analyzeUrbanArea(bounds);
+      setUrbanReport(report);
+      setShowUrbanReport(true);
+      toast.success('Análisis completado');
+    } catch (error) {
+      console.error('❌ Error analyzing urban area:', error);
+      toast.error('Error al analizar el área');
+    } finally {
+      setIsAnalyzingUrban(false);
+    }
+  };
+
+  const handleCloseUrbanReport = () => {
+    setShowUrbanReport(false);
+    setUrbanReport(null);
+  };
+
   const handleDeleteArea = async (id: string) => {
     try {
       // Try to delete from database first
@@ -276,6 +307,10 @@ const Layout: React.FC = () => {
           <div>No zone selected</div>
         );
       
+      case 'analisis-urbano':
+        // Urban analysis view - full screen map
+        return null;
+      
       case 'analisis-especializados':
         return <SpecializedAnalysisGallery onNavigate={handleNavigate} />;
       
@@ -327,6 +362,7 @@ const Layout: React.FC = () => {
   };
 
   const showMap = currentView === 'zonas-create' || currentView === 'presupuestos-create' || currentView === 'presupuestos-detail' || isDrawing;
+  const showUrbanMap = currentView === 'analisis-urbano';
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -343,7 +379,35 @@ const Layout: React.FC = () => {
         onViewChange={handleViewChange}
       />
       
-      {showMap ? (
+      {showUrbanMap ? (
+        <div className="flex-1 relative">
+          <MapWithAnalysis 
+            onAreaSelected={handleUrbanAreaSelected}
+            disabled={isAnalyzingUrban}
+          />
+          
+          {/* Loading overlay while analyzing */}
+          {isAnalyzingUrban && (
+            <div 
+              className="fixed inset-0 bg-black/50 flex items-center justify-center"
+              style={{ zIndex: Z_INDEX.PAGE_OVERLAY }}
+            >
+              <div className="bg-white rounded-lg p-6 text-center max-w-md">
+                <div className="animate-spin h-12 w-12 border-4 border-green-600 border-t-transparent rounded-full mx-auto mb-4" />
+                <div className="font-semibold text-lg mb-2">🤖 Analizando área...</div>
+                <div className="text-sm text-gray-600 space-y-1">
+                  <div>✓ Detectando tejados</div>
+                  <div>✓ Analizando con IA...</div>
+                  <div>⏳ Generando informe...</div>
+                </div>
+                <div className="text-xs text-gray-500 mt-2">
+                  Esto puede tardar 30-60 segundos
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      ) : showMap ? (
         <div className="flex-1 relative">
           <FullScreenMap
             isDrawing={isDrawing}
@@ -401,6 +465,14 @@ const Layout: React.FC = () => {
           polygon={currentPolygon}
           zoneName={`Zona ${new Date().toLocaleDateString('es-ES')}`}
           onClose={handleCloseAnalysisReport}
+        />
+      )}
+
+      {/* Urban Analysis Report Modal */}
+      {showUrbanReport && urbanReport && (
+        <ReportView
+          report={urbanReport}
+          onClose={handleCloseUrbanReport}
         />
       )}
     </div>
