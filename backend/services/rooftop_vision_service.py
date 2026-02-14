@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 # Configure Gemini API
 GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
-GEMINI_MODEL_NAME = os.getenv('GEMINI_MODEL_NAME', 'gemini-1.5-flash-001')
+GEMINI_MODEL_NAME = os.getenv('GEMINI_MODEL_NAME', 'gemini-1.5-flash')
 GOOGLE_CLOUD_REGION = os.getenv('GOOGLE_CLOUD_REGION', 'not configured')
 
 if GOOGLE_API_KEY:
