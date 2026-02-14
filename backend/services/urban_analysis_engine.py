@@ -3,6 +3,7 @@ Urban Analysis Engine - Automatic rooftop detection and analysis
 Detects rooftops in a given area and analyzes them with Gemini Vision
 """
 
+import os
 import logging
 import math
 from typing import Dict, List, Tuple, Optional
@@ -17,6 +18,8 @@ GRID_SPACING_M = 100  # Distance between sample points in meters
 MAX_ROOFTOPS_PER_ANALYSIS = 50  # Limit to prevent timeout
 MIN_AREA_M2 = 50  # Minimum rooftop area to consider
 MAX_AREA_KM2 = 5.0  # Maximum area to analyze
+MAX_ANALYSES_PER_RUN = 25  # Maximum number of analyses to perform per run
+MIN_VIABILITY_SCORE = 50  # Minimum viability score to include in results
 
 # Cost and impact estimates
 COST_PER_M2_EUR = 100  # €/m² for green roof installation
@@ -52,27 +55,30 @@ def calculate_area_km2(north: float, south: float, east: float, west: float) -> 
 
 
 def generate_grid_points(north: float, south: float, east: float, west: float, 
-                         spacing_m: int = GRID_SPACING_M) -> List[Tuple[float, float]]:
-    """Generate a grid of lat/lng points for sampling rooftops"""
+                         grid_size: int = 5) -> List[Tuple[float, float]]:
+    """Generate a fixed grid of lat/lng points for sampling rooftops
+    
+    Args:
+        north, south, east, west: Bounding box coordinates
+        grid_size: Number of points in each dimension (default: 5x5 = 25 points)
+        
+    Returns:
+        List of (lat, lng) tuples representing grid points
+    """
     points = []
     
-    # Calculate approximate degrees per meter
-    center_lat = (north + south) / 2
-    lat_per_m = 1 / 111320  # Roughly 111.32 km per degree latitude
-    lon_per_m = 1 / (111320 * math.cos(math.radians(center_lat)))
+    # Calculate step sizes
+    lat_step = (north - south) / grid_size
+    lng_step = (east - west) / grid_size
     
-    # Calculate grid spacing in degrees
-    lat_spacing = spacing_m * lat_per_m
-    lon_spacing = spacing_m * lon_per_m
+    # Generate grid with points at center of each cell
+    for i in range(grid_size):
+        for j in range(grid_size):
+            lat = south + (lat_step * i) + (lat_step / 2)
+            lng = west + (lng_step * j) + (lng_step / 2)
+            points.append((lat, lng))
     
-    # Generate grid
-    current_lat = south
-    while current_lat <= north:
-        current_lon = west
-        while current_lon <= east:
-            points.append((current_lat, current_lon))
-            current_lon += lon_spacing
-        current_lat += lat_spacing
+    logger.info(f"📍 Grid sampling: {grid_size}x{grid_size} = {len(points)} puntos")
     
     return points
 
@@ -114,19 +120,30 @@ def estimate_rooftop_viability(
     return max(0, min(100, score))
 
 
-def generate_google_maps_static_url(lat: float, lng: float, zoom: int = 19, 
-                                    size: str = "400x300") -> str:
-    """Generate Google Maps Static API URL for a location"""
-    # For MVP, we'll use a placeholder. In production, use Google Maps Static API
-    # This would require an API key and proper implementation
-    return f"https://maps.googleapis.com/maps/api/staticmap?center={lat},{lng}&zoom={zoom}&size={size}&maptype=satellite"
-
-
 class UrbanAnalysisEngine:
     """Main engine for urban area analysis"""
     
     def __init__(self):
         self.logger = logging.getLogger(self.__class__.__name__)
+        self.google_maps_api_key = os.getenv('GOOGLE_API_KEY')
+        
+        # Validar que existe API key
+        if not self.google_maps_api_key:
+            logger.warning("⚠️ GOOGLE_API_KEY no configurada. Las imágenes no se descargarán.")
+        else:
+            logger.info("✅ Google Maps API key configurada")
+    
+    def _generate_satellite_image_url(self, lat: float, lng: float, zoom: int = 19, 
+                                     size: str = "400x300") -> str:
+        """Generate Google Maps Static API URL for a location with API key"""
+        return (
+            f"https://maps.googleapis.com/maps/api/staticmap"
+            f"?center={lat},{lng}"
+            f"&zoom={zoom}"
+            f"&size={size}"
+            f"&maptype=satellite"
+            f"&key={self.google_maps_api_key}"
+        )
     
     async def analyze_area(
         self,
@@ -145,7 +162,9 @@ class UrbanAnalysisEngine:
             Urban analysis report with opportunities
         """
         try:
-            self.logger.info(f"🔍 Starting area analysis: ({north},{south},{east},{west})")
+            center_lat = (north + south) / 2
+            center_lng = (east + west) / 2
+            self.logger.info(f"🔍 Iniciando análisis de área: ({center_lat:.4f}, {center_lng:.4f})")
             
             # Validate area size
             area_km2 = calculate_area_km2(north, south, east, west)
@@ -154,23 +173,24 @@ class UrbanAnalysisEngine:
             if area_km2 > MAX_AREA_KM2:
                 raise ValueError(f"Area too large: {area_km2:.2f} km² (max: {MAX_AREA_KM2} km²)")
             
-            # Generate sample points
-            grid_points = generate_grid_points(north, south, east, west)
-            self.logger.info(f"📍 Generated {len(grid_points)} sample points")
+            # Generate sample points with fixed 5x5 grid
+            grid_points = generate_grid_points(north, south, east, west, grid_size=5)
+            self.logger.info(f"📍 Detectados {len(grid_points)} puntos de muestreo")
             
-            # Limit points to prevent timeout
-            if len(grid_points) > MAX_ROOFTOPS_PER_ANALYSIS:
-                grid_points = grid_points[:MAX_ROOFTOPS_PER_ANALYSIS]
-                self.logger.warning(f"⚠️ Limited to {MAX_ROOFTOPS_PER_ANALYSIS} points")
-            
-            # Analyze rooftops at each point
+            # Analyze rooftops at each point (with limit)
             green_roof_opportunities = []
+            max_analyses = MAX_ANALYSES_PER_RUN  # Límite para no saturar
             
-            for i, (lat, lng) in enumerate(grid_points, 1):
-                self.logger.info(f"🏢 Analyzing rooftop {i}/{len(grid_points)} at ({lat:.6f}, {lng:.6f})")
+            for i, (lat, lng) in enumerate(grid_points[:max_analyses], 1):
+                self.logger.info(f"🤖 Analizando punto {i}/{len(grid_points[:max_analyses])}")
                 
-                # Generate image URL (placeholder for MVP)
-                image_url = generate_google_maps_static_url(lat, lng)
+                # Generate image URL with API key
+                image_url = self._generate_satellite_image_url(lat, lng)
+                
+                # Create descriptive address
+                address = f"Edificio {i} ({lat:.5f}, {lng:.5f})"
+                
+                self.logger.info(f"📸 Descargando imagen: {address}")
                 
                 # Estimate area (simplified - would need proper detection)
                 area_m2 = 100  # Default estimate for MVP
@@ -184,39 +204,51 @@ class UrbanAnalysisEngine:
                         orientacion=orientacion
                     )
                     
+                    roof_type = analysis.get("tipo_cubierta", "desconocido")
+                    self.logger.info(f"✅ Análisis completado: {roof_type}")
+                    
                     # Calculate viability
                     viability_score = estimate_rooftop_viability(
-                        tipo_cubierta=analysis.get("tipo_cubierta", "desconocido"),
+                        tipo_cubierta=roof_type,
                         estado_conservacion=analysis.get("estado_conservacion", "bueno"),
                         obstrucciones=analysis.get("obstrucciones", []),
                         confianza=analysis.get("confianza", 50)
                     )
                     
-                    # Only include viable opportunities (score > 40)
-                    if viability_score > 40:
-                        opportunity = {
-                            "id": f"roof_{i}_{int(lat * 1000000)}_{int(lng * 1000000)}",
-                            "address": f"Aprox. {lat:.5f}, {lng:.5f}",
-                            "coordinates": [lat, lng],
-                            "area_m2": area_m2,
-                            "viability_score": viability_score,
-                            "roof_type": analysis.get("tipo_cubierta", "desconocido"),
-                            "condition": analysis.get("estado_conservacion", "bueno"),
-                            "obstructions": [obs.get("tipo", "otro") for obs in analysis.get("obstrucciones", [])],
-                            "estimated_cost_eur": int(area_m2 * COST_PER_M2_EUR),
-                            "co2_savings_kg_year": int(area_m2 * CO2_SAVINGS_PER_M2_KG_YEAR),
-                            "image_url": image_url,
-                            "ai_notes": analysis.get("notas_ia", "")
-                        }
-                        
-                        green_roof_opportunities.append(opportunity)
-                        self.logger.info(f"✅ Added opportunity: viability={viability_score}")
-                    else:
-                        self.logger.info(f"⏭️ Skipped: low viability ({viability_score})")
+                    # Only include viable opportunities (score >= MIN_VIABILITY_SCORE)
+                    if viability_score < MIN_VIABILITY_SCORE:
+                        self.logger.info(f"❌ Viabilidad baja ({viability_score}%), descartado")
+                        continue
+                    
+                    # Estimate costs and CO2 savings
+                    cost = int(area_m2 * COST_PER_M2_EUR)
+                    co2_savings = int(area_m2 * CO2_SAVINGS_PER_M2_KG_YEAR)
+                    
+                    self.logger.info(f"💰 Coste estimado: {cost}€, CO₂: {co2_savings}kg/año")
+                    
+                    opportunity = {
+                        "id": f"roof_{i}_{int(lat * 1000000)}_{int(lng * 1000000)}",
+                        "address": address,
+                        "coordinates": [lat, lng],
+                        "area_m2": area_m2,
+                        "viability_score": viability_score,
+                        "roof_type": roof_type,
+                        "condition": analysis.get("estado_conservacion", "bueno"),
+                        "obstructions": [obs.get("tipo", "otro") for obs in analysis.get("obstrucciones", [])],
+                        "estimated_cost_eur": cost,
+                        "co2_savings_kg_year": co2_savings,
+                        "image_url": image_url,
+                        "ai_notes": analysis.get("notas_ia", "")
+                    }
+                    
+                    green_roof_opportunities.append(opportunity)
+                    self.logger.info(f"✅ Added opportunity: viability={viability_score}")
                         
                 except Exception as e:
-                    self.logger.error(f"❌ Error analyzing point {i}: {e}")
+                    self.logger.error(f"❌ Error analizando {address}: {e}")
                     continue
+            
+            self.logger.info(f"✅ {len(green_roof_opportunities)} tejados viables detectados")
             
             # Sort by viability score
             green_roof_opportunities.sort(key=lambda x: x["viability_score"], reverse=True)
@@ -226,10 +258,6 @@ class UrbanAnalysisEngine:
             total_investment = sum(opp["estimated_cost_eur"] for opp in green_roof_opportunities)
             total_co2_impact = sum(opp["co2_savings_kg_year"] for opp in green_roof_opportunities)
             total_area = sum(opp["area_m2"] for opp in green_roof_opportunities)
-            
-            # Calculate center coordinates for report
-            center_lat = (north + south) / 2
-            center_lng = (east + west) / 2
             
             # Generate top priorities
             top_priorities = []
@@ -261,7 +289,7 @@ class UrbanAnalysisEngine:
                 }
             }
             
-            self.logger.info(f"✅ Analysis complete: {total_opportunities} opportunities found")
+            self.logger.info(f"📊 Informe completado: {total_opportunities} oportunidades totales")
             return report
             
         except Exception as e:
