@@ -19,8 +19,14 @@ LOCATION = os.getenv('GOOGLE_CLOUD_LOCATION', 'europe-west9')
 MODEL_NAME = os.getenv('GEMINI_MODEL_NAME', 'gemini-1.5-flash-001')
 
 if not PROJECT_ID:
+    # Using hardcoded default only for this specific Cloud Run deployment
+    # In production, GOOGLE_CLOUD_PROJECT should always be set explicitly
     PROJECT_ID = 'ecourbe-ai'
-    logger.warning("⚠️ GOOGLE_CLOUD_PROJECT not set, using default: ecourbe-ai")
+    logger.warning("⚠️ ⚠️ ⚠️  SECURITY WARNING  ⚠️ ⚠️ ⚠️")
+    logger.warning("GOOGLE_CLOUD_PROJECT environment variable is NOT set!")
+    logger.warning(f"Falling back to hardcoded project: {PROJECT_ID}")
+    logger.warning("This should only happen in the specific Cloud Run deployment.")
+    logger.warning("For other environments, set GOOGLE_CLOUD_PROJECT explicitly!")
 
 # Inicializar Vertex AI
 try:
