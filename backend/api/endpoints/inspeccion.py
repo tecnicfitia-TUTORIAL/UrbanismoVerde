@@ -9,8 +9,8 @@ from typing import List, Dict, Optional
 import logging
 
 from services.rooftop_vision_service import (
-    analyze_rooftop_from_image,
-    batch_analyze_rooftops
+    analyze_rooftop_image,
+    analyze_batch_rooftops
 )
 
 logger = logging.getLogger(__name__)
@@ -22,8 +22,8 @@ class RooftopAnalysisRequest(BaseModel):
     """Request model for single rooftop analysis"""
     imageUrl: str = Field(..., description="URL of satellite image to analyze")
     coordinates: Optional[Dict] = Field(None, description="GeoJSON coordinates of rooftop")
-    area_m2: Optional[float] = Field(None, description="Area in square meters")
-    orientacion: Optional[str] = Field(None, description="Orientation (Norte, Sur, Este, Oeste)")
+    area_m2: Optional[float] = Field(100, description="Area in square meters")
+    orientacion: Optional[str] = Field("sur", description="Orientation (norte, sur, este, oeste)")
 
 
 class BatchAnalysisRequest(BaseModel):
@@ -31,7 +31,7 @@ class BatchAnalysisRequest(BaseModel):
     rooftops: List[RooftopAnalysisRequest] = Field(..., description="List of rooftops to analyze")
 
 
-@router.post("/inspecciones/analyze")
+@router.post("/analyze")
 async def analyze_single_rooftop(request: RooftopAnalysisRequest):
     """
     Analyze a single rooftop using Gemini Vision
@@ -42,9 +42,10 @@ async def analyze_single_rooftop(request: RooftopAnalysisRequest):
     try:
         logger.info(f"📥 Received analysis request for image: {request.imageUrl[:50]}...")
         
-        result = await analyze_rooftop_from_image(
+        result = await analyze_rooftop_image(
             image_url=request.imageUrl,
-            coordinates=request.coordinates
+            area_m2=request.area_m2 or 100,
+            orientacion=request.orientacion or "sur"
         )
         
         # Add original request data to response
@@ -64,7 +65,7 @@ async def analyze_single_rooftop(request: RooftopAnalysisRequest):
         )
 
 
-@router.post("/inspecciones/analyze-batch")
+@router.post("/analyze-batch")
 async def analyze_batch(request: BatchAnalysisRequest):
     """
     Analyze multiple rooftops in batch using Gemini Vision
@@ -76,7 +77,7 @@ async def analyze_batch(request: BatchAnalysisRequest):
         rooftops_data = [r.model_dump() for r in request.rooftops]
         logger.info(f"📥 Received batch analysis request for {len(rooftops_data)} rooftops")
         
-        results = await batch_analyze_rooftops(rooftops_data)
+        results = await analyze_batch_rooftops(rooftops_data)
         
         logger.info(f"✅ Batch analysis completed: {len(results)} rooftops")
         return {"results": results, "count": len(results)}
@@ -89,52 +90,37 @@ async def analyze_batch(request: BatchAnalysisRequest):
         )
 
 
-@router.get("/inspecciones/test")
+@router.get("/test")
 async def test_ai_service():
     """
-    Test endpoint to verify Vertex AI service is working with comprehensive diagnostics
+    Test endpoint to verify AI service is working
     """
     import os
     import sys
     
+    google_api_key = os.getenv("GOOGLE_API_KEY")
+    gemini_model = os.getenv("GEMINI_MODEL_NAME", "gemini-2.5-flash")
+    vision_provider = os.getenv("VISION_PROVIDER", "gemini")
+    
     try:
-        import vertexai
-        vertexai_available = True
-        vertexai_version = "google-cloud-aiplatform"
+        import google.generativeai as genai
+        library_available = True
+        library_version = "google-generativeai"
     except ImportError:
-        vertexai_available = False
-        vertexai_version = 'not installed'
-    
-    vertex_ai_configured = bool(os.getenv("GOOGLE_CLOUD_PROJECT"))
-    model_name = os.getenv("GEMINI_MODEL_NAME", "gemini-1.5-flash-001")
-    project_id = os.getenv("GOOGLE_CLOUD_PROJECT") or "not configured"
-    location = os.getenv("GOOGLE_CLOUD_LOCATION", "europe-west9")
-    
-    if not vertex_ai_configured:
-        return {
-            "status": "error",
-            "message": "GOOGLE_CLOUD_PROJECT not configured",
-            "vertex_ai_available": False,
-            "vision_provider": "vertex-ai",
-            "model_name": model_name,
-            "library_version": vertexai_version,
-            "python_version": sys.version
-        }
+        library_available = False
+        library_version = 'not installed'
     
     return {
-        "status": "ok",
-        "message": "Vertex AI Gemini service is ready",
-        "vertex_ai_available": vertexai_available,
-        "vision_provider": "vertex-ai",
-        "model_name": model_name,
-        "project_id": project_id,
-        "location": location,
-        "library_version": vertexai_version,
+        "status": "ok" if google_api_key else "error",
+        "message": "Gemini service ready" if google_api_key else "GOOGLE_API_KEY not configured",
+        "provider": vision_provider,
+        "model_name": gemini_model,
+        "api_key_configured": bool(google_api_key),
+        "library_available": library_available,
+        "library_version": library_version,
         "python_version": sys.version,
         "configuration": {
             "temperature": 0.4,
-            "top_p": 0.95,
-            "top_k": 40,
-            "max_output_tokens": 2048
+            "max_tokens": 2048
         }
     }
