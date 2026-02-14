@@ -1,33 +1,37 @@
 """
-Rooftop Vision Analysis Service using Google Gemini
-Updated for google-generativeai 1.0.0+ with API v1 support
+Rooftop Vision Analysis Service using Vertex AI Gemini
+Migrated from google-generativeai to Vertex AI for production use
 """
 
-import google.generativeai as genai
-from google.generativeai.types import HarmCategory, HarmBlockThreshold
 import os
 import json
 import logging
-import base64
 import httpx
 from typing import Dict, List, Optional
 from urllib.parse import urlparse
+from services.vertex_ai_service import analyze_rooftop_with_vertex_ai
 
 logger = logging.getLogger(__name__)
 
-# Configure Gemini API
-GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
-GEMINI_MODEL_NAME = os.getenv('GEMINI_MODEL_NAME', 'gemini-1.5-flash')
-GOOGLE_CLOUD_REGION = os.getenv('GOOGLE_CLOUD_REGION', 'not configured')
+# Vertex AI configuration (no API key needed)
+PROJECT_ID = os.getenv('GOOGLE_CLOUD_PROJECT')
+LOCATION = os.getenv('GOOGLE_CLOUD_LOCATION', 'europe-west9')
+MODEL_NAME = os.getenv('GEMINI_MODEL_NAME', 'gemini-1.5-flash-001')
 
-if GOOGLE_API_KEY:
-    genai.configure(api_key=GOOGLE_API_KEY)
-    logger.info("✅ Gemini API configured")
-    logger.info(f"   Model: {GEMINI_MODEL_NAME}")
-    logger.info(f"   Region: {GOOGLE_CLOUD_REGION}")
-    logger.info(f"   Library version: {genai.__version__ if hasattr(genai, '__version__') else 'unknown'}")
-else:
-    logger.warning("⚠️ GOOGLE_API_KEY not set - AI features will not work")
+if not PROJECT_ID:
+    # Using hardcoded default only for this specific Cloud Run deployment
+    # In production, GOOGLE_CLOUD_PROJECT should always be set explicitly
+    PROJECT_ID = 'ecourbe-ai'
+    logger.warning("⚠️ ⚠️ ⚠️  SECURITY WARNING  ⚠️ ⚠️ ⚠️")
+    logger.warning("GOOGLE_CLOUD_PROJECT environment variable is NOT set!")
+    logger.warning(f"Falling back to hardcoded project: {PROJECT_ID}")
+    logger.warning("This should only happen in the specific Cloud Run deployment.")
+    logger.warning("For other environments, set GOOGLE_CLOUD_PROJECT explicitly!")
+
+logger.info("✅ Using Vertex AI for Gemini")
+logger.info(f"   Project: {PROJECT_ID}")
+logger.info(f"   Location: {LOCATION}")
+logger.info(f"   Model: {MODEL_NAME}")
 
 
 # Allowed URL schemes and domains for image downloads (security measure)
@@ -137,7 +141,7 @@ async def analyze_rooftop_from_image(
     coordinates: Optional[Dict] = None
 ) -> Dict:
     """
-    Analyze rooftop characteristics from satellite image using Gemini Vision
+    Analyze rooftop characteristics from satellite image using Vertex AI Gemini
     
     Args:
         image_url: URL of the satellite image to analyze
@@ -147,9 +151,7 @@ async def analyze_rooftop_from_image(
         Dict with analysis results including tipo_cubierta, estado_conservacion, etc.
     """
     
-    if not GOOGLE_API_KEY:
-        logger.error("❌ GOOGLE_API_KEY not configured")
-        return _fallback_response("API key not configured")
+    # Vertex AI uses service account, no API key check needed
     
     # Validate URL to prevent SSRF attacks
     if not validate_image_url(image_url):
@@ -157,25 +159,8 @@ async def analyze_rooftop_from_image(
         return _fallback_response("Invalid image URL or source not allowed")
     
     try:
-        logger.info(f"🔍 Analyzing rooftop image with Gemini")
-        logger.info(f"   Using model: {GEMINI_MODEL_NAME}")
-        
-        # Initialize Gemini model with updated API
-        model = genai.GenerativeModel(
-            model_name=GEMINI_MODEL_NAME,
-            generation_config={
-                "temperature": 0.4,
-                "top_p": 0.95,
-                "top_k": 40,
-                "max_output_tokens": 2048,
-            },
-            safety_settings={
-                HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_NONE,
-                HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_NONE,
-                HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_NONE,
-                HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_NONE,
-            }
-        )
+        logger.info(f"🔍 Analyzing rooftop image with Vertex AI Gemini")
+        logger.info(f"   Using model: {MODEL_NAME}")
         
         # Download image from URL with security checks
         # SECURITY NOTE: URL is validated before this point via validate_image_url()
@@ -198,22 +183,21 @@ async def analyze_rooftop_from_image(
         
         logger.info(f"✅ Image downloaded: {len(image_data)} bytes")
         
-        # Encode image to base64
-        image_base64 = base64.b64encode(image_data).decode('utf-8')
+        # Call Vertex AI service
+        logger.info("🤖 Sending request to Vertex AI...")
+        vertex_response = await analyze_rooftop_with_vertex_ai(
+            image_bytes=image_data,
+            prompt=ANALYSIS_PROMPT
+        )
         
-        # Generate content with image and prompt
-        logger.info("🤖 Sending request to Gemini API...")
-        response = model.generate_content([
-            ANALYSIS_PROMPT,
-            {
-                "mime_type": content_type,  # Use actual content type from response
-                "data": image_base64
-            }
-        ])
+        if not vertex_response.get("success"):
+            error_msg = vertex_response.get("error", "Unknown error")
+            logger.error(f"❌ Vertex AI analysis failed: {error_msg}")
+            return _fallback_response(error_msg)
         
         # Extract and clean response
-        content = response.text
-        logger.info(f"📄 Raw Gemini response: {content[:200]}...")
+        content = vertex_response.get("result", "")
+        logger.info(f"📄 Raw Vertex AI response: {content[:200]}...")
         
         # Remove markdown code blocks if present
         if "```json" in content:
@@ -264,14 +248,6 @@ async def analyze_rooftop_from_image(
     except Exception as e:
         error_msg = str(e)
         error_type = type(e).__name__
-        
-        # Check for model not found error (404)
-        if '404' in error_msg and 'models/' in error_msg:
-            logger.error(f"❌ Modelo no encontrado: {GEMINI_MODEL_NAME}")
-            logger.error(f"   Región: {GOOGLE_CLOUD_REGION}")
-            logger.error(f"   Error completo: {error_msg}")
-            logger.error(f"   Sugerencia: Verificar que el modelo esté disponible en la región")
-            logger.error(f"   Modelos alternativos: 'gemini-1.5-flash', 'gemini-1.5-flash', 'gemini-1.5-flash-002', 'gemini-1.5-flash-latest'")
         
         logger.error(f"❌ Error analyzing rooftop: {error_msg}")
         logger.error(f"Error type: {error_type}")

@@ -92,42 +92,44 @@ async def analyze_batch(request: BatchAnalysisRequest):
 @router.get("/inspecciones/test")
 async def test_ai_service():
     """
-    Test endpoint to verify Gemini AI service is working with comprehensive diagnostics
+    Test endpoint to verify Vertex AI service is working with comprehensive diagnostics
     """
     import os
     import sys
     
     try:
-        import google.generativeai as genai
-        genai_version = getattr(genai, '__version__', 'unknown')
-        genai_available = True
+        import vertexai
+        vertexai_available = True
+        vertexai_version = "google-cloud-aiplatform"
     except ImportError:
-        genai_version = 'not installed'
-        genai_available = False
+        vertexai_available = False
+        vertexai_version = 'not installed'
     
-    google_api_configured = bool(os.getenv("GOOGLE_API_KEY"))
-    model_name = os.getenv("GEMINI_MODEL_NAME", "gemini-1.5-flash")
+    vertex_ai_configured = bool(os.getenv("GOOGLE_CLOUD_PROJECT"))
+    model_name = os.getenv("GEMINI_MODEL_NAME", "gemini-1.5-flash-001")
+    project_id = os.getenv("GOOGLE_CLOUD_PROJECT") or "not configured"
+    location = os.getenv("GOOGLE_CLOUD_LOCATION", "europe-west9")
     
-    if not google_api_configured:
+    if not vertex_ai_configured:
         return {
             "status": "error",
-            "message": "GOOGLE_API_KEY not configured",
-            "gemini_available": False,
-            "vision_provider": os.getenv("VISION_PROVIDER", "gemini"),
+            "message": "GOOGLE_CLOUD_PROJECT not configured",
+            "vertex_ai_available": False,
+            "vision_provider": "vertex-ai",
             "model_name": model_name,
-            "library_version": genai_version,
+            "library_version": vertexai_version,
             "python_version": sys.version
         }
     
     return {
         "status": "ok",
-        "message": "Gemini Vision AI service is ready",
-        "gemini_available": genai_available,
-        "vision_provider": os.getenv("VISION_PROVIDER", "gemini"),
+        "message": "Vertex AI Gemini service is ready",
+        "vertex_ai_available": vertexai_available,
+        "vision_provider": "vertex-ai",
         "model_name": model_name,
-        "region": os.getenv("GOOGLE_CLOUD_REGION", "not configured"),
-        "library_version": genai_version,
-        "api_version": "v1",
+        "project_id": project_id,
+        "location": location,
+        "library_version": vertexai_version,
         "python_version": sys.version,
         "configuration": {
             "temperature": 0.4,
