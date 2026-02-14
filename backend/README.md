@@ -19,7 +19,7 @@ Configure these in Cloud Run:
 
 ```bash
 GOOGLE_API_KEY=AIzaSy...your-google-api-key
-GEMINI_MODEL_NAME=gemini-1.5-flash-001  # Optional: Gemini model version (default: gemini-1.5-flash-001)
+GEMINI_MODEL_NAME=gemini-1.5-flash  # Optional: Gemini model version (default: gemini-1.5-flash)
 GOOGLE_CLOUD_REGION=europe-west9  # Optional: For logging/debugging purposes
 VISION_PROVIDER=gemini
 SUPABASE_URL=https://your-project.supabase.co
@@ -28,9 +28,9 @@ PORT=8080
 ```
 
 **Note about GEMINI_MODEL_NAME:**
-- Default: `gemini-1.5-flash-001`
+- Default: `gemini-1.5-flash`
 - Alternatives: `gemini-1.5-flash-002`, `gemini-1.5-flash-latest`
-- The model name must include the version suffix (e.g., `-001`) to work with the Gemini API
+- With API v1 (google-generativeai >= 1.0.0), use model names without version suffix for Google AI Studio
 - If you get a 404 error, verify the model is available in your region and try an alternative version
 
 ### Deploy from GitHub
@@ -55,7 +55,7 @@ gcloud run deploy urbanismoverde-backend \
   --allow-unauthenticated \
   --memory 512Mi \
   --timeout 300 \
-  --set-env-vars "GOOGLE_API_KEY=AIza...,GEMINI_MODEL_NAME=gemini-1.5-flash-001,GOOGLE_CLOUD_REGION=europe-west9,VISION_PROVIDER=gemini"
+  --set-env-vars "GOOGLE_API_KEY=AIza...,GEMINI_MODEL_NAME=gemini-1.5-flash,GOOGLE_CLOUD_REGION=europe-west9,VISION_PROVIDER=gemini"
 ```
 
 ## 🧪 Testing
