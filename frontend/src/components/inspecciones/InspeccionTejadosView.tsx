@@ -351,8 +351,11 @@ const InspeccionTejadosView: React.FC<InspeccionTejadosViewProps> = ({ onNavigat
                   : 'bg-white text-gray-700 hover:bg-gray-100'
               }`}
               title={editMode ? 'Desactivar edición' : 'Editar forma del tejado'}
+              aria-label={editMode ? 'Desactivar modo de edición de forma del tejado' : 'Activar modo de edición de forma del tejado'}
             >
-              {editMode ? '✏️ Editando' : '🔧 Ajustar forma'}
+              <span aria-hidden="true">{editMode ? '✏️' : '🔧'}</span>
+              {' '}
+              {editMode ? 'Editando' : 'Ajustar forma'}
             </button>
           )}
           
@@ -364,8 +367,11 @@ const InspeccionTejadosView: React.FC<InspeccionTejadosViewProps> = ({ onNavigat
                 ? 'bg-green-600 text-white hover:bg-green-700'
                 : 'bg-white text-gray-700 hover:bg-gray-100'
             }`}
+            aria-label={selectionMode === 'multi' ? 'Desactivar modo multi-selección' : 'Activar modo multi-selección'}
           >
-            {selectionMode === 'multi' ? '✓ Multi-Selección' : '+ Multi-Selección'}
+            <span aria-hidden="true">{selectionMode === 'multi' ? '✓' : '+'}</span>
+            {' '}
+            Multi-Selección
           </button>
         </div>
       </div>

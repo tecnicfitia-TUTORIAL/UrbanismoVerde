@@ -73,13 +73,19 @@ function ClickHandler({ onClick }: { onClick: (lat: number, lng: number) => void
   return null;
 }
 
+// Type for GeoJSON Polygon geometry
+interface PolygonGeometry {
+  type: 'Polygon';
+  coordinates: [number, number][][];
+}
+
 // Component to handle editable polygon using React-Leaflet's proper API
 function EditablePolygon({ 
   geometry, 
   onEdit, 
   editable = false 
 }: { 
-  geometry: any; 
+  geometry: PolygonGeometry; 
   onEdit?: (coords: [number, number][][]) => void;
   editable?: boolean;
 }) {
@@ -88,7 +94,12 @@ function EditablePolygon({
   useEffect(() => {
     if (!geometry?.coordinates?.[0] || !editable || !onEdit || !polygonRef.current) return;
     
-    const leafletPolygon = polygonRef.current as any;
+    const leafletPolygon = polygonRef.current as L.Polygon & {
+      editing?: {
+        enable?: () => void;
+        disable?: () => void;
+      };
+    };
     
     // Enable editing if the Leaflet polygon supports it
     if (leafletPolygon.editing && typeof leafletPolygon.editing.enable === 'function') {
@@ -260,8 +271,10 @@ const RooftopInspectionMap: React.FC<RooftopInspectionMapProps> = ({
 
       {/* Instructions overlay */}
       <div className="absolute top-4 left-4 bg-white rounded-lg shadow-lg p-4 max-w-xs z-10">
-        <h3 className="font-semibold mb-2 flex items-center gap-2">
-          {selectionMode === 'multi' ? '🎯 Multi-Selección Activa' : '📍 Herramienta de Inspección'}
+        <h3 className="font-semibold mb-2 flex items-center gap-2" role="heading" aria-level={3}>
+          <span aria-label={selectionMode === 'multi' ? 'Multi-selección activa' : 'Herramienta de inspección'}>
+            {selectionMode === 'multi' ? '🎯 Multi-Selección Activa' : '📍 Herramienta de Inspección'}
+          </span>
         </h3>
         <p className="text-sm text-gray-600 mb-2">
           {selectionMode === 'multi' 
