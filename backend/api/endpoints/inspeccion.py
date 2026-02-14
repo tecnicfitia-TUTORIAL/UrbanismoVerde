@@ -106,7 +106,7 @@ async def test_ai_service():
         genai_available = False
     
     google_api_configured = bool(os.getenv("GOOGLE_API_KEY"))
-    model_name = os.getenv("GEMINI_MODEL_NAME", "gemini-1.5-flash-001")
+    model_name = os.getenv("GEMINI_MODEL_NAME", "gemini-1.5-flash")
     
     if not google_api_configured:
         return {
