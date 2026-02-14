@@ -17,9 +17,15 @@ logger = logging.getLogger(__name__)
 
 # Configure Gemini API
 GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
+GEMINI_MODEL_NAME = os.getenv('GEMINI_MODEL_NAME', 'gemini-1.5-flash-001')
+GOOGLE_CLOUD_REGION = os.getenv('GOOGLE_CLOUD_REGION', 'not configured')
+
 if GOOGLE_API_KEY:
     genai.configure(api_key=GOOGLE_API_KEY)
     logger.info("✅ Gemini API configured")
+    logger.info(f"   Model: {GEMINI_MODEL_NAME}")
+    logger.info(f"   Region: {GOOGLE_CLOUD_REGION}")
+    logger.info(f"   Library version: {genai.__version__ if hasattr(genai, '__version__') else 'unknown'}")
 else:
     logger.warning("⚠️ GOOGLE_API_KEY not set - AI features will not work")
 
@@ -151,11 +157,12 @@ async def analyze_rooftop_from_image(
         return _fallback_response("Invalid image URL or source not allowed")
     
     try:
-        logger.info(f"🔍 Analyzing rooftop image with Gemini 1.5 Flash")
+        logger.info(f"🔍 Analyzing rooftop image with Gemini")
+        logger.info(f"   Using model: {GEMINI_MODEL_NAME}")
         
         # Initialize Gemini model with updated API
         model = genai.GenerativeModel(
-            model_name='gemini-1.5-flash',  # Correct model name for v0.8.3+
+            model_name=GEMINI_MODEL_NAME,
             generation_config={
                 "temperature": 0.4,
                 "top_p": 0.95,
@@ -255,9 +262,20 @@ async def analyze_rooftop_from_image(
         return _fallback_response(f"Error downloading image: {str(e)}")
         
     except Exception as e:
-        logger.error(f"❌ Error analyzing rooftop: {e}")
-        logger.error(f"Error type: {type(e).__name__}")
-        return _fallback_response(str(e))
+        error_msg = str(e)
+        error_type = type(e).__name__
+        
+        # Check for model not found error (404)
+        if '404' in error_msg and 'models/' in error_msg:
+            logger.error(f"❌ Modelo no encontrado: {GEMINI_MODEL_NAME}")
+            logger.error(f"   Región: {GOOGLE_CLOUD_REGION}")
+            logger.error(f"   Error completo: {error_msg}")
+            logger.error(f"   Sugerencia: Verificar que el modelo esté disponible en la región")
+            logger.error(f"   Modelos alternativos: 'gemini-1.5-flash-001', 'gemini-1.5-flash-002', 'gemini-1.5-flash-latest'")
+        
+        logger.error(f"❌ Error analyzing rooftop: {error_msg}")
+        logger.error(f"Error type: {error_type}")
+        return _fallback_response(error_msg)
 
 
 async def batch_analyze_rooftops(rooftops: List[Dict]) -> List[Dict]:

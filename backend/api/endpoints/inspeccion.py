@@ -106,6 +106,7 @@ async def test_ai_service():
         genai_available = False
     
     google_api_configured = bool(os.getenv("GOOGLE_API_KEY"))
+    model_name = os.getenv("GEMINI_MODEL_NAME", "gemini-1.5-flash-001")
     
     if not google_api_configured:
         return {
@@ -113,6 +114,7 @@ async def test_ai_service():
             "message": "GOOGLE_API_KEY not configured",
             "gemini_available": False,
             "vision_provider": os.getenv("VISION_PROVIDER", "gemini"),
+            "model_name": model_name,
             "library_version": genai_version,
             "python_version": sys.version
         }
@@ -122,7 +124,8 @@ async def test_ai_service():
         "message": "Gemini Vision AI service is ready",
         "gemini_available": genai_available,
         "vision_provider": os.getenv("VISION_PROVIDER", "gemini"),
-        "model_name": "gemini-1.5-flash",
+        "model_name": model_name,
+        "region": os.getenv("GOOGLE_CLOUD_REGION", "not configured"),
         "library_version": genai_version,
         "api_version": "v1",
         "python_version": sys.version,
