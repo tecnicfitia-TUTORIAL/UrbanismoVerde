@@ -21,6 +21,22 @@ body {
   height: 100vh;
 }
 
+/* Animation for fade-in effect */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out;
+}
+
 /* Mobile responsive adjustments for search control */
 @media (max-width: 768px) {
   /* Adjust search control on mobile to avoid conflicts with map controls */
