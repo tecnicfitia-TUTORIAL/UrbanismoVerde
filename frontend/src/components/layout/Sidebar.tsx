@@ -59,7 +59,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     }
   };
 
-  // Menu structure with submenus
+  // Menu structure with submenus - SIMPLIFIED TO 5 MAIN SECTIONS
   const menuStructure: MenuItemType[] = [
     {
       id: 'dashboard',
@@ -69,56 +69,23 @@ const Sidebar: React.FC<SidebarProps> = ({
       subItems: []
     },
     {
-      id: 'zonas',
-      icon: <MapPin size={20} />,
-      label: 'Zonas Verdes',
-      view: 'zonas',
-      count: dbZonasCount + areas.length,
-      subItems: [
-        { id: 'zonas-gallery', label: 'Ver todas', icon: <List size={16} />, view: 'zonas-gallery', count: dbZonasCount },
-        { id: 'zonas-create', label: 'Crear nueva', icon: <PlusCircle size={16} />, view: 'zonas-create' },
-        { id: 'zonas-search', label: 'Buscar', icon: <Search size={16} />, view: 'zonas-search' }
-      ]
-    },
-    {
-      id: 'analisis',
-      icon: <Brain size={20} />,
-      label: 'Análisis IA',
-      view: 'analisis',
-      subItems: [
-        { id: 'analisis-new', label: 'Nuevo análisis', icon: <Sparkles size={16} />, view: 'analisis-new' },
-        { id: 'analisis-point', label: 'Analizar punto', icon: <MapPin size={16} />, view: 'analisis-point' },
-        { id: 'analisis-zone', label: 'Analizar zona', icon: <Map size={16} />, view: 'analisis-zone' },
-        { id: 'analisis-history', label: 'Historial', icon: <History size={16} />, view: 'analisis-history' }
-      ]
-    },
-    {
       id: 'analisis-urbano',
-      icon: <Building2 size={20} />,
+      icon: <Brain size={20} />,
       label: 'Análisis Urbano',
-      view: 'analisis-urbano',
-      subItems: []
-    },
-    {
-      id: 'analisis-especializados',
-      icon: <Layers size={20} />,
-      label: 'Análisis Especializados',
-      view: 'analisis-especializados',
-      count: especialesCount,
-      subItems: []
-    },
-    {
-      id: 'conjuntos-zonas',
-      icon: <Layers size={20} />,
-      label: 'Conjuntos de Zonas',
-      view: 'conjuntos-zonas',
-      count: conjuntosCount,
-      subItems: []
+      view: 'proyectos',
+      count: dbZonasCount + areas.length + especialesCount + conjuntosCount,
+      subItems: [
+        { id: 'zonas-verdes', label: 'Zonas Verdes', icon: <MapPin size={16} />, view: 'proyectos', count: dbZonasCount + areas.length },
+        { id: 'analisis-ia', label: 'Análisis IA', icon: <Sparkles size={16} />, view: 'analisis-new' },
+        { id: 'analisis-especializados', label: 'Análisis Especializados', icon: <Layers size={16} />, view: 'analisis-especializados', count: especialesCount },
+        { id: 'conjuntos-zonas', label: 'Conjuntos de Zonas', icon: <Layers size={16} />, view: 'conjuntos-zonas', count: conjuntosCount },
+        { id: 'crear-zona', label: 'Crear nueva zona', icon: <PlusCircle size={16} />, view: 'zonas-create' }
+      ]
     },
     {
       id: 'inspecciones-tejados',
       icon: <Clipboard size={20} />,
-      label: 'Inspección de Tejados',
+      label: 'Inspección Tejados',
       view: 'inspecciones-tejados',
       subItems: []
     },
@@ -133,10 +100,10 @@ const Sidebar: React.FC<SidebarProps> = ({
       ]
     },
     {
-      id: 'estadisticas',
+      id: 'configuracion',
       icon: <BarChart3 size={20} />,
-      label: 'Estadísticas',
-      view: 'estadisticas',
+      label: 'Configuración',
+      view: 'configuracion',
       disabled: true,
       subItems: []
     }

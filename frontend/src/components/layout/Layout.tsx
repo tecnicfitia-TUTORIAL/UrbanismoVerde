@@ -4,17 +4,15 @@ import Sidebar from './Sidebar';
 import FullScreenMap from '../maps/FullScreenMap';
 import MapWithAnalysis from '../maps/MapWithAnalysis';
 import DashboardContent from '../dashboard/DashboardContent';
-import ZonesGalleryContent from '../zones/ZonesGalleryContent';
 import ZoneDetailView from '../zones/ZoneDetailView';
 import AnalysisWorkflowContent from '../analysis/AnalysisWorkflowContent';
 import BudgetGalleryContent from '../budget/BudgetGalleryContent';
 import { AnalysisResults } from '../analysis/AnalysisResults';
 import { AnalysisReportPage } from '../analysis/AnalysisReportPage';
-import SpecializedAnalysisGallery from '../analysis/SpecializedAnalysisGallery';
 import SpecializedAnalysisDetail from '../analysis/SpecializedAnalysisDetail';
-import ConjuntosGallery from '../conjuntos/ConjuntosGallery';
 import InspeccionTejadosView from '../inspecciones/InspeccionTejadosView';
 import ReportView from '../reports/ReportView';
+import ProyectosView from '../proyectos/ProyectosView';
 import { Area, GeoJSONPolygon, AreaBounds, UrbanAnalysisReport } from '../../types';
 import { useAnalysis } from '../../hooks/useAnalysis';
 import { coordinatesToGeoJSON } from '../../services/ai-analysis';
@@ -275,21 +273,25 @@ const Layout: React.FC = () => {
     }
   };
 
-  // Render content based on current view
+  // Render content based on current view - SIMPLIFIED TO 6 MAIN CASES
   const renderContent = () => {
     switch (currentView) {
       case 'dashboard':
         return <DashboardContent areas={areas} onNavigate={handleNavigate} />;
       
+      // Unified projects view - replaces multiple zone/analysis views
+      case 'proyectos':
       case 'zonas-gallery':
       case 'zonas':
       case 'zonas-search':
+      case 'analisis-especializados':
+      case 'conjuntos-zonas':
         return (
-          <ZonesGalleryContent
+          <ProyectosView
             areas={areas}
-            onSelectZone={setSelectedArea}
             onNavigate={handleNavigate}
             onDeleteArea={handleDeleteArea}
+            onSelectZone={setSelectedArea}
           />
         );
       
@@ -297,9 +299,8 @@ const Layout: React.FC = () => {
         return selectedArea ? (
           <ZoneDetailView
             zone={selectedArea}
-            onBack={() => setCurrentView('zonas-gallery')}
+            onBack={() => setCurrentView('proyectos')}
             onViewAnalysis={(zoneId) => {
-              // TODO: Implement navigation to analysis view for this zone
               toast.error('Vista de análisis no implementada aún');
             }}
           />
@@ -307,38 +308,18 @@ const Layout: React.FC = () => {
           <div>No zone selected</div>
         );
       
-      case 'analisis-urbano':
-        // Urban analysis view - full screen map
-        return null;
-      
-      case 'analisis-especializados':
-        return <SpecializedAnalysisGallery onNavigate={handleNavigate} />;
-      
       case 'analisis-especializado-detalle':
         return selectedSpecializedAnalysis ? (
           <SpecializedAnalysisDetail
             analysis={selectedSpecializedAnalysis}
-            onBack={() => setCurrentView('analisis-especializados')}
+            onBack={() => setCurrentView('proyectos')}
           />
         ) : null;
-      
-      case 'conjuntos-zonas':
-        return (
-          <ConjuntosGallery
-            onViewOnMap={(conjuntoId) => {
-              console.log('View conjunto on map:', conjuntoId);
-              toast.info('Visualización en mapa en desarrollo');
-            }}
-            onConjuntoDeleted={() => {
-              // Reload count in sidebar
-              loadZonasCount();
-            }}
-          />
-        );
       
       case 'inspecciones-tejados':
         return <InspeccionTejadosView onNavigate={handleNavigate} />;
       
+      // Analysis workflows
       case 'analisis-new':
       case 'analisis-point':
       case 'analisis-zone':
@@ -346,13 +327,16 @@ const Layout: React.FC = () => {
       case 'analisis-history':
         return <AnalysisWorkflowContent areas={areas} onNavigate={handleNavigate} />;
       
+      // Budget views
       case 'presupuestos-gallery':
       case 'presupuestos':
         return <BudgetGalleryContent areas={areas} onNavigate={handleNavigate} />;
       
+      // Map-based views
       case 'presupuestos-create':
       case 'presupuestos-detail':
       case 'zonas-create':
+      case 'analisis-urbano':
         // Show map for these views
         return null;
       
