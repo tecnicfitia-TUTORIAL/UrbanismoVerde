@@ -112,7 +112,8 @@ async def api_info():
         "environment": "production" if google_api_configured else "development",
         "vision": {
             "provider": os.getenv("VISION_PROVIDER", "gemini"),
-            "model_name": "gemini-1.5-flash",
+            "model_name": os.getenv("GEMINI_MODEL_NAME", "gemini-1.5-flash-001"),
+            "region": os.getenv("GOOGLE_CLOUD_REGION", "not configured"),
             "library_version": genai_version,
             "api_version": "v1",
             "available": genai_available and google_api_configured,
