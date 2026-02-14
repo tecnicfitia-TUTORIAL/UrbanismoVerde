@@ -6,7 +6,6 @@ Migrated from google-generativeai to Vertex AI for production use
 import os
 import json
 import logging
-import base64
 import httpx
 from typing import Dict, List, Optional
 from urllib.parse import urlparse

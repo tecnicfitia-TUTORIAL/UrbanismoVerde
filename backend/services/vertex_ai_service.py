@@ -7,7 +7,6 @@ import vertexai
 from vertexai.generative_models import GenerativeModel, Part, GenerationConfig
 import os
 import logging
-import base64
 from typing import Dict, Optional
 
 logger = logging.getLogger(__name__)
