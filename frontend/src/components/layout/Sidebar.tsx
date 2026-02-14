@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Home, MapPin, PlusCircle, Brain, BarChart3, Euro, Menu, X, List, Search, Sparkles, Map, History, ChevronDown, ChevronRight, Layers, Clipboard } from 'lucide-react';
+import { Home, MapPin, PlusCircle, Brain, BarChart3, Euro, Menu, X, List, Search, Sparkles, Map, History, ChevronDown, ChevronRight, Layers, Clipboard, Building2 } from 'lucide-react';
 import { Area, MenuItem as MenuItemType } from '../../types';
 import SubMenu from './SubMenu';
 import { countSpecializedAnalyses } from '../../services/specialized-analysis-service';
@@ -91,6 +91,13 @@ const Sidebar: React.FC<SidebarProps> = ({
         { id: 'analisis-zone', label: 'Analizar zona', icon: <Map size={16} />, view: 'analisis-zone' },
         { id: 'analisis-history', label: 'Historial', icon: <History size={16} />, view: 'analisis-history' }
       ]
+    },
+    {
+      id: 'analisis-urbano',
+      icon: <Building2 size={20} />,
+      label: 'Análisis Urbano',
+      view: 'analisis-urbano',
+      subItems: []
     },
     {
       id: 'analisis-especializados',
