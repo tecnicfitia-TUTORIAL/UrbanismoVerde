@@ -73,7 +73,7 @@ function ClickHandler({ onClick }: { onClick: (lat: number, lng: number) => void
   return null;
 }
 
-// Component to handle editable polygon
+// Component to handle editable polygon using React-Leaflet's proper API
 function EditablePolygon({ 
   geometry, 
   onEdit, 
@@ -84,38 +84,41 @@ function EditablePolygon({
   editable?: boolean;
 }) {
   const polygonRef = useRef<L.Polygon | null>(null);
-  const map = useMap();
 
   useEffect(() => {
-    if (!geometry?.coordinates?.[0] || !editable || !onEdit) return;
+    if (!geometry?.coordinates?.[0] || !editable || !onEdit || !polygonRef.current) return;
     
-    const polygon = polygonRef.current;
-    if (!polygon) return;
-
-    // Enable editing
-    const leafletPolygon = polygon as any;
-    if (leafletPolygon.editing) {
+    const leafletPolygon = polygonRef.current as any;
+    
+    // Enable editing if the Leaflet polygon supports it
+    if (leafletPolygon.editing && typeof leafletPolygon.editing.enable === 'function') {
       leafletPolygon.editing.enable();
       
-      // Listen for edit events
       const handleEdit = () => {
-        const latlngs = leafletPolygon.getLatLngs()[0];
-        const newCoords = latlngs.map((latlng: L.LatLng) => [latlng.lng, latlng.lat]);
-        // Close the polygon by adding the first point at the end
-        newCoords.push([latlngs[0].lng, latlngs[0].lat]);
-        onEdit([newCoords]);
+        try {
+          const latlngs = leafletPolygon.getLatLngs()[0];
+          if (!latlngs || latlngs.length === 0) return;
+          
+          const newCoords = latlngs.map((latlng: L.LatLng) => [latlng.lng, latlng.lat]);
+          // Close the polygon
+          newCoords.push([latlngs[0].lng, latlngs[0].lat]);
+          onEdit([newCoords]);
+        } catch (err) {
+          console.error('Error handling polygon edit:', err);
+        }
       };
 
+      // Listen for both edit and vertex drag events
       leafletPolygon.on('edit', handleEdit);
-
+      
       return () => {
-        if (leafletPolygon.editing) {
+        if (leafletPolygon.editing && typeof leafletPolygon.editing.disable === 'function') {
           leafletPolygon.editing.disable();
         }
         leafletPolygon.off('edit', handleEdit);
       };
     }
-  }, [geometry, editable, onEdit, map]);
+  }, [geometry, editable, onEdit]);
 
   if (!geometry?.coordinates?.[0]) return null;
 
