@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { MapContainer, TileLayer, Polygon, Popup, useMapEvents, LayersControl, Marker } from 'react-leaflet';
+import { MapContainer, TileLayer, Polygon, Popup, useMapEvents, LayersControl, Marker, useMap } from 'react-leaflet';
 import { LatLng, Icon } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Area, coloresPorTipo, SelectedZone } from '../../types';
@@ -10,6 +10,10 @@ import SearchControl from './SearchControl';
 import MultiSelectionMode from './MultiSelectionMode';
 import SelectionToolbar from './SelectionToolbar';
 import SaveSelectionModal from './SaveSelectionModal';
+import { MapModeControl, MapMode } from './MapModeControl';
+import { HelpPanel } from './HelpPanel';
+import { ModeIndicator } from './ModeIndicator';
+import { useMapMode } from '../../hooks/useMapMode';
 import { saveConjuntoZonas } from '../../services/conjunto-zonas-service';
 import { Layers } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -32,20 +36,62 @@ interface FullScreenMapProps {
 
 // Componente para manejar eventos de dibujo en el mapa
 const DrawingHandler: React.FC<{
-  isDrawing: boolean;
+  currentMode: MapMode;
   onPointClick: (latlng: LatLng) => void;
   onAnalysisClick: (latlng: LatLng) => void;
-}> = ({ isDrawing, onPointClick, onAnalysisClick }) => {
+}> = ({ currentMode, onPointClick, onAnalysisClick }) => {
   useMapEvents({
     click: (e) => {
-      if (isDrawing) {
-        onPointClick(e.latlng);
-      } else {
-        // Si no está dibujando, permitir análisis
-        onAnalysisClick(e.latlng);
+      switch (currentMode) {
+        case 'draw':
+          onPointClick(e.latlng);
+          break;
+        case 'analyze':
+          onAnalysisClick(e.latlng);
+          break;
+        case 'gallery':
+          // Gallery mode: no click action on map itself
+          break;
+        case 'idle':
+        default:
+          // Idle mode: show hint to select a mode
+          toast('Selecciona un modo (Dibujar, Analizar o Galería) para comenzar', {
+            icon: '👆',
+            duration: 2000,
+          });
+          break;
       }
     }
   });
+  return null;
+};
+
+// Component to handle cursor changes based on mode
+const CursorController: React.FC<{ mode: MapMode }> = ({ mode }) => {
+  const map = useMap();
+
+  useEffect(() => {
+    const container = map.getContainer();
+    
+    switch (mode) {
+      case 'draw':
+        container.style.cursor = 'crosshair';
+        break;
+      case 'analyze':
+        container.style.cursor = 'pointer';
+        break;
+      case 'gallery':
+        container.style.cursor = 'grab';
+        break;
+      default:
+        container.style.cursor = 'default';
+    }
+
+    return () => {
+      container.style.cursor = 'default';
+    };
+  }, [mode, map]);
+
   return null;
 };
 
@@ -61,11 +107,57 @@ const FullScreenMap: React.FC<FullScreenMapProps> = ({
   const [selectedPoint, setSelectedPoint] = useState<{ lat: number; lon: number } | null>(null);
   const [showAnalysis, setShowAnalysis] = useState(false);
   const [searchMarker, setSearchMarker] = useState<{ lat: number; lng: number; label: string } | null>(null);
+  const [showHelpPanel, setShowHelpPanel] = useState(true);
 
   // Multi-selection mode state
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [selectedZones, setSelectedZones] = useState<SelectedZone[]>([]);
   const [showSaveModal, setShowSaveModal] = useState(false);
+
+  // Map mode management
+  const { mode, changeMode } = useMapMode('idle');
+
+  // Sync mode with isDrawing prop
+  useEffect(() => {
+    if (isDrawing && mode !== 'draw') {
+      changeMode('draw');
+    } else if (!isDrawing && mode === 'draw') {
+      changeMode('idle');
+    }
+  }, [isDrawing, mode, changeMode]);
+
+  // Handle mode changes
+  const handleModeChange = useCallback((newMode: MapMode) => {
+    // Cancel any active operations when changing modes
+    if (mode === 'draw' && newMode !== 'draw') {
+      // Cancel drawing
+      setCurrentPolygon([]);
+      setIsDrawing(false);
+    }
+    
+    if (mode === 'analyze' && newMode !== 'analyze') {
+      // Close analysis panel
+      setShowAnalysis(false);
+      setSelectedPoint(null);
+    }
+
+    if (isSelectionMode) {
+      handleCancelSelectionMode();
+    }
+
+    // Set new mode
+    changeMode(newMode);
+    
+    // Handle specific mode activations
+    if (newMode === 'draw') {
+      setIsDrawing(true);
+      toast.success('Modo Dibujo activado. Haz clic en el mapa para comenzar.', { icon: '✏️' });
+    } else if (newMode === 'analyze') {
+      toast.success('Modo Análisis activado. Haz clic en cualquier ubicación.', { icon: '🔍' });
+    } else if (newMode === 'gallery') {
+      toast.success('Modo Galería activado. Explora las zonas guardadas.', { icon: '📋' });
+    }
+  }, [mode, changeMode, isSelectionMode, setIsDrawing]);
 
   // Deshacer último punto
   const handleUndoPoint = useCallback(() => {
@@ -160,6 +252,8 @@ const FullScreenMap: React.FC<FullScreenMapProps> = ({
   const handleStartSelectionMode = () => {
     setIsSelectionMode(true);
     setSelectedZones([]);
+    // Switch to gallery mode when starting multi-selection
+    changeMode('gallery');
     // Disable drawing mode if active
     if (isDrawing) {
       setIsDrawing(false);
@@ -170,6 +264,10 @@ const FullScreenMap: React.FC<FullScreenMapProps> = ({
   const handleCancelSelectionMode = () => {
     setIsSelectionMode(false);
     setSelectedZones([]);
+    // Return to idle mode
+    if (mode === 'gallery') {
+      changeMode('idle');
+    }
   };
 
   const handleOpenSaveModal = () => {
@@ -207,11 +305,31 @@ const FullScreenMap: React.FC<FullScreenMapProps> = ({
 
   return (
     <div className="relative w-full h-full">
-      {/* Multi-Selection Mode Button */}
-      {!isDrawing && !isSelectionMode && (
+      {/* Map Mode Control - Replaces standalone Multi-Selection button */}
+      {!isSelectionMode && (
+        <MapModeControl
+          currentMode={mode}
+          onModeChange={handleModeChange}
+          disabled={isSelectionMode}
+        />
+      )}
+
+      {/* Mode Indicator */}
+      <ModeIndicator mode={mode} />
+
+      {/* Help Panel */}
+      {showHelpPanel && (
+        <HelpPanel 
+          mode={mode} 
+          onClose={() => setShowHelpPanel(false)}
+        />
+      )}
+
+      {/* Multi-Selection Mode Button - Only visible in gallery mode */}
+      {mode === 'gallery' && !isSelectionMode && (
         <button
           onClick={handleStartSelectionMode}
-          className="absolute top-4 right-4 z-[1000] bg-white hover:bg-gray-50 text-gray-700 font-medium py-2 px-4 rounded-lg shadow-lg border border-gray-200 flex items-center space-x-2 transition-colors"
+          className="absolute top-44 right-4 z-[1000] bg-white hover:bg-gray-50 text-gray-700 font-medium py-2 px-4 rounded-lg shadow-lg border border-gray-200 flex items-center space-x-2 transition-colors"
           title="Activar selección múltiple"
         >
           <Layers size={20} />
@@ -271,7 +389,7 @@ const FullScreenMap: React.FC<FullScreenMapProps> = ({
 
         {/* Manejador de eventos de dibujo */}
         <DrawingHandler
-          isDrawing={isDrawing}
+          currentMode={mode}
           onPointClick={handleMapClickWrapper}
           onAnalysisClick={(latlng) => {
             setSelectedPoint({ lat: latlng.lat, lon: latlng.lng });
@@ -279,6 +397,9 @@ const FullScreenMap: React.FC<FullScreenMapProps> = ({
             setSearchMarker(null);
           }}
         />
+
+        {/* Cursor Controller */}
+        <CursorController mode={mode} />
 
         {/* Multi-Selection Mode Handler */}
         {isSelectionMode && (

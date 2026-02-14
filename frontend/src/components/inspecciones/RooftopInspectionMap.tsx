@@ -23,6 +23,9 @@ interface RooftopInspectionMapProps {
   editMode?: boolean;
 }
 
+type InspectionMode = 'auto' | 'manual';
+
+
 /**
  * Create a simple polygon geometry around a clicked point.
  * This is used as a placeholder for rooftop selection when precise building
@@ -176,17 +179,62 @@ const RooftopInspectionMap: React.FC<RooftopInspectionMapProps> = ({
   onPolygonEdit,
   editMode = false
 }) => {
-  const handleMapClick = async (lat: number, lng: number) => {
-    // Create a placeholder geometry around the clicked point
-    // Note: We no longer query external APIs which can timeout or be unreliable.
-    // The user can adjust the rooftop boundary in the inspection form if needed.
-    const geometry = createPlaceholderGeometry(lat, lng);
+  const [inspectionMode, setInspectionMode] = React.useState<InspectionMode>('manual');
+  const [showModeSelector, setShowModeSelector] = React.useState(true);
 
-    onRooftopClick(geometry, [lat, lng]);
+  const handleAutoDetect = () => {
+    // Placeholder for future auto-detection feature
+    // This would use ML/AI to detect building boundaries
+    console.log('Auto-detect clicked - feature coming soon');
+  };
+
+  const handleMapClick = async (lat: number, lng: number) => {
+    if (inspectionMode === 'manual') {
+      // Create a placeholder geometry around the clicked point
+      // Note: We no longer query external APIs which can timeout or be unreliable.
+      // The user can adjust the rooftop boundary in the inspection form if needed.
+      const geometry = createPlaceholderGeometry(lat, lng);
+
+      onRooftopClick(geometry, [lat, lng]);
+      setShowModeSelector(false);
+    } else {
+      // Auto mode - would trigger ML detection (placeholder)
+      handleAutoDetect();
+    }
   };
 
   return (
     <div className="relative w-full h-full">
+      {/* Mode Selector - Only show when no rooftop is selected */}
+      {showModeSelector && !selectedRooftop && (
+        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-[1000] flex gap-2">
+          <button
+            onClick={() => setInspectionMode('manual')}
+            className={`px-4 py-2 rounded-lg shadow-lg font-medium transition-all flex items-center gap-2 ${
+              inspectionMode === 'manual'
+                ? 'bg-green-600 text-white scale-105'
+                : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+            }`}
+            title="Dibujar manualmente el área del tejado"
+          >
+            ✏️ <span>Dibujar Manualmente</span>
+          </button>
+          <button
+            onClick={() => setInspectionMode('auto')}
+            disabled={true}
+            className={`px-4 py-2 rounded-lg shadow-lg font-medium transition-all flex items-center gap-2 opacity-50 cursor-not-allowed ${
+              inspectionMode === 'auto'
+                ? 'bg-blue-600 text-white scale-105'
+                : 'bg-white text-gray-700 border border-gray-200'
+            }`}
+            title="Detectar automáticamente - Próximamente"
+          >
+            🤖 <span>Detectar Automáticamente</span>
+            <span className="text-xs bg-yellow-400 text-black px-2 py-0.5 rounded">Próximamente</span>
+          </button>
+        </div>
+      )}
+
       <MapContainer
         center={[40.4168, -3.7038]} // Madrid center
         zoom={16}
@@ -276,16 +324,35 @@ const RooftopInspectionMap: React.FC<RooftopInspectionMapProps> = ({
             {selectionMode === 'multi' ? '🎯 Multi-Selección Activa' : '📍 Herramienta de Inspección'}
           </span>
         </h3>
-        <p className="text-sm text-gray-600 mb-2">
-          {selectionMode === 'multi' 
-            ? 'Haz clic en múltiples tejados para seleccionarlos. Usa el botón "Analizar con IA" cuando termines.'
-            : editMode
-            ? '✏️ Modo de edición activo: Arrastra los puntos del polígono para ajustar la forma del tejado.'
-            : 'Haz clic en cualquier ubicación del mapa para crear una inspección de tejado. Se creará un área inicial que podrás ajustar después.'}
-        </p>
-        {editMode && (
-          <div className="text-xs text-amber-600 bg-amber-50 p-2 rounded border border-amber-200">
-            💡 <strong>Tip:</strong> Arrastra los vértices (puntos) para ajustar la forma exacta del tejado.
+        
+        {!selectedRooftop ? (
+          <div>
+            <p className="text-sm text-gray-600 mb-3">
+              {selectionMode === 'multi' 
+                ? 'Haz clic en múltiples tejados para seleccionarlos. Usa el botón "Analizar con IA" cuando termines.'
+                : '¿Cómo inspeccionar un tejado?'}
+            </p>
+            {selectionMode === 'single' && (
+              <ol className="list-decimal list-inside space-y-2 text-sm text-gray-700">
+                <li>Busca la dirección o navega el mapa</li>
+                <li>Selecciona el modo de selección arriba</li>
+                <li>Haz clic en el tejado para crear el área</li>
+                <li>Ajusta la forma si es necesario</li>
+              </ol>
+            )}
+          </div>
+        ) : (
+          <div>
+            <p className="text-sm text-gray-600 mb-2">
+              {editMode
+                ? '✏️ Modo de edición activo: Arrastra los puntos del polígono para ajustar la forma del tejado.'
+                : '✅ Tejado seleccionado. Continúa con el formulario de inspección.'}
+            </p>
+            {editMode && (
+              <div className="text-xs text-amber-600 bg-amber-50 p-2 rounded border border-amber-200 mt-2">
+                💡 <strong>Tip:</strong> Arrastra los vértices (puntos) para ajustar la forma exacta del tejado.
+              </div>
+            )}
           </div>
         )}
       </div>
