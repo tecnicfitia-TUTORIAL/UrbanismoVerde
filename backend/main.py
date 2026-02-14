@@ -48,6 +48,13 @@ try:
 except ImportError as e:
     logger.warning(f"⚠️ Could not load inspection router: {e}")
 
+try:
+    from api.endpoints.analysis import router as analysis_router
+    app.include_router(analysis_router, prefix="/api/analysis", tags=["analysis"])
+    logger.info("✅ Analysis router loaded")
+except ImportError as e:
+    logger.warning(f"⚠️ Could not load analysis router: {e}")
+
 @app.get("/")
 async def root():
     """Root endpoint with API information"""
@@ -133,7 +140,8 @@ async def api_info():
         "endpoints": {
             "docs": "/docs",
             "health": "/health",
-            "inspections": "/api/inspecciones/*"
+            "inspections": "/api/inspecciones/*",
+            "analysis": "/api/analysis/*"
         }
     }
 
