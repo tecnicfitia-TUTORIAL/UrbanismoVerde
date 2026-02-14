@@ -1,6 +1,6 @@
 # UrbanismoVerde AI Backend
 
-Backend API for intelligent rooftop inspection using Google Gemini Vision.
+Backend API for intelligent rooftop inspection using **Google Cloud Vertex AI** with Gemini models.
 
 ## 🚀 Deployment on Google Cloud Run
 
@@ -11,27 +11,30 @@ Backend API for intelligent rooftop inspection using Google Gemini Vision.
    - Cloud Run API
    - Cloud Build API
    - Artifact Registry API
-   - Generative Language API (Gemini)
+   - Vertex AI API (for Gemini)
 
 ### Environment Variables
 
 Configure these in Cloud Run:
 
 ```bash
-GOOGLE_API_KEY=AIzaSy...your-google-api-key
-GEMINI_MODEL_NAME=gemini-1.5-flash  # Optional: Gemini model version (default: gemini-1.5-flash)
-GOOGLE_CLOUD_REGION=europe-west9  # Optional: For logging/debugging purposes
-VISION_PROVIDER=gemini
+GOOGLE_CLOUD_PROJECT=ecourbe-ai
+GOOGLE_CLOUD_LOCATION=europe-west9
+GEMINI_MODEL_NAME=gemini-1.5-flash-001  # Optional: defaults to gemini-1.5-flash-001
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_ANON_KEY=your-supabase-anon-key
 PORT=8080
 ```
 
-**Note about GEMINI_MODEL_NAME:**
-- Default: `gemini-1.5-flash`
-- Alternatives: `gemini-1.5-flash-002`, `gemini-1.5-flash-latest`
-- With API v1 (google-generativeai >= 1.0.0), use model names without version suffix for Google AI Studio
-- If you get a 404 error, verify the model is available in your region and try an alternative version
+**Note about Authentication:**
+- **No API key needed** - Vertex AI uses the service account attached to Cloud Run
+- The service account needs the `roles/aiplatform.user` role
+
+**Available Gemini Models:**
+- `gemini-1.5-flash-001` - Fast and efficient (recommended, default)
+- `gemini-1.5-flash-002` - Newer version
+- `gemini-1.5-pro-001` - More powerful model
+- `gemini-1.5-flash-latest` - Always the latest stable version
 
 ### Deploy from GitHub
 
@@ -42,8 +45,14 @@ PORT=8080
    - Branch: `main`
    - Build Type: Dockerfile
    - Source location: `/backend/Dockerfile`
-5. Set environment variables
-6. Deploy
+5. Set environment variables (see above)
+6. **Grant IAM permissions** to the service account:
+   ```bash
+   gcloud projects add-iam-policy-binding ecourbe-ai \
+     --member="serviceAccount:903228431552-compute@developer.gserviceaccount.com" \
+     --role="roles/aiplatform.user"
+   ```
+7. Deploy
 
 ### Manual Deploy
 
@@ -55,7 +64,21 @@ gcloud run deploy urbanismoverde-backend \
   --allow-unauthenticated \
   --memory 512Mi \
   --timeout 300 \
-  --set-env-vars "GOOGLE_API_KEY=AIza...,GEMINI_MODEL_NAME=gemini-1.5-flash,GOOGLE_CLOUD_REGION=europe-west9,VISION_PROVIDER=gemini"
+  --set-env-vars "GOOGLE_CLOUD_PROJECT=ecourbe-ai,GOOGLE_CLOUD_LOCATION=europe-west9,GEMINI_MODEL_NAME=gemini-1.5-flash-001"
+```
+
+### Required IAM Permissions
+
+The Cloud Run service account needs access to Vertex AI:
+
+```bash
+# Enable Vertex AI API
+gcloud services enable aiplatform.googleapis.com --project=ecourbe-ai
+
+# Grant permissions to service account
+gcloud projects add-iam-policy-binding ecourbe-ai \
+  --member="serviceAccount:903228431552-compute@developer.gserviceaccount.com" \
+  --role="roles/aiplatform.user"
 ```
 
 ## 🧪 Testing
@@ -91,21 +114,43 @@ cd backend
 pip install -r requirements.txt
 
 # Set environment variables
-export GOOGLE_API_KEY=your-key
-export VISION_PROVIDER=gemini
+export GOOGLE_CLOUD_PROJECT=ecourbe-ai
+export GOOGLE_CLOUD_LOCATION=europe-west9
+export GEMINI_MODEL_NAME=gemini-1.5-flash-001
+
+# For local development, authenticate with gcloud
+gcloud auth application-default login
 
 # Run locally
 uvicorn main:app --reload --port 8080
 ```
 
-## 🤖 Gemini Vision API
+## 🤖 Vertex AI (Gemini)
 
-This backend uses Google Gemini Vision API instead of OpenAI for:
+This backend uses **Google Cloud Vertex AI** for AI-powered rooftop analysis with Gemini models.
+
+### Features
+
 - Roof type detection (plana/inclinada/mixta)
-- Condition assessment (excelente/bueno/regular/malo)
+- Condition assessment (excelente/bueno/regular/malo/muy_malo)
 - Obstruction identification
-- Slope estimation
-- Confidence scoring
+- Slope estimation (0-45°)
+- Confidence scoring (0-100%)
+
+### Authentication
+
+Vertex AI uses **service account authentication** instead of API keys:
+- In Cloud Run: Uses the service account attached to the Cloud Run service
+- Local development: Uses `gcloud auth application-default login`
+
+### Benefits vs Google AI Studio
+
+- ✅ No API keys needed - uses service account
+- ✅ Production-ready and enterprise-grade
+- ✅ Better reliability and performance
+- ✅ Full Gemini 1.5 model support
+- ✅ Native integration with Google Cloud services
+- ✅ Better security and access control
 
 ## 📊 Monitoring
 
