@@ -1,6 +1,6 @@
 """
-Rooftop Vision Analysis Service using Vertex AI Gemini
-Migrated from google-generativeai to Vertex AI for production use
+Rooftop Vision Analysis Service using Gemini via Vertex AI
+Uses Google Cloud Vertex AI (google-cloud-aiplatform) for production-grade Gemini access
 """
 
 import os
@@ -9,7 +9,7 @@ import logging
 import httpx
 from typing import Dict, List, Optional
 from urllib.parse import urlparse
-from services.vertex_ai_service import analyze_rooftop_with_vertex_ai
+from services.gemini_vertex_service import analyze_rooftop_with_vertex_ai
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +28,7 @@ if not PROJECT_ID:
     logger.warning("This should only happen in the specific Cloud Run deployment.")
     logger.warning("For other environments, set GOOGLE_CLOUD_PROJECT explicitly!")
 
-logger.info("✅ Using Vertex AI for Gemini")
+logger.info("✅ Using Gemini via Vertex AI (google-cloud-aiplatform)")
 logger.info(f"   Project: {PROJECT_ID}")
 logger.info(f"   Location: {LOCATION}")
 logger.info(f"   Model: {MODEL_NAME}")
@@ -159,7 +159,7 @@ async def analyze_rooftop_from_image(
         return _fallback_response("Invalid image URL or source not allowed")
     
     try:
-        logger.info(f"🔍 Analyzing rooftop image with Vertex AI Gemini")
+        logger.info(f"🔍 Analyzing rooftop image with Gemini via Vertex AI")
         logger.info(f"   Using model: {MODEL_NAME}")
         
         # Download image from URL with security checks

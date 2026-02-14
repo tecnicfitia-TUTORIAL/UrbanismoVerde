@@ -35,6 +35,7 @@ const InspeccionTejadosView: React.FC<InspeccionTejadosViewProps> = ({ onNavigat
   const [inspections, setInspections] = useState<InspeccionTejado[]>([]);
   const [isInspecting, setIsInspecting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [editMode, setEditMode] = useState(false);
   
   // Multi-selection state
   const [selectionMode, setSelectionMode] = useState<'single' | 'multi'>('single');
@@ -282,6 +283,38 @@ const InspeccionTejadosView: React.FC<InspeccionTejadosViewProps> = ({ onNavigat
     toast.success(`Modo ${newMode === 'multi' ? 'multi-selección' : 'selección simple'} activado`);
   };
 
+  const handlePolygonEdit = (newCoordinates: [number, number][][]) => {
+    if (!selectedRooftop) return;
+    
+    // Recalculate area and perimeter with new coordinates
+    const coords = newCoordinates[0];
+    const area = calculatePolygonArea(coords);
+    const perimeter = calculatePerimeter(coords);
+    const orientation = calculateOrientation(coords);
+    
+    setSelectedRooftop({
+      ...selectedRooftop,
+      coordenadas: {
+        type: 'Polygon',
+        coordinates: newCoordinates
+      },
+      area_m2: area,
+      perimetro_m: perimeter,
+      orientacion: orientation
+    });
+    
+    toast.success('Forma del tejado actualizada');
+  };
+
+  const toggleEditMode = () => {
+    if (!selectedRooftop) {
+      toast.error('Selecciona un tejado primero');
+      return;
+    }
+    setEditMode(!editMode);
+    toast.success(editMode ? 'Modo edición desactivado' : 'Modo edición activado');
+  };
+
   return (
     <div className="h-screen flex relative">
       {/* Multi-selection toolbar */}
@@ -302,19 +335,45 @@ const InspeccionTejadosView: React.FC<InspeccionTejadosViewProps> = ({ onNavigat
           existingInspections={inspections}
           selectedRooftops={selectedRooftops}
           selectionMode={selectionMode}
+          editMode={editMode}
+          onPolygonEdit={handlePolygonEdit}
         />
         
-        {/* Selection mode toggle button */}
-        <button
-          onClick={toggleSelectionMode}
-          className={`absolute top-4 right-4 px-4 py-2 rounded-lg shadow-lg font-medium transition-all z-10 ${
-            selectionMode === 'multi'
-              ? 'bg-green-600 text-white hover:bg-green-700'
-              : 'bg-white text-gray-700 hover:bg-gray-100'
-          }`}
-        >
-          {selectionMode === 'multi' ? '✓ Multi-Selección' : '+ Multi-Selección'}
-        </button>
+        {/* Controls toolbar */}
+        <div className="absolute top-4 right-4 flex gap-2 z-10">
+          {/* Edit mode toggle button - only show when a rooftop is selected */}
+          {selectedRooftop && selectionMode === 'single' && (
+            <button
+              onClick={toggleEditMode}
+              className={`px-4 py-2 rounded-lg shadow-lg font-medium transition-all ${
+                editMode
+                  ? 'bg-amber-600 text-white hover:bg-amber-700'
+                  : 'bg-white text-gray-700 hover:bg-gray-100'
+              }`}
+              title={editMode ? 'Desactivar edición' : 'Editar forma del tejado'}
+              aria-label={editMode ? 'Desactivar modo de edición de forma del tejado' : 'Activar modo de edición de forma del tejado'}
+            >
+              <span aria-hidden="true">{editMode ? '✏️' : '🔧'}</span>
+              {' '}
+              {editMode ? 'Editando' : 'Ajustar forma'}
+            </button>
+          )}
+          
+          {/* Selection mode toggle button */}
+          <button
+            onClick={toggleSelectionMode}
+            className={`px-4 py-2 rounded-lg shadow-lg font-medium transition-all ${
+              selectionMode === 'multi'
+                ? 'bg-green-600 text-white hover:bg-green-700'
+                : 'bg-white text-gray-700 hover:bg-gray-100'
+            }`}
+            aria-label={selectionMode === 'multi' ? 'Desactivar modo multi-selección' : 'Activar modo multi-selección'}
+          >
+            <span aria-hidden="true">{selectionMode === 'multi' ? '✓' : '+'}</span>
+            {' '}
+            Multi-Selección
+          </button>
+        </div>
       </div>
 
       {/* Sidebar (30% width) */}

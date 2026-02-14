@@ -1,8 +1,9 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef, useCallback } from 'react';
 import { MapContainer, TileLayer, Polygon, useMapEvents, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { InspeccionTejado } from '../../types';
 import SearchControl from '../maps/SearchControl';
+import L from 'leaflet';
 
 interface SelectedRooftop {
   tempId?: string;
@@ -18,6 +19,8 @@ interface RooftopInspectionMapProps {
   existingInspections: InspeccionTejado[];
   selectedRooftops?: SelectedRooftop[];
   selectionMode?: 'single' | 'multi';
+  onPolygonEdit?: (newCoordinates: [number, number][][]) => void;
+  editMode?: boolean;
 }
 
 /**
@@ -70,6 +73,84 @@ function ClickHandler({ onClick }: { onClick: (lat: number, lng: number) => void
   return null;
 }
 
+// Type for GeoJSON Polygon geometry
+interface PolygonGeometry {
+  type: 'Polygon';
+  coordinates: [number, number][][];
+}
+
+// Component to handle editable polygon using React-Leaflet's proper API
+function EditablePolygon({ 
+  geometry, 
+  onEdit, 
+  editable = false 
+}: { 
+  geometry: PolygonGeometry; 
+  onEdit?: (coords: [number, number][][]) => void;
+  editable?: boolean;
+}) {
+  const polygonRef = useRef<L.Polygon | null>(null);
+
+  useEffect(() => {
+    if (!geometry?.coordinates?.[0] || !editable || !onEdit || !polygonRef.current) return;
+    
+    const leafletPolygon = polygonRef.current as L.Polygon & {
+      editing?: {
+        enable?: () => void;
+        disable?: () => void;
+      };
+    };
+    
+    // Enable editing if the Leaflet polygon supports it
+    if (leafletPolygon.editing && typeof leafletPolygon.editing.enable === 'function') {
+      leafletPolygon.editing.enable();
+      
+      const handleEdit = () => {
+        try {
+          const latlngs = leafletPolygon.getLatLngs()[0];
+          if (!latlngs || latlngs.length === 0) return;
+          
+          const newCoords = latlngs.map((latlng: L.LatLng) => [latlng.lng, latlng.lat]);
+          // Close the polygon
+          newCoords.push([latlngs[0].lng, latlngs[0].lat]);
+          onEdit([newCoords]);
+        } catch (err) {
+          console.error('Error handling polygon edit:', err);
+        }
+      };
+
+      // Listen for both edit and vertex drag events
+      leafletPolygon.on('edit', handleEdit);
+      
+      return () => {
+        if (leafletPolygon.editing && typeof leafletPolygon.editing.disable === 'function') {
+          leafletPolygon.editing.disable();
+        }
+        leafletPolygon.off('edit', handleEdit);
+      };
+    }
+  }, [geometry, editable, onEdit]);
+
+  if (!geometry?.coordinates?.[0]) return null;
+
+  const positions = (geometry.coordinates[0] as [number, number][]).map(
+    ([lng, lat]) => [lat, lng] as [number, number]
+  );
+
+  return (
+    <Polygon
+      ref={polygonRef}
+      positions={positions}
+      pathOptions={{
+        color: editable ? '#f59e0b' : '#16a34a',
+        fillColor: editable ? '#fbbf24' : '#22c55e',
+        fillOpacity: editable ? 0.4 : 0.5,
+        weight: editable ? 4 : 3,
+      }}
+    />
+  );
+}
+
 // Component to auto-zoom to selected rooftop
 function AutoZoom({ geometry }: { geometry: any }) {
   const map = useMap();
@@ -91,7 +172,9 @@ const RooftopInspectionMap: React.FC<RooftopInspectionMapProps> = ({
   selectedRooftop,
   existingInspections,
   selectedRooftops = [],
-  selectionMode = 'single'
+  selectionMode = 'single',
+  onPolygonEdit,
+  editMode = false
 }) => {
   const handleMapClick = async (lat: number, lng: number) => {
     // Create a placeholder geometry around the clicked point
@@ -177,31 +260,34 @@ const RooftopInspectionMap: React.FC<RooftopInspectionMapProps> = ({
         })}
 
         {/* Show currently selected rooftop (for single mode or preview) */}
-        {selectionMode === 'single' && selectedRooftop?.coordenadas?.coordinates?.[0] && (
-          <Polygon
-            positions={(selectedRooftop.coordenadas.coordinates[0] as [number, number][]).map(
-              ([lng, lat]) => [lat, lng] as [number, number]
-            )}
-            pathOptions={{
-              color: '#16a34a',
-              fillColor: '#22c55e',
-              fillOpacity: 0.5,
-              weight: 3
-            }}
+        {selectionMode === 'single' && selectedRooftop?.coordenadas && (
+          <EditablePolygon
+            geometry={selectedRooftop.coordenadas}
+            editable={editMode}
+            onEdit={onPolygonEdit}
           />
         )}
       </MapContainer>
 
       {/* Instructions overlay */}
       <div className="absolute top-4 left-4 bg-white rounded-lg shadow-lg p-4 max-w-xs z-10">
-        <h3 className="font-semibold mb-2">
-          {selectionMode === 'multi' ? 'Multi-Selección Activa' : 'Herramienta de Inspección'}
+        <h3 className="font-semibold mb-2 flex items-center gap-2" role="heading" aria-level={3}>
+          <span aria-label={selectionMode === 'multi' ? 'Multi-selección activa' : 'Herramienta de inspección'}>
+            {selectionMode === 'multi' ? '🎯 Multi-Selección Activa' : '📍 Herramienta de Inspección'}
+          </span>
         </h3>
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-gray-600 mb-2">
           {selectionMode === 'multi' 
             ? 'Haz clic en múltiples tejados para seleccionarlos. Usa el botón "Analizar con IA" cuando termines.'
+            : editMode
+            ? '✏️ Modo de edición activo: Arrastra los puntos del polígono para ajustar la forma del tejado.'
             : 'Haz clic en cualquier ubicación del mapa para crear una inspección de tejado. Se creará un área inicial que podrás ajustar después.'}
         </p>
+        {editMode && (
+          <div className="text-xs text-amber-600 bg-amber-50 p-2 rounded border border-amber-200">
+            💡 <strong>Tip:</strong> Arrastra los vértices (puntos) para ajustar la forma exacta del tejado.
+          </div>
+        )}
       </div>
     </div>
   );

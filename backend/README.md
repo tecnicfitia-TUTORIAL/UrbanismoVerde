@@ -1,6 +1,6 @@
 # UrbanismoVerde AI Backend
 
-Backend API for intelligent rooftop inspection using **Google Cloud Vertex AI** with Gemini models.
+Backend API for intelligent rooftop inspection using **Gemini** via **Google Cloud Vertex AI**.
 
 ## 🚀 Deployment on Google Cloud Run
 
@@ -125,9 +125,9 @@ gcloud auth application-default login
 uvicorn main:app --reload --port 8080
 ```
 
-## 🤖 Vertex AI (Gemini)
+## 🤖 Gemini Vision (via Vertex AI)
 
-This backend uses **Google Cloud Vertex AI** for AI-powered rooftop analysis with Gemini models.
+This backend uses **Gemini** AI models via **Google Cloud Vertex AI** (`google-cloud-aiplatform` library) for AI-powered rooftop analysis.
 
 ### Features
 
@@ -143,14 +143,15 @@ Vertex AI uses **service account authentication** instead of API keys:
 - In Cloud Run: Uses the service account attached to the Cloud Run service
 - Local development: Uses `gcloud auth application-default login`
 
-### Benefits vs Google AI Studio
+### Benefits vs Google AI Studio (google-generativeai)
 
-- ✅ No API keys needed - uses service account
+- ✅ No API keys needed - uses service account authentication
 - ✅ Production-ready and enterprise-grade
 - ✅ Better reliability and performance
-- ✅ Full Gemini 1.5 model support
+- ✅ Full Gemini 1.5 and 2.0 model support
 - ✅ Native integration with Google Cloud services
 - ✅ Better security and access control
+- ✅ Supports all Gemini model versions
 
 ## 📊 Monitoring
 
