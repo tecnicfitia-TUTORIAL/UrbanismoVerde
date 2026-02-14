@@ -1,40 +1,37 @@
 """
-Rooftop Vision Analysis Service using Gemini via Vertex AI
-Uses Google Cloud Vertex AI (google-cloud-aiplatform) for production-grade Gemini access
+Rooftop Vision Analysis Service using Google Generative AI with Gemini 2.5
 """
 
 import os
 import json
 import logging
 import httpx
+import re
 from typing import Dict, List, Optional
 from urllib.parse import urlparse
-from services.gemini_vertex_service import analyze_rooftop_with_vertex_ai
 
 logger = logging.getLogger(__name__)
 
-# Vertex AI configuration (no API key needed)
-PROJECT_ID = os.getenv('GOOGLE_CLOUD_PROJECT')
-LOCATION = os.getenv('GOOGLE_CLOUD_LOCATION', 'europe-west9')
-MODEL_NAME = os.getenv('GEMINI_MODEL_NAME', 'gemini-1.5-flash-001')
+# Configure Gemini API
+GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
+GEMINI_MODEL_NAME = os.getenv('GEMINI_MODEL_NAME', 'gemini-2.5-flash')
+VISION_PROVIDER = os.getenv('VISION_PROVIDER', 'gemini')
 
-if not PROJECT_ID:
-    # Using hardcoded default only for this specific Cloud Run deployment
-    # In production, GOOGLE_CLOUD_PROJECT should always be set explicitly
-    PROJECT_ID = 'ecourbe-ai'
-    logger.warning("⚠️ ⚠️ ⚠️  SECURITY WARNING  ⚠️ ⚠️ ⚠️")
-    logger.warning("GOOGLE_CLOUD_PROJECT environment variable is NOT set!")
-    logger.warning(f"Falling back to hardcoded project: {PROJECT_ID}")
-    logger.warning("This should only happen in the specific Cloud Run deployment.")
-    logger.warning("For other environments, set GOOGLE_CLOUD_PROJECT explicitly!")
+# Solo importar y configurar si tenemos API key
+if GOOGLE_API_KEY and VISION_PROVIDER == 'gemini':
+    try:
+        import google.generativeai as genai
+        genai.configure(api_key=GOOGLE_API_KEY)
+        logger.info("✅ Gemini API configured")
+        logger.info(f"   Model: {GEMINI_MODEL_NAME}")
+        logger.info(f"   Provider: {VISION_PROVIDER}")
+    except Exception as e:
+        logger.error(f"❌ Error configuring Gemini API: {e}")
+        GOOGLE_API_KEY = None
+else:
+    logger.warning("⚠️ Gemini not configured - using fallback responses")
 
-logger.info("✅ Using Gemini via Vertex AI (google-cloud-aiplatform)")
-logger.info(f"   Project: {PROJECT_ID}")
-logger.info(f"   Location: {LOCATION}")
-logger.info(f"   Model: {MODEL_NAME}")
-
-
-# Allowed URL schemes and domains for image downloads (security measure)
+# Allowed URL schemes and domains
 ALLOWED_SCHEMES = ['https']
 ALLOWED_DOMAINS = [
     'maps.googleapis.com',
@@ -47,256 +44,187 @@ ALLOWED_DOMAINS = [
 
 
 def validate_image_url(url: str) -> bool:
-    """
-    Validate that the image URL is from an allowed source to prevent SSRF attacks
-    
-    Args:
-        url: URL to validate
-        
-    Returns:
-        bool: True if URL is valid and from allowed source
-    """
+    """Validate image URL for security"""
     try:
         parsed = urlparse(url)
-        
-        # Check scheme
         if parsed.scheme not in ALLOWED_SCHEMES:
-            logger.warning(f"❌ Invalid URL scheme: {parsed.scheme}")
+            logger.warning(f"⚠️ Scheme not allowed: {parsed.scheme}")
             return False
-        
-        # Check domain
-        hostname = parsed.hostname
-        if not hostname:
-            logger.warning(f"❌ Invalid URL: no hostname")
+        if not any(domain in parsed.netloc for domain in ALLOWED_DOMAINS):
+            logger.warning(f"⚠️ Domain not allowed: {parsed.netloc}")
             return False
-        
-        # Allow exact matches or subdomains of allowed domains
-        is_allowed = False
-        for allowed_domain in ALLOWED_DOMAINS:
-            if hostname == allowed_domain or hostname.endswith('.' + allowed_domain):
-                is_allowed = True
-                break
-        
-        if not is_allowed:
-            logger.warning(f"❌ Domain not in allowlist: {hostname}")
-            return False
-        
         return True
-        
     except Exception as e:
         logger.error(f"❌ Error validating URL: {e}")
         return False
 
 
-ANALYSIS_PROMPT = """
-Eres un experto en análisis de cubiertas y tejados para proyectos de infraestructura verde urbana.
-
-Analiza esta imagen satelital de un tejado y proporciona un análisis técnico detallado.
-
-Responde ÚNICAMENTE con un JSON válido (sin markdown, sin explicaciones adicionales) con esta estructura exacta:
-
-{
-  "tipo_cubierta": "plana" | "inclinada" | "mixta",
-  "estado_conservacion": "excelente" | "bueno" | "regular" | "malo" | "muy_malo",
-  "inclinacion_estimada": número entre 0-45,
-  "obstrucciones": [
-    {"tipo": "chimenea" | "ac" | "antena" | "vegetacion" | "solar" | "otro", "descripcion": "descripción breve"}
-  ],
-  "confianza": número entre 0-100,
-  "notas_ia": "observaciones técnicas relevantes"
-}
-
-Criterios de evaluación:
-
-1. **tipo_cubierta**:
-   - "plana": ángulo < 10°, superficie mayormente horizontal
-   - "inclinada": ángulo > 10°, pendiente claramente visible
-   - "mixta": combinación de secciones planas e inclinadas
-
-2. **estado_conservacion**:
-   - "excelente": sin daños visibles, superficie uniforme y limpia
-   - "bueno": pequeñas marcas o decoloración menor, estructuralmente sano
-   - "regular": decoloración notable, posibles grietas menores, necesita mantenimiento
-   - "malo": daños evidentes, grietas, manchas extensas, requiere reparación
-   - "muy_malo": daños graves, vegetación invasiva, deterioro estructural
-
-3. **inclinacion_estimada**: Ángulo en grados (0° = totalmente plano, 45° = muy inclinado)
-
-4. **obstrucciones**: Lista detallada de todos los elementos visibles que podrían afectar la instalación de infraestructura verde
-
-5. **confianza**: Tu nivel de certeza en el análisis (0-100%):
-   - 90-100: imagen clara, análisis muy confiable
-   - 70-89: buena visibilidad, análisis confiable
-   - 50-69: visibilidad moderada, análisis con reservas
-   - 0-49: imagen poco clara, análisis poco confiable
-
-6. **notas_ia**: Observaciones adicionales sobre viabilidad para techos verdes, paneles solares, o mejoras ambientales
-
-Sé preciso, técnico y objetivo en tu evaluación.
-"""
-
-
-async def analyze_rooftop_from_image(
-    image_url: str,
-    coordinates: Optional[Dict] = None
-) -> Dict:
-    """
-    Analyze rooftop characteristics from satellite image using Vertex AI Gemini
-    
-    Args:
-        image_url: URL of the satellite image to analyze
-        coordinates: Optional GeoJSON coordinates of the rooftop
-    
-    Returns:
-        Dict with analysis results including tipo_cubierta, estado_conservacion, etc.
-    """
-    
-    # Vertex AI uses service account, no API key check needed
-    
-    # Validate URL to prevent SSRF attacks
-    if not validate_image_url(image_url):
-        logger.error(f"❌ Invalid or disallowed image URL: {image_url}")
-        return _fallback_response("Invalid image URL or source not allowed")
-    
+async def download_image(url: str) -> Optional[bytes]:
+    """Download image from URL"""
     try:
-        logger.info(f"🔍 Analyzing rooftop image with Gemini via Vertex AI")
-        logger.info(f"   Using model: {MODEL_NAME}")
+        if not validate_image_url(url):
+            raise ValueError(f"Invalid image URL: {url}")
         
-        # Download image from URL with security checks
-        # SECURITY NOTE: URL is validated before this point via validate_image_url()
-        # which enforces HTTPS-only, domain allowlisting, and prevents redirects
-        logger.info(f"📥 Downloading image from: {image_url[:50]}...")
+        logger.info(f"📥 Downloading image from: {url[:80]}...")
+        
         async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.get(
-                image_url,
-                follow_redirects=False  # Prevent redirect-based SSRF
-            )
+            response = await client.get(url)
             response.raise_for_status()
             
-            # Verify content type
-            content_type = response.headers.get('content-type', 'image/jpeg')
-            if not content_type.startswith('image/'):
-                logger.error(f"❌ Invalid content type: {content_type}")
-                return _fallback_response("URL does not point to an image")
+            image_bytes = response.content
+            logger.info(f"✅ Image downloaded: {len(image_bytes)} bytes")
             
-            image_data = response.content
+            return image_bytes
+            
+    except Exception as e:
+        logger.error(f"❌ Error downloading image: {e}")
+        return None
+
+
+def clean_json_response(text: str) -> str:
+    """
+    Limpiar respuesta de Gemini para extraer JSON válido
+    
+    Gemini puede devolver:
+    - JSON puro: {"key": "value"}
+    - JSON con markdown: ```json\n{"key": "value"}\n```
+    - Texto + JSON: "Aquí está:\n```json\n{...}\n```"
+    """
+    try:
+        # 1. Buscar JSON dentro de bloques markdown
+        json_block_match = re.search(r'```(?:json)?\s*(\{.*?\})\s*```', text, re.DOTALL)
+        if json_block_match:
+            return json_block_match.group(1).strip()
         
-        logger.info(f"✅ Image downloaded: {len(image_data)} bytes")
+        # 2. Buscar JSON sin bloques
+        json_match = re.search(r'(\{.*\})', text, re.DOTALL)
+        if json_match:
+            return json_match.group(1).strip()
         
-        # Call Vertex AI service
-        logger.info("🤖 Sending request to Vertex AI...")
-        vertex_response = await analyze_rooftop_with_vertex_ai(
-            image_bytes=image_data,
-            prompt=ANALYSIS_PROMPT
-        )
-        
-        if not vertex_response.get("success"):
-            error_msg = vertex_response.get("error", "Unknown error")
-            logger.error(f"❌ Vertex AI analysis failed: {error_msg}")
-            return _fallback_response(error_msg)
-        
-        # Extract and clean response
-        content = vertex_response.get("result", "")
-        logger.info(f"📄 Raw Vertex AI response: {content[:200]}...")
-        
-        # Remove markdown code blocks if present
-        if "```json" in content:
-            content = content.split("```json")[1].split("```")[0].strip()
-        elif "```" in content:
-            content = content.split("```")[1].split("```")[0].strip()
-        
-        # Parse JSON
-        result = json.loads(content)
-        
-        # Validate required fields
-        required_fields = [
-            "tipo_cubierta",
-            "estado_conservacion",
-            "inclinacion_estimada",
-            "obstrucciones",
-            "confianza",
-            "notas_ia"
-        ]
-        
-        for field in required_fields:
-            if field not in result:
-                raise ValueError(f"Missing required field: {field}")
-        
-        # Validate and clamp numeric values
-        if result["confianza"] < 0 or result["confianza"] > 100:
-            result["confianza"] = max(0, min(100, result["confianza"]))
-        
-        if result["inclinacion_estimada"] < 0 or result["inclinacion_estimada"] > 45:
-            result["inclinacion_estimada"] = max(0, min(45, result["inclinacion_estimada"]))
-        
-        logger.info(f"✅ Analysis completed successfully")
-        logger.info(f"   - Type: {result['tipo_cubierta']}")
-        logger.info(f"   - Condition: {result['estado_conservacion']}")
-        logger.info(f"   - Confidence: {result['confianza']}%")
-        
-        return result
-        
-    except json.JSONDecodeError as e:
-        logger.error(f"❌ JSON parsing error: {e}")
-        logger.error(f"Response content: {content}")
-        return _fallback_response(f"JSON parsing error: {str(e)}")
-        
-    except httpx.HTTPError as e:
-        logger.error(f"❌ HTTP error downloading image: {e}")
-        return _fallback_response(f"Error downloading image: {str(e)}")
+        # 3. Si no se encuentra, devolver original
+        return text.strip()
         
     except Exception as e:
-        error_msg = str(e)
-        error_type = type(e).__name__
+        logger.warning(f"⚠️ Error cleaning JSON: {e}")
+        return text
+
+
+async def analyze_rooftop_image(
+    image_url: str,
+    area_m2: float,
+    orientacion: str
+) -> Dict:
+    """Analyze rooftop image using Gemini Vision"""
+    
+    if not GOOGLE_API_KEY:
+        logger.warning("⚠️ No API key configured")
+        return {
+            "tipo_cubierta": "desconocido",
+            "estado_conservacion": "bueno",
+            "inclinacion_estimada": 0,
+            "obstrucciones": [],
+            "confianza": 20,
+            "notas_ia": "API key not configured",
+            "error": "API key not configured",
+            "fallback": True
+        }
+    
+    try:
+        logger.info("🔍 Analyzing rooftop with Gemini")
+        logger.info(f"   Model: {GEMINI_MODEL_NAME}")
         
-        logger.error(f"❌ Error analyzing rooftop: {error_msg}")
-        logger.error(f"Error type: {error_type}")
-        return _fallback_response(error_msg)
+        image_bytes = await download_image(image_url)
+        if not image_bytes:
+            raise ValueError("Failed to download image")
+        
+        logger.info(f"✅ Downloaded: {len(image_bytes)} bytes")
+        logger.info("🤖 Sending to Gemini...")
+        
+        import google.generativeai as genai
+        model = genai.GenerativeModel(GEMINI_MODEL_NAME)
+        
+        prompt = f"""Analiza esta cubierta y responde SOLO con JSON válido (sin markdown):
+
+{{
+  "tipo_cubierta": "plana|inclinada|mixta",
+  "estado": "excelente|bueno|regular|malo",
+  "inclinacion": 0-45,
+  "obstrucciones": [{{"tipo": "ac|antena|chimenea|otro", "descripcion": "..."}}],
+  "confianza": 0-100,
+  "notas": "Análisis detallado"
+}}
+
+Área: {area_m2} m², Orientación: {orientacion}"""
+        
+        response = model.generate_content([
+            {"mime_type": "image/jpeg", "data": image_bytes},
+            prompt
+        ])
+        
+        result_text = response.text
+        logger.info(f"✅ Response: {len(result_text)} chars")
+        logger.info(f"📄 Preview: {result_text[:150]}...")
+        
+        try:
+            clean_text = clean_json_response(result_text)
+            logger.info(f"🧹 Cleaned: {clean_text[:150]}...")
+            
+            analysis = json.loads(clean_text)
+            
+            return {
+                "tipo_cubierta": analysis.get("tipo_cubierta", "desconocido"),
+                "estado_conservacion": analysis.get("estado", "desconocido"),
+                "inclinacion_estimada": int(analysis.get("inclinacion", 0)),
+                "obstrucciones": analysis.get("obstrucciones", []),
+                "confianza": int(analysis.get("confianza", 50)),
+                "notas_ia": analysis.get("notas", result_text[:500])
+            }
+            
+        except json.JSONDecodeError as e:
+            logger.error(f"❌ JSON error: {e}")
+            logger.error(f"📄 Text: {result_text}")
+            
+            return {
+                "tipo_cubierta": "desconocido",
+                "estado_conservacion": "bueno",
+                "inclinacion_estimada": 0,
+                "obstrucciones": [],
+                "confianza": 30,
+                "notas_ia": f"Parse error. Raw: {result_text[:500]}",
+                "error": f"JSON parse: {str(e)}",
+                "raw_response": result_text
+            }
+        
+    except Exception as e:
+        logger.error(f"❌ Error: {e}")
+        
+        return {
+            "tipo_cubierta": "desconocido",
+            "estado_conservacion": "bueno",
+            "inclinacion_estimada": 0,
+            "obstrucciones": [],
+            "confianza": 20,
+            "notas_ia": f"Error: {e}",
+            "error": str(e),
+            "fallback": True
+        }
 
 
-async def batch_analyze_rooftops(rooftops: List[Dict]) -> List[Dict]:
-    """
-    Analyze multiple rooftops in batch
+async def analyze_batch_rooftops(rooftops: List[Dict]) -> List[Dict]:
+    """Analyze multiple rooftops"""
+    logger.info(f"🔄 Batch: {len(rooftops)} rooftops")
     
-    Args:
-        rooftops: List of dicts with 'imageUrl' and other rooftop data
-    
-    Returns:
-        List of dicts with original data + analysis results
-    """
     results = []
-    total = len(rooftops)
-    
-    logger.info(f"🔄 Starting batch analysis of {total} rooftops")
-    
-    for idx, rooftop in enumerate(rooftops, 1):
-        logger.info(f"🔍 Analyzing rooftop {idx}/{total}...")
+    for i, rooftop in enumerate(rooftops, 1):
+        logger.info(f"🔍 {i}/{len(rooftops)}...")
         
-        analysis = await analyze_rooftop_from_image(
-            image_url=rooftop.get('imageUrl'),
-            coordinates=rooftop.get('coordinates')
+        result = await analyze_rooftop_image(
+            image_url=rooftop.get("imageUrl"),
+            area_m2=rooftop.get("area_m2", 100),
+            orientacion=rooftop.get("orientacion", "sur")
         )
         
-        results.append({
-            **rooftop,
-            **analysis
-        })
+        results.append({**rooftop, **result})
     
-    logger.info(f"✅ Batch analysis completed: {total} rooftops")
+    logger.info(f"✅ Completed: {len(results)} rooftops")
     return results
-
-
-def _fallback_response(error_message: str) -> Dict:
-    """
-    Generate fallback response when AI analysis fails
-    """
-    return {
-        "tipo_cubierta": "desconocido",
-        "estado_conservacion": "bueno",
-        "inclinacion_estimada": 0,
-        "obstrucciones": [],
-        "confianza": 20,
-        "notas_ia": f"Análisis automático no disponible: {error_message}. Se requiere inspección manual.",
-        "error": error_message,
-        "fallback": True
-    }
