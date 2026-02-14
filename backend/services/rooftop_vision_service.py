@@ -271,7 +271,7 @@ async def analyze_rooftop_from_image(
             logger.error(f"   Región: {GOOGLE_CLOUD_REGION}")
             logger.error(f"   Error completo: {error_msg}")
             logger.error(f"   Sugerencia: Verificar que el modelo esté disponible en la región")
-            logger.error(f"   Modelos alternativos: 'gemini-1.5-flash', 'gemini-1.5-flash-001', 'gemini-1.5-flash-002', 'gemini-1.5-flash-latest'")
+            logger.error(f"   Modelos alternativos: 'gemini-1.5-flash', 'gemini-1.5-flash', 'gemini-1.5-flash-002', 'gemini-1.5-flash-latest'")
         
         logger.error(f"❌ Error analyzing rooftop: {error_msg}")
         logger.error(f"Error type: {error_type}")
