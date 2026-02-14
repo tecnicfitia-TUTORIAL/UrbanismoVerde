@@ -54,7 +54,7 @@ const MapWithAnalysis: React.FC<MapWithAnalysisProps> = ({ onAreaSelected, disab
         <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[1000] pointer-events-none">
           <div className="bg-white/95 backdrop-blur-sm px-6 py-3 rounded-lg shadow-lg border border-gray-200">
             <p className="text-sm font-medium text-gray-900">
-              🗺️ <strong>Selecciona un área:</strong> Arrastra el mouse para dibujar un rectángulo
+              🗺️ <strong>Selecciona un área:</strong> Haz clic en "Seleccionar Área" y luego arrastra
             </p>
           </div>
         </div>

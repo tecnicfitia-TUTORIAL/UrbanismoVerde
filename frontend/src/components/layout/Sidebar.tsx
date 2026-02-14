@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Home, MapPin, PlusCircle, Brain, BarChart3, Euro, Menu, X, List, Search, Sparkles, Map, History, ChevronDown, ChevronRight, Layers, Clipboard, Building2 } from 'lucide-react';
+import { Home, MapPin, PlusCircle, Brain, BarChart3, Euro, Menu, X, List, Search, Sparkles, Map, History, ChevronDown, ChevronRight, Layers, Clipboard, Building2, Settings } from 'lucide-react';
 import { Area, MenuItem as MenuItemType } from '../../types';
 import SubMenu from './SubMenu';
 import { countSpecializedAnalyses } from '../../services/specialized-analysis-service';
@@ -101,7 +101,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     },
     {
       id: 'configuracion',
-      icon: <BarChart3 size={20} />,
+      icon: <Settings size={20} />,
       label: 'Configuración',
       view: 'configuracion',
       disabled: true,

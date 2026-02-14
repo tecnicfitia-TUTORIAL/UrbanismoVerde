@@ -9,6 +9,9 @@ import ZonesGalleryContent from '../zones/ZonesGalleryContent';
 import SpecializedAnalysisGallery from '../analysis/SpecializedAnalysisGallery';
 import ConjuntosGallery from '../conjuntos/ConjuntosGallery';
 import { Area } from '../../types';
+import { countSpecializedAnalyses } from '../../services/specialized-analysis-service';
+import { countConjuntosZonas } from '../../services/conjunto-zonas-service';
+import { supabase, TABLES } from '../../config/supabase';
 
 interface ProyectosViewProps {
   areas: Area[];
@@ -66,10 +69,28 @@ const ProyectosView: React.FC<ProyectosViewProps> = ({
 
   // Load counts when component mounts
   useEffect(() => {
-    // For now, using areas.length as zones count
-    // In a real app, would load from API
-    setZonasCount(areas.length);
+    loadCounts();
   }, [areas]);
+
+  const loadCounts = async () => {
+    try {
+      // Load zonas count from DB
+      const { count: dbZonasCount } = await supabase
+        .from(TABLES.ZONAS_VERDES)
+        .select('*', { count: 'exact', head: true });
+      setZonasCount((dbZonasCount || 0) + areas.length);
+
+      // Load specialized analyses count
+      const especialesCount = await countSpecializedAnalyses();
+      setEspecialesCount(especialesCount);
+
+      // Load conjuntos count
+      const conjuntosCountValue = await countConjuntosZonas();
+      setConjuntosCount(conjuntosCountValue);
+    } catch (error) {
+      console.error('Error loading counts:', error);
+    }
+  };
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -94,12 +115,10 @@ const ProyectosView: React.FC<ProyectosViewProps> = ({
               <h3 className="text-lg font-semibold mb-4">Conjuntos de Zonas</h3>
               <ConjuntosGallery
                 onViewOnMap={(conjuntoId) => {
+                  // TODO: Implement visualization on map
                   console.log('View conjunto on map:', conjuntoId);
                 }}
-                onConjuntoDeleted={() => {
-                  // Reload counts
-                  setConjuntosCount(prev => Math.max(0, prev - 1));
-                }}
+                onConjuntoDeleted={loadCounts}
               />
             </div>
           </div>
@@ -119,11 +138,11 @@ const ProyectosView: React.FC<ProyectosViewProps> = ({
         return (
           <ConjuntosGallery
             onViewOnMap={(conjuntoId) => {
+              // TODO: Implement visualization on map
               console.log('View conjunto on map:', conjuntoId);
             }}
             onConjuntoDeleted={() => {
-              // Reload counts
-              setConjuntosCount(prev => Math.max(0, prev - 1));
+              loadCounts();
             }}
           />
         );
