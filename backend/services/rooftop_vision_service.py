@@ -1,6 +1,6 @@
 """
 Rooftop Vision Analysis Service using Google Gemini
-Updated for google-generativeai 0.8.3+ with proper API v1 support
+Updated for google-generativeai 1.0.0+ with API v1 support
 """
 
 import google.generativeai as genai
@@ -271,7 +271,7 @@ async def analyze_rooftop_from_image(
             logger.error(f"   Región: {GOOGLE_CLOUD_REGION}")
             logger.error(f"   Error completo: {error_msg}")
             logger.error(f"   Sugerencia: Verificar que el modelo esté disponible en la región")
-            logger.error(f"   Modelos alternativos: 'gemini-1.5-flash-001', 'gemini-1.5-flash-002', 'gemini-1.5-flash-latest'")
+            logger.error(f"   Modelos alternativos: 'gemini-1.5-flash', 'gemini-1.5-flash-001', 'gemini-1.5-flash-002', 'gemini-1.5-flash-latest'")
         
         logger.error(f"❌ Error analyzing rooftop: {error_msg}")
         logger.error(f"Error type: {error_type}")
