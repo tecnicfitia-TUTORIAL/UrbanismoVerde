@@ -76,7 +76,9 @@ async def health():
         "configuration": {
             "vertex_ai_project": os.getenv("GOOGLE_CLOUD_PROJECT", "not configured"),
             "vertex_ai_location": os.getenv("GOOGLE_CLOUD_LOCATION", "europe-west9"),
-            "vision_provider": "vertex-ai",
+            "vision_provider": "gemini",
+            "vision_backend": "vertex-ai",
+            "model": os.getenv("GEMINI_MODEL_NAME", "gemini-1.5-flash-001"),
             "supabase": "configured" if supabase_configured else "missing",
             "port": os.getenv("PORT", "8080")
         }
@@ -112,12 +114,15 @@ async def api_info():
         "status": "healthy" if (vertex_ai_configured and supabase_configured) else "degraded",
         "environment": "production" if vertex_ai_configured else "development",
         "vision": {
-            "provider": "vertex-ai",
+            "provider": "gemini",
             "model_name": os.getenv("GEMINI_MODEL_NAME", "gemini-1.5-flash-001"),
+            "api_key_configured": vertex_ai_configured,
+            "library": "google-cloud-aiplatform",
+            "version": vertexai_version,
+            "available": vertexai_available and vertex_ai_configured,
+            "backend_type": "vertex-ai",
             "project_id": os.getenv("GOOGLE_CLOUD_PROJECT") or "not configured",
             "location": os.getenv("GOOGLE_CLOUD_LOCATION", "europe-west9"),
-            "library_version": vertexai_version,
-            "available": vertexai_available and vertex_ai_configured,
             "configuration": {
                 "temperature": 0.4,
                 "top_p": 0.95,
@@ -150,7 +155,8 @@ async def test_env():
     return {
         "vertex_ai_project": os.getenv("GOOGLE_CLOUD_PROJECT", "not_set"),
         "vertex_ai_location": os.getenv("GOOGLE_CLOUD_LOCATION", "europe-west9"),
-        "vision_provider": "vertex-ai",
+        "vision_provider": "gemini",
+        "vision_backend": "vertex-ai",
         "model_name": os.getenv("GEMINI_MODEL_NAME", "gemini-1.5-flash-001"),
         "supabase_url": os.getenv("SUPABASE_URL", "not_set")[:30] + "..." if os.getenv("SUPABASE_URL") else None,
         "supabase_configured": bool(os.getenv("SUPABASE_ANON_KEY")),
@@ -171,7 +177,7 @@ async def startup_event():
     
     logger.info(f"🔑 GOOGLE_CLOUD_PROJECT: {os.getenv('GOOGLE_CLOUD_PROJECT', 'not set')}")
     logger.info(f"📍 Environment: {'Production' if os.getenv('GOOGLE_CLOUD_PROJECT') else 'Development'}")
-    logger.info(f"🤖 Vision Provider: vertex-ai")
+    logger.info(f"🤖 Vision Provider: gemini (via Vertex AI)")
     logger.info(f"📍 Vertex AI Location: {os.getenv('GOOGLE_CLOUD_LOCATION', 'europe-west9')}")
     logger.info(f"🤖 Model: {os.getenv('GEMINI_MODEL_NAME', 'gemini-1.5-flash-001')}")
     logger.info(f"🔌 Port: {os.getenv('PORT', '8080')}")
