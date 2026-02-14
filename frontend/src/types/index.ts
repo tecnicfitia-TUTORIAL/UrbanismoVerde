@@ -215,6 +215,65 @@ export interface ReportData {
 }
 
 // ============================================================================
+// URBAN ANALYSIS - Automatic Rooftop Detection & Analysis
+// ============================================================================
+
+export interface GreenRoofOpportunity {
+  id: string;
+  address: string;
+  coordinates: [number, number];
+  area_m2: number;
+  viability_score: number; // 0-100
+  roof_type: string;
+  condition: string;
+  obstructions: string[];
+  estimated_cost_eur: number;
+  co2_savings_kg_year: number;
+  image_url: string;
+  ai_notes: string;
+}
+
+export interface ReforestationOpportunity {
+  id: string;
+  address: string;
+  coordinates: [number, number];
+  area_m2: number;
+  viability_score: number;
+  land_type: string;
+  estimated_cost_eur: number;
+  co2_capture_kg_year: number;
+  image_url: string;
+  description: string;
+}
+
+export interface UrbanAnalysisReport {
+  area_name: string;
+  analysis_date: string;
+  bounds: {
+    north: number;
+    south: number;
+    east: number;
+    west: number;
+  };
+  green_roofs: GreenRoofOpportunity[];
+  reforestation: ReforestationOpportunity[];
+  summary: {
+    total_opportunities: number;
+    total_investment_eur: number;
+    total_co2_impact_kg_year: number;
+    total_green_area_m2: number;
+    top_priorities: string[];
+  };
+}
+
+export interface AreaBounds {
+  north: number;
+  south: number;
+  east: number;
+  west: number;
+}
+
+// ============================================================================
 // SPECIALIZED ANALYSIS - Hierarchical Analysis System
 // ============================================================================
 
