@@ -241,7 +241,7 @@ export interface ReforestationOpportunity {
   viability_score: number;
   land_type: string;
   estimated_cost_eur: number;
-  co2_capture_kg_year: number;
+  co2_savings_kg_year: number;  // Changed from co2_capture_kg_year for consistency
   image_url: string;
   description: string;
 }

@@ -122,7 +122,7 @@ const OpportunityCard: React.FC<OpportunityCardProps> = ({ opportunity, type }) 
             <span className="font-semibold text-green-700">
               {isGreenRoof 
                 ? (specificOpportunity as GreenRoofOpportunity).co2_savings_kg_year
-                : (opportunity as ReforestationOpportunity).co2_capture_kg_year
+                : (opportunity as ReforestationOpportunity).co2_savings_kg_year
               } kg
             </span>
           </div>

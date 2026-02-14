@@ -99,30 +99,6 @@ const AreaSelector: React.FC<AreaSelectorProps> = ({ onAreaSelected, disabled = 
     };
   }, [map, disabled, isDrawing, startPoint, onAreaSelected]);
 
-  // Show help text
-  useEffect(() => {
-    if (!map || disabled) return;
-
-    const helpControl = L.Control.extend({
-      onAdd: function() {
-        const div = L.DomUtil.create('div', 'leaflet-control-attribution leaflet-control');
-        div.innerHTML = `
-          <div style="background: white; padding: 8px 12px; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-            <strong>🗺️ Seleccionar área:</strong> Arrastra el mouse para dibujar un rectángulo
-          </div>
-        `;
-        return div;
-      }
-    });
-
-    const control = new helpControl({ position: 'topleft' });
-    map.addControl(control);
-
-    return () => {
-      map.removeControl(control);
-    };
-  }, [map, disabled]);
-
   return null;
 };
 

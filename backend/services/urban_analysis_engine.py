@@ -227,6 +227,10 @@ class UrbanAnalysisEngine:
             total_co2_impact = sum(opp["co2_savings_kg_year"] for opp in green_roof_opportunities)
             total_area = sum(opp["area_m2"] for opp in green_roof_opportunities)
             
+            # Calculate center coordinates for report
+            center_lat = (north + south) / 2
+            center_lng = (east + west) / 2
+            
             # Generate top priorities
             top_priorities = []
             if total_opportunities > 0:
@@ -238,7 +242,7 @@ class UrbanAnalysisEngine:
             
             # Build report
             report = {
-                "area_name": f"Área urbana ({lat:.4f}, {lng:.4f})",
+                "area_name": f"Área urbana ({center_lat:.4f}, {center_lng:.4f})",
                 "analysis_date": datetime.utcnow().isoformat(),
                 "bounds": {
                     "north": north,
