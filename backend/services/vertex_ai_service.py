@@ -14,9 +14,13 @@ from functools import partial
 logger = logging.getLogger(__name__)
 
 # Configuración de Vertex AI
-PROJECT_ID = os.getenv('GOOGLE_CLOUD_PROJECT', 'ecourbe-ai')
+PROJECT_ID = os.getenv('GOOGLE_CLOUD_PROJECT')
 LOCATION = os.getenv('GOOGLE_CLOUD_LOCATION', 'europe-west9')
 MODEL_NAME = os.getenv('GEMINI_MODEL_NAME', 'gemini-1.5-flash-001')
+
+if not PROJECT_ID:
+    PROJECT_ID = 'ecourbe-ai'
+    logger.warning("⚠️ GOOGLE_CLOUD_PROJECT not set, using default: ecourbe-ai")
 
 # Inicializar Vertex AI
 try:

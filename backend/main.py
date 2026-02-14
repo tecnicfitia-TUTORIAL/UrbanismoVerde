@@ -114,7 +114,7 @@ async def api_info():
         "vision": {
             "provider": "vertex-ai",
             "model_name": os.getenv("GEMINI_MODEL_NAME", "gemini-1.5-flash-001"),
-            "project_id": os.getenv("GOOGLE_CLOUD_PROJECT", "ecourbe-ai"),
+            "project_id": os.getenv("GOOGLE_CLOUD_PROJECT") or "not configured",
             "location": os.getenv("GOOGLE_CLOUD_LOCATION", "europe-west9"),
             "library_version": vertexai_version,
             "available": vertexai_available and vertex_ai_configured,

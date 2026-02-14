@@ -14,9 +14,13 @@ from services.vertex_ai_service import analyze_rooftop_with_vertex_ai
 logger = logging.getLogger(__name__)
 
 # Vertex AI configuration (no API key needed)
-PROJECT_ID = os.getenv('GOOGLE_CLOUD_PROJECT', 'ecourbe-ai')
+PROJECT_ID = os.getenv('GOOGLE_CLOUD_PROJECT')
 LOCATION = os.getenv('GOOGLE_CLOUD_LOCATION', 'europe-west9')
 MODEL_NAME = os.getenv('GEMINI_MODEL_NAME', 'gemini-1.5-flash-001')
+
+if not PROJECT_ID:
+    PROJECT_ID = 'ecourbe-ai'
+    logger.warning("⚠️ GOOGLE_CLOUD_PROJECT not set, using default: ecourbe-ai")
 
 logger.info("✅ Using Vertex AI for Gemini")
 logger.info(f"   Project: {PROJECT_ID}")

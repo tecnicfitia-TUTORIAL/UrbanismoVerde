@@ -107,7 +107,7 @@ async def test_ai_service():
     
     vertex_ai_configured = bool(os.getenv("GOOGLE_CLOUD_PROJECT"))
     model_name = os.getenv("GEMINI_MODEL_NAME", "gemini-1.5-flash-001")
-    project_id = os.getenv("GOOGLE_CLOUD_PROJECT", "ecourbe-ai")
+    project_id = os.getenv("GOOGLE_CLOUD_PROJECT") or "not configured"
     location = os.getenv("GOOGLE_CLOUD_LOCATION", "europe-west9")
     
     if not vertex_ai_configured:
